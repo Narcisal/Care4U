@@ -1,6 +1,7 @@
 {
   "elder_id": "W001",
   "name": "王大明",
+  "gender": "male",
   "persona": {
     "former_job": "國中數學老師",
     "tone_preference": "尊敬且親切",

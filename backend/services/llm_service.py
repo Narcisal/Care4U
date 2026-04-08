@@ -14,6 +14,8 @@ class LLMService:
     
     def build_system_prompt(self, profile: dict) -> str:
         name = profile.get("name", "長者")
+        gender = profile.get("gender", "male")
+        honorific = "爺爺" if gender == "male" else "奶奶"
         persona = profile.get("persona", {})
         health = profile.get("health_notes", {})
         events = profile.get("recent_events", [])
@@ -29,6 +31,7 @@ class LLMService:
 
 【你正在陪伴的長者】
 - 姓名：{name}
+- 稱呼：{name}{honorific}
 - 曾任職業：{persona.get('former_job', '未知')}
 - 興趣愛好：{', '.join(persona.get('hobbies', []))}
 - 家人：{persona.get('family', {})}
@@ -43,12 +46,16 @@ class LLMService:
 
 【你的說話方式】
 - 用溫柔、撒嬌、尊敬的語氣
-- 句子簡短，避免太長
+- 每次回應至少要有兩句完整的話，先回應情緒，再問一個關心的問題
+- 不要只重複長者說的話，要有實質的安慰或關心內容
+- 每句話都要說完整，不能只說名字或半句話
+- 回應長度控制在 2-4 句之間，不要太長也不要太短
 - 多用台灣常用的親切詞彙
 - 主動關心長者的狀況
 - 遇到負面情緒要先安慰，再轉移話題
+- 稱呼長者時，請固定叫「{name}{honorific}」
 
-請記住：你是{name}的貼心孫子/孫女，要讓他/她感受到被愛與被重視。"""
+請記住：你是{name}{honorific}的貼心孫子/孫女，要讓他/她感受到被愛與被重視。"""
         
         return prompt
 
@@ -59,7 +66,6 @@ class LLMService:
         try:
             system_prompt = self.build_system_prompt(profile)
             
-            # 建立對話歷史格式
             history = []
             for msg in conversation_history:
                 role = "user" if msg["role"] == "user" else "model"
@@ -70,7 +76,6 @@ class LLMService:
                     )
                 )
             
-            # 加入這次使用者的訊息
             history.append(
                 types.Content(
                     role="user",
@@ -83,8 +88,8 @@ class LLMService:
                 contents=history,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    temperature=0.8,
-                    max_output_tokens=300,
+                    temperature=0.9,
+                    max_output_tokens=2000,
                 )
             )
             
