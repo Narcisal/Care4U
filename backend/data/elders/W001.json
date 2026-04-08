@@ -1,0 +1,29 @@
+{
+  "elder_id": "W001",
+  "name": "王大明",
+  "persona": {
+    "former_job": "國中數學老師",
+    "tone_preference": "尊敬且親切",
+    "hobbies": ["聽鄧麗君", "下象棋"],
+    "family": {
+      "daughter": "小玲",
+      "grandson": "小寶"
+    }
+  },
+  "health_notes": {
+    "sensitivity": ["怕冷", "腰部舊傷"],
+    "diet": "喜歡喝熱豆漿，不吃苦瓜"
+  },
+  "recent_events": [
+    {
+      "id": "evt001",
+      "date": "2026-04-08",
+      "event": "抱怨冷氣太冷",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "topic_tags": ["環境", "身體不適"],
+      "source": "voice",
+      "embedding": null
+    }
+  ]
+}

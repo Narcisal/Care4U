@@ -1,0 +1,20 @@
+# 虛擬環境
+venv/
+
+# 環境變數（重要！金鑰不能上傳）
+.env
+
+# Python 快取
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code 設定
+.vscode/
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 日誌
+*.log
