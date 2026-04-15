@@ -2,8 +2,16 @@ const ELDER_ID = "W001";
 const API_BASE = "http://127.0.0.1:8000";
 
 let chatCount = 0;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
 
-// ====== 初始化 ======
+function enableButtons() {
+    document.getElementById("text-input").removeAttribute("disabled");
+    document.getElementById("send-btn").removeAttribute("disabled");
+    document.getElementById("record-btn").removeAttribute("disabled");
+}
+
 async function loadElderProfile() {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
@@ -14,7 +22,6 @@ async function loadElderProfile() {
     }
 }
 
-// ====== 開始對話 ======
 async function startSession() {
     const btn = document.getElementById("start-btn");
     btn.textContent = "⏳ 啟動中...";
@@ -28,37 +35,31 @@ async function startSession() {
         });
         const data = await res.json();
 
-        // 顯示問候訊息
         addMessage("ai", data.message);
-        
-        // 啟用輸入
-        document.getElementById("text-input").disabled = false;
-        document.getElementById("send-btn").disabled = false;
+        enableButtons();
         document.getElementById("text-input").focus();
-
         btn.textContent = "✅ 對話進行中";
         updateEmotionStatus("😊", "正常");
+        speakText(data.message);
 
     } catch (e) {
         btn.textContent = "❌ 啟動失敗，請重試";
         btn.disabled = false;
-        addMessage("system", "系統啟動失敗，請確認後端是否正常運行。");
+        addMessage("system", "系統啟動失敗。");
     }
 }
 
-// ====== 送出訊息 ======
 async function sendMessage() {
     const input = document.getElementById("text-input");
     const message = input.value.trim();
     if (!message) return;
-
-    // 顯示使用者訊息
     addMessage("user", message);
     input.value = "";
+    await processAndRespond(message);
+}
 
-    // 顯示 AI 思考中
+async function processAndRespond(message) {
     const thinkingId = addThinking();
-
     try {
         const res = await fetch(`${API_BASE}/api/chat`, {
             method: "POST",
@@ -66,60 +67,132 @@ async function sendMessage() {
             body: JSON.stringify({ elder_id: ELDER_ID, message: message })
         });
         const data = await res.json();
-
-        // 移除思考中，顯示回應
         removeThinking(thinkingId);
         addMessage("ai", data.message);
-
-        // 更新對話輪數
         chatCount++;
         document.getElementById("chat-count").textContent = chatCount;
-
-        // 偵測情緒關鍵字更新狀態
         updateEmotionFromMessage(message);
-
+        speakText(data.message);
     } catch (e) {
         removeThinking(thinkingId);
-        addMessage("system", "回應失敗，請稍後再試。");
+        addMessage("system", "回應失敗。");
     }
 }
 
-// ====== 新增訊息泡泡 ======
+async function toggleRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+            await sendAudioToSTT(audioBlob);
+            stream.getTracks().forEach(t => t.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+
+        const btn = document.getElementById("record-btn");
+        btn.textContent = "⏹️ 停止錄音";
+        btn.classList.replace("bg-green-500", "bg-red-500");
+        btn.classList.replace("hover:bg-green-600", "hover:bg-red-600");
+        document.getElementById("voice-visualizer").classList.remove("hidden");
+        document.getElementById("voice-status").textContent = "正在錄音...";
+
+    } catch (e) {
+        addMessage("system", "無法存取麥克風，請確認瀏覽器權限。");
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        const btn = document.getElementById("record-btn");
+        btn.textContent = "🎙️ 語音輸入";
+        btn.classList.replace("bg-red-500", "bg-green-500");
+        btn.classList.replace("hover:bg-red-600", "hover:bg-green-600");
+        document.getElementById("voice-status").textContent = "辨識中...";
+    }
+}
+
+async function sendAudioToSTT(audioBlob) {
+    try {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "recording.webm");
+        const res = await fetch(`${API_BASE}/api/stt`, { method: "POST", body: formData });
+        const data = await res.json();
+        document.getElementById("voice-visualizer").classList.add("hidden");
+        if (data.success && data.text) {
+            addMessage("user", data.text);
+            await processAndRespond(data.text);
+        } else {
+            addMessage("system", "語音辨識失敗，請再試一次。");
+        }
+    } catch (e) {
+        document.getElementById("voice-visualizer").classList.add("hidden");
+        addMessage("system", "語音傳送失敗。");
+    }
+}
+
+async function speakText(text) {
+    try {
+        const res = await fetch(`${API_BASE}/api/tts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: text })
+        });
+        const audioBlob = await res.blob();
+        const audio = new Audio(URL.createObjectURL(audioBlob));
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.error("音訊播放被封鎖：", e);
+            });
+        }
+    } catch (e) {
+        console.error("TTS 失敗：", e);
+    }
+}
+
 function addMessage(role, text) {
     const container = document.getElementById("chat-container");
-    
-    // 清除初始提示文字
     const placeholder = container.querySelector(".text-center");
     if (placeholder) placeholder.remove();
-
     const wrapper = document.createElement("div");
-    
     if (role === "ai") {
         wrapper.className = "flex items-start gap-2";
         wrapper.innerHTML = `
-            <div class="text-2xl">🤖</div>
-            <div class="chat-bubble-ai text-white px-4 py-3 rounded-2xl rounded-tl-none max-w-xs lg:max-w-md shadow">
-                <p class="text-base leading-relaxed">${text}</p>
-            </div>
-        `;
+            <div class="text-2xl">🌸</div>
+            <div class="chat-bubble-ai px-5 py-4 rounded-2xl rounded-tl-none max-w-xs lg:max-w-md shadow-sm">
+                <p class="text-lg leading-relaxed">${text}</p>
+            </div>`;
     } else if (role === "user") {
         wrapper.className = "flex items-start gap-2 justify-end";
         wrapper.innerHTML = `
-            <div class="chat-bubble-user text-white px-4 py-3 rounded-2xl rounded-tr-none max-w-xs lg:max-w-md shadow">
-                <p class="text-base leading-relaxed">${text}</p>
+            <div class="chat-bubble-user px-5 py-4 rounded-2xl rounded-tr-none max-w-xs lg:max-w-md shadow-sm">
+                <p class="text-lg leading-relaxed">${text}</p>
             </div>
-            <div class="text-2xl">👴</div>
-        `;
+            <div class="text-2xl">👴</div>`;
     } else {
         wrapper.className = "text-center text-gray-400 text-sm";
         wrapper.textContent = text;
     }
-
     container.appendChild(wrapper);
     container.scrollTop = container.scrollHeight;
 }
 
-// ====== 思考中動畫 ======
 function addThinking() {
     const container = document.getElementById("chat-container");
     const id = "thinking-" + Date.now();
@@ -134,8 +207,7 @@ function addThinking() {
                 <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0.15s"></div>
                 <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0.3s"></div>
             </div>
-        </div>
-    `;
+        </div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     return id;
@@ -146,11 +218,9 @@ function removeThinking(id) {
     if (el) el.remove();
 }
 
-// ====== 情緒偵測 ======
 function updateEmotionFromMessage(message) {
     const negative = ["痛", "不舒服", "難過", "孤單", "無聊", "累", "不高興", "煩", "憂鬱", "想哭"];
     const positive = ["開心", "高興", "快樂", "好", "棒", "謝謝", "喜歡", "愛"];
-
     if (negative.some(kw => message.includes(kw))) {
         updateEmotionStatus("😢", "需要關懷");
     } else if (positive.some(kw => message.includes(kw))) {
@@ -164,23 +234,33 @@ function updateEmotionStatus(emoji, text) {
     document.getElementById("emotion-status").textContent = `${emoji} ${text}`;
 }
 
-// ====== 清除對話 ======
 function clearChat() {
-    const container = document.getElementById("chat-container");
-    container.innerHTML = `<div class="text-center text-gray-400 text-sm py-8">點擊「開始對話」來啟動陪伴系統</div>`;
+    document.getElementById("chat-container").innerHTML =
+        `<div class="text-center text-gray-400 text-sm py-8">點擊「開始對話」來啟動陪伴系統</div>`;
     chatCount = 0;
     document.getElementById("chat-count").textContent = "0";
     document.getElementById("emotion-status").textContent = "等待對話...";
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
+    document.getElementById("record-btn").disabled = true;
     document.getElementById("start-btn").textContent = "🌟 開始對話";
     document.getElementById("start-btn").disabled = false;
 }
 
-// ====== Enter 鍵送出 ======
-document.addEventListener("DOMContentLoaded", () => {
+try {
     loadElderProfile();
+} catch(e) {
+    console.error("loadElderProfile 失敗：", e);
+}
+
+try {
     document.getElementById("text-input").addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
-});
+    document.getElementById("record-btn").addEventListener("click", toggleRecording);
+    document.getElementById("send-btn").addEventListener("click", sendMessage);
+    document.getElementById("start-btn").addEventListener("click", startSession);
+    document.getElementById("clear-btn").addEventListener("click", clearChat);
+} catch(e) {
+    console.error("事件綁定失敗：", e);
+}

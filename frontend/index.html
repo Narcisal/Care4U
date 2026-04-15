@@ -6,92 +6,129 @@
     <title>AI Care U - 智慧照護陪伴系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .chat-bubble-ai {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .chat-bubble-user {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .wave-animation {
-            animation: wave 1.5s ease-in-out infinite;
-        }
-        @keyframes wave {
-            0%, 100% { transform: scaleY(1); }
-            50% { transform: scaleY(2); }
-        }
-        #chat-container {
-            scrollbar-width: thin;
-            scrollbar-color: #764ba2 #f1f1f1;
-        }
-    </style>
+    body {
+        font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif;
+        font-size: 20px;
+        background-color: #F7F3EE;
+        color: #3D3530;
+    }
+    .chat-bubble-ai {
+        background: #FFFFFF;
+        color: #3D3530;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        border: 1px solid #E8E2DC;
+    }
+    .chat-bubble-user {
+        background: #7B9E87;
+        color: #FFFFFF;
+    }
+    .btn-primary {
+        background-color: #C17F5A;
+        color: white;
+        transition: background-color 0.2s;
+    }
+    .btn-primary:hover { background-color: #A86844; }
+    .btn-voice {
+        background-color: #7B9E87;
+        color: white;
+        transition: all 0.2s;
+    }
+    .btn-voice:hover { background-color: #5F8470; }
+    .btn-voice-recording {
+        background-color: #C17B7B;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(193,123,123,0.4); }
+        50% { box-shadow: 0 0 0 12px rgba(193,123,123,0); }
+    }
+    .wave-bar {
+        animation: wave 1.5s ease-in-out infinite;
+    }
+    @keyframes wave {
+        0%, 100% { transform: scaleY(1); }
+        50% { transform: scaleY(2.5); }
+    }
+    #chat-container {
+        scrollbar-width: thin;
+        scrollbar-color: #C8BDB7 #F0EBE5;
+    }
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
+<body class="h-screen flex flex-col overflow-hidden" style="background-color: #FDFBF7;">
 
     <!-- 頂部標題列 -->
-    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 shadow-lg flex-shrink-0">
+    <div style="background-color: #EDE8E3; border-bottom: 2px solid #D6CEC7;" class="p-4 flex-shrink-0">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="text-4xl">🤖</div>
+                <div class="text-4xl">🌸</div>
                 <div>
-                    <h1 class="text-2xl font-bold">AI Care U</h1>
-                    <p class="text-purple-200 text-sm">智慧照護陪伴系統</p>
+                    <h1 class="font-bold" style="font-size: 26px; color: #2C3E50;">AI Care U</h1>
+                    <p style="font-size: 15px; color: #7F8C8D;">智慧照護陪伴系統</p>
                 </div>
             </div>
-            <div id="elder-info" class="text-right text-sm">
-                <div class="text-purple-200">陪伴對象</div>
-                <div id="elder-name" class="font-bold text-lg">載入中...</div>
+            <div class="text-right">
+                <div style="font-size: 15px; color: #7F8C8D;">陪伴對象</div>
+                <div id="elder-name" class="font-bold" style="font-size: 24px; color: #C17F5A;">載入中...</div>
             </div>
         </div>
     </div>
 
     <!-- 主內容區 -->
-    <div class="max-w-4xl w-full mx-auto p-4 flex flex-col gap-3 flex-1 overflow-y-auto">
+    <div class="max-w-4xl w-full mx-auto p-4 flex flex-col gap-3 flex-1 overflow-hidden">
 
-        <!-- 情緒狀態欄 -->
-        <div class="bg-white rounded-2xl p-3 shadow flex items-center gap-4 flex-shrink-0">
-            <div class="text-2xl">💭</div>
+        <!-- 狀態列 -->
+        <div style="background: white; border: 1px solid #E0E0E0; border-radius: 16px;" class="p-4 flex items-center gap-4 flex-shrink-0">
+            <div id="status-icon" class="text-3xl">💛</div>
             <div>
-                <div class="text-gray-500 text-sm">目前情緒狀態</div>
-                <div id="emotion-status" class="font-semibold text-gray-700">等待對話...</div>
+                <div style="font-size: 15px; color: #7F8C8D;">目前情緒狀態</div>
+                <div id="emotion-status" class="font-semibold" style="font-size: 20px; color: #2C3E50;">等待對話...</div>
             </div>
-            <div class="ml-auto">
-                <div class="text-gray-500 text-sm">對話輪數</div>
-                <div id="chat-count" class="font-bold text-purple-600 text-xl text-right">0</div>
+            <div class="ml-auto text-right">
+                <div style="font-size: 15px; color: #7F8C8D;">對話輪數</div>
+                <div id="chat-count" class="font-bold" style="font-size: 28px; color: #C17F5A;">0</div>
             </div>
         </div>
 
         <!-- 對話區域 -->
         <div id="chat-container"
-             class="bg-white rounded-2xl shadow p-4 flex-1 overflow-y-auto flex flex-col gap-3 min-h-0">
-            <div class="text-center text-gray-400 text-sm py-8">
-                點擊「開始對話」來啟動陪伴系統
+             style="background: #F0EBE5; border-radius: 16px; border: 1px solid #D6CEC7;"
+             class="p-4 flex-1 overflow-y-auto flex flex-col gap-4 min-h-0">
+            <div class="text-center py-12" style="color: #BDC3C7; font-size: 20px;">
+                請點擊下方「開始對話」來啟動陪伴系統
             </div>
         </div>
 
         <!-- 語音視覺化 -->
         <div id="voice-visualizer"
-             class="hidden bg-white rounded-2xl shadow p-3 flex items-center justify-center gap-1 flex-shrink-0">
-            <div class="w-1 h-4 bg-purple-400 rounded wave-animation" style="animation-delay: 0s"></div>
-            <div class="w-1 h-4 bg-purple-400 rounded wave-animation" style="animation-delay: 0.1s"></div>
-            <div class="w-1 h-4 bg-purple-400 rounded wave-animation" style="animation-delay: 0.2s"></div>
-            <div class="w-1 h-4 bg-purple-400 rounded wave-animation" style="animation-delay: 0.3s"></div>
-            <div class="w-1 h-4 bg-purple-400 rounded wave-animation" style="animation-delay: 0.4s"></div>
-            <span class="ml-3 text-purple-600 font-medium" id="voice-status">正在聆聽...</span>
+             style="background: #F5EFEA; border: 2px solid #C17F5A; border-radius: 16px;"
+             class="hidden p-3 flex items-center justify-center gap-1 flex-shrink-0">
+            <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0s"></div>
+            <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.1s"></div>
+            <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.2s"></div>
+            <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.3s"></div>
+            <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.4s"></div>
+            <span class="ml-3 font-semibold" id="voice-status" style="color:#C17F5A; font-size:18px;">正在錄音...</span>
         </div>
 
         <!-- 文字輸入區 -->
-        <div class="bg-white rounded-2xl shadow p-3 flex gap-3 flex-shrink-0">
+        <div style="background: white; border: 1px solid #E0E0E0; border-radius: 16px;" class="p-3 flex gap-3 flex-shrink-0">
             <input
                 id="text-input"
                 type="text"
                 placeholder="輸入訊息..."
-                class="flex-1 border-2 border-purple-200 rounded-xl px-4 py-2 text-lg focus:outline-none focus:border-purple-500"
+                style="font-size: 20px; border: 2px solid #D6CEC7; border-radius: 12px; padding: 12px 16px; background: #F0EBE5; color: #3D3530;"
+                class="flex-1 focus:outline-none disabled:opacity-50"
                 disabled
             />
             <button
                 id="send-btn"
-                onclick="sendMessage()"
-                class="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold text-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                class="btn-primary px-6 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                style="font-size: 20px;"
                 disabled
             >
                 送出
@@ -102,14 +139,23 @@
         <div class="flex gap-3 flex-shrink-0">
             <button
                 id="start-btn"
-                onclick="startSession()"
-                class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-2xl font-bold text-xl hover:opacity-90 transition shadow-lg"
+                class="btn-primary flex-1 rounded-2xl font-bold"
+                style="font-size: 22px; padding: 18px;"
             >
                 🌟 開始對話
             </button>
             <button
-                onclick="clearChat()"
-                class="bg-gray-200 text-gray-600 px-6 py-3 rounded-2xl font-bold hover:bg-gray-300 transition"
+                id="record-btn"
+                class="btn-voice rounded-2xl font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                style="font-size: 20px; padding: 18px 28px;"
+                disabled
+            >
+                🎙️ 語音輸入
+            </button>
+            <button
+                id="clear-btn"
+                class="rounded-2xl font-bold"
+                style="background: #D6CEC7; color: #3D3530; font-size: 20px; padding: 18px 24px;"
             >
                 清除
             </button>
@@ -117,6 +163,6 @@
 
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=5"></script>
 </body>
 </html>
