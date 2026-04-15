@@ -72,7 +72,7 @@ async function processAndRespond(message) {
         chatCount++;
         document.getElementById("chat-count").textContent = chatCount;
         updateEmotionFromMessage(message);
-        speakText(data.message);
+        speakText(data.message, data.emotion || "normal");
     } catch (e) {
         removeThinking(thinkingId);
         addMessage("system", "回應失敗。");
@@ -146,21 +146,16 @@ async function sendAudioToSTT(audioBlob) {
     }
 }
 
-async function speakText(text) {
+async function speakText(text, emotion = "normal") {
     try {
         const res = await fetch(`${API_BASE}/api/tts`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: text })
+            body: JSON.stringify({ text: text, emotion: emotion })
         });
         const audioBlob = await res.blob();
         const audio = new Audio(URL.createObjectURL(audioBlob));
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => {
-                console.error("音訊播放被封鎖：", e);
-            });
-        }
+        audio.play();
     } catch (e) {
         console.error("TTS 失敗：", e);
     }

@@ -3,16 +3,13 @@
   "name": "王大明",
   "gender": "male",
   "persona": {
-    "former_job": "國中數學老師",
+    "former_job": "電腦工程師",
     "tone_preference": "尊敬且親切",
     "hobbies": [
       "聽鄧麗君",
       "下象棋"
     ],
-    "family": {
-      "daughter": "小玲",
-      "grandson": "小寶"
-    }
+    "family": {}
   },
   "health_notes": {
     "sensitivity": [

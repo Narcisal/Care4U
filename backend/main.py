@@ -1,8 +1,11 @@
+import json
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
+from typing import Optional
 from backend.agents.magic_ai import MagicAI
 from backend.services.stt_service import STTService
 from backend.services.tts_service import TTSService
@@ -18,7 +21,6 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
-# 初始化服務
 stt = STTService(model_size="medium", device="cpu")
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
 agents: dict[str, MagicAI] = {}
@@ -33,12 +35,28 @@ class GreetRequest(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
+    emotion: str = "normal"
+
+class ElderProfileUpdate(BaseModel):
+    elder_id: str
+    name: str
+    gender: str
+    former_job: str
+    tone_preference: str
+    hobbies: str
+    sensitivity: str
+    diet: str
+    family: str
 
 # ====== 路由 ======
 
 @app.get("/")
 def read_root():
     return FileResponse("frontend/index.html")
+
+@app.get("/admin")
+def admin_page():
+    return FileResponse("frontend/admin.html")
 
 @app.post("/api/greet")
 def greet(req: GreetRequest):
@@ -58,8 +76,23 @@ def chat(req: ChatRequest):
             agents[req.elder_id] = MagicAI(req.elder_id)
         agent = agents[req.elder_id]
         response = agent.chat(req.message)
+
+        negative = ["痛", "不舒服", "難過", "孤單", "想哭", "累", "憂鬱"]
+        positive = ["開心", "高興", "好棒", "謝謝", "喜歡"]
+        urgent = ["跌倒", "頭暈", "胸痛", "喘不過氣"]
+
+        if any(kw in req.message for kw in urgent):
+            emotion = "urgent"
+        elif any(kw in req.message for kw in negative):
+            emotion = "comfort"
+        elif any(kw in req.message for kw in positive):
+            emotion = "happy"
+        else:
+            emotion = "normal"
+
         return {
             "message": response,
+            "emotion": emotion,
             "elder_id": req.elder_id,
             "history_length": len(agent.get_history())
         }
@@ -68,7 +101,6 @@ def chat(req: ChatRequest):
 
 @app.post("/api/stt")
 async def speech_to_text(audio: UploadFile = File(...)):
-    """接收音訊檔案，回傳辨識文字"""
     try:
         audio_bytes = await audio.read()
         text = stt.transcribe(audio_bytes)
@@ -80,32 +112,22 @@ async def speech_to_text(audio: UploadFile = File(...)):
 
 @app.post("/api/tts")
 def text_to_speech(req: TTSRequest):
-    """接收文字，回傳音訊"""
     try:
-        audio_bytes = tts.synthesize(req.text)
+        audio_bytes = tts.synthesize(req.text, req.emotion)
         if not audio_bytes:
             raise HTTPException(status_code=500, detail="TTS 失敗")
-        return Response(
-            content=audio_bytes,
-            media_type="audio/mpeg"
-        )
+        return Response(content=audio_bytes, media_type="audio/mpeg")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat_with_tts")
 def chat_with_tts(req: ChatRequest):
-    """對話並回傳音訊"""
     try:
         if req.elder_id not in agents:
             agents[req.elder_id] = MagicAI(req.elder_id)
         agent = agents[req.elder_id]
-        
-        # 取得文字回應
         response_text = agent.chat(req.message)
-        
-        # 轉成語音
         audio_bytes = tts.synthesize(response_text)
-        
         return Response(
             content=audio_bytes,
             media_type="audio/mpeg",
@@ -133,3 +155,48 @@ def get_history(elder_id: str):
     if elder_id not in agents:
         return {"history": []}
     return {"history": agents[elder_id].get_history()}
+
+@app.post("/api/profile/save")
+def save_profile(req: ElderProfileUpdate):
+    try:
+        data_path = Path("backend/data/elders") / f"{req.elder_id}.json"
+
+        if data_path.exists():
+            with open(data_path, "r", encoding="utf-8") as f:
+                profile = json.load(f)
+        else:
+            profile = {
+                "elder_id": req.elder_id,
+                "recent_events": []
+            }
+
+        profile["name"] = req.name
+        profile["gender"] = req.gender
+        profile["persona"] = {
+            "former_job": req.former_job,
+            "tone_preference": req.tone_preference,
+            "hobbies": [h.strip() for h in req.hobbies.split("、") if h.strip()],
+            "family": {}
+        }
+        profile["health_notes"] = {
+            "sensitivity": [s.strip() for s in req.sensitivity.split("、") if s.strip()],
+            "diet": req.diet
+        }
+
+        family = {}
+        for item in req.family.split("、"):
+            if "：" in item:
+                role, name = item.split("：", 1)
+                family[role.strip()] = name.strip()
+        profile["persona"]["family"] = family
+
+        with open(data_path, "w", encoding="utf-8") as f:
+            json.dump(profile, f, ensure_ascii=False, indent=2)
+
+        if req.elder_id in agents:
+            del agents[req.elder_id]
+
+        return {"success": True, "message": f"{req.name} 的資料已儲存"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
