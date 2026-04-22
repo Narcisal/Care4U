@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
-from typing import Optional
-from backend.agents.magic_ai import MagicAI
+from backend.agents.decision import Decision, clear_agent
 from backend.services.stt_service import STTService
 from backend.services.tts_service import TTSService
 
@@ -23,9 +22,19 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 stt = STTService(model_size="medium", device="cpu")
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
-agents: dict[str, MagicAI] = {}
+
+# main.py 現在只維護 Decision Agent 的字典
+decisions: dict[str, Decision] = {}
+
+
+def get_decision(elder_id: str) -> Decision:
+    if elder_id not in decisions:
+        decisions[elder_id] = Decision(elder_id)
+    return decisions[elder_id]
+
 
 # ====== 資料格式 ======
+
 class ChatRequest(BaseModel):
     elder_id: str
     message: str
@@ -48,6 +57,7 @@ class ElderProfileUpdate(BaseModel):
     diet: str
     family: str
 
+
 # ====== 路由 ======
 
 @app.get("/")
@@ -61,41 +71,16 @@ def admin_page():
 @app.post("/api/greet")
 def greet(req: GreetRequest):
     try:
-        if req.elder_id not in agents:
-            agents[req.elder_id] = MagicAI(req.elder_id)
-        agent = agents[req.elder_id]
-        greeting = agent.greet()
-        return {"message": greeting, "elder_id": req.elder_id}
+        decision = get_decision(req.elder_id)
+        return decision.greet()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
     try:
-        if req.elder_id not in agents:
-            agents[req.elder_id] = MagicAI(req.elder_id)
-        agent = agents[req.elder_id]
-        response = agent.chat(req.message)
-
-        negative = ["痛", "不舒服", "難過", "孤單", "想哭", "累", "憂鬱"]
-        positive = ["開心", "高興", "好棒", "謝謝", "喜歡"]
-        urgent = ["跌倒", "頭暈", "胸痛", "喘不過氣"]
-
-        if any(kw in req.message for kw in urgent):
-            emotion = "urgent"
-        elif any(kw in req.message for kw in negative):
-            emotion = "comfort"
-        elif any(kw in req.message for kw in positive):
-            emotion = "happy"
-        else:
-            emotion = "normal"
-
-        return {
-            "message": response,
-            "emotion": emotion,
-            "elder_id": req.elder_id,
-            "history_length": len(agent.get_history())
-        }
+        decision = get_decision(req.elder_id)
+        return decision.chat(req.message)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -120,31 +105,13 @@ def text_to_speech(req: TTSRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/chat_with_tts")
-def chat_with_tts(req: ChatRequest):
-    try:
-        if req.elder_id not in agents:
-            agents[req.elder_id] = MagicAI(req.elder_id)
-        agent = agents[req.elder_id]
-        response_text = agent.chat(req.message)
-        audio_bytes = tts.synthesize(response_text)
-        return Response(
-            content=audio_bytes,
-            media_type="audio/mpeg",
-            headers={"X-Response-Text": response_text.encode('utf-8').hex()}
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/api/profile/{elder_id}")
 def get_profile(elder_id: str):
     try:
-        if elder_id not in agents:
-            agents[elder_id] = MagicAI(elder_id)
-        profile = agents[elder_id].profile
-        if not profile:
+        decision = get_decision(elder_id)
+        if not decision.profile:
             raise HTTPException(status_code=404, detail="找不到長者資料")
-        return profile
+        return decision.profile
     except HTTPException:
         raise
     except Exception as e:
@@ -152,9 +119,18 @@ def get_profile(elder_id: str):
 
 @app.get("/api/history/{elder_id}")
 def get_history(elder_id: str):
-    if elder_id not in agents:
+    if elder_id not in decisions:
         return {"history": []}
-    return {"history": agents[elder_id].get_history()}
+    return {"history": decisions[elder_id].get_history()}
+
+@app.get("/api/safety/{elder_id}")
+def get_safety(elder_id: str):
+    """新增：取得長者安全狀態（後台用）"""
+    try:
+        decision = get_decision(elder_id)
+        return decision.get_safety_status()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/profile/save")
 def save_profile(req: ElderProfileUpdate):
@@ -165,10 +141,7 @@ def save_profile(req: ElderProfileUpdate):
             with open(data_path, "r", encoding="utf-8") as f:
                 profile = json.load(f)
         else:
-            profile = {
-                "elder_id": req.elder_id,
-                "recent_events": []
-            }
+            profile = {"elder_id": req.elder_id, "recent_events": []}
 
         profile["name"] = req.name
         profile["gender"] = req.gender
@@ -183,18 +156,22 @@ def save_profile(req: ElderProfileUpdate):
             "diet": req.diet
         }
 
-        family = {}
-        for item in req.family.split("、"):
-            if "：" in item:
-                role, name = item.split("：", 1)
-                family[role.strip()] = name.strip()
+        try:
+            family = json.loads(req.family)
+        except Exception:
+            family = {}
+            for item in req.family.split("、"):
+                if "：" in item:
+                    role, name = item.split("：", 1)
+                    family[role.strip()] = name.strip()
         profile["persona"]["family"] = family
 
         with open(data_path, "w", encoding="utf-8") as f:
             json.dump(profile, f, ensure_ascii=False, indent=2)
 
-        if req.elder_id in agents:
-            del agents[req.elder_id]
+        # 清除所有相關 Agent 快取
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
 
         return {"success": True, "message": f"{req.name} 的資料已儲存"}
 
