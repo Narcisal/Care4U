@@ -91,6 +91,78 @@ class LLMService:
 
         return prompt
 
+    def analyze_emotion(self, message: str) -> dict:
+        """
+        用 LLM 判斷長者訊息的情緒狀態
+        回傳格式：
+        {
+            "emotion": "urgent" | "comfort" | "happy" | "normal",
+            "sentiment": "negative" | "positive" | "neutral",
+            "is_urgent": bool,
+            "should_record": bool,
+            "reason": str
+        }
+        """
+        prompt = f"""你是一個長照系統的情緒分析模組。
+請分析以下長者說的話，判斷情緒狀態。
+
+長者說的話：「{message}」
+
+請用 JSON 格式回答，只回傳 JSON，不要有其他文字：
+{{
+  "emotion": "urgent 或 comfort 或 happy 或 normal",
+  "sentiment": "negative 或 positive 或 neutral",
+  "is_urgent": true 或 false,
+  "should_record": true 或 false,
+  "reason": "一句話說明判斷原因"
+}}
+
+判斷標準：
+- urgent：身體不適、疼痛、跌倒、頭暈、胸痛、呼吸困難、求救
+- comfort：情緒低落、難過、孤單、思念、委屈、哭泣、憂鬱
+- happy：開心、高興、感謝、分享好事、說笑
+- normal：日常對話、閒聊、提問
+
+- is_urgent：只有 urgent 等級才為 true
+- should_record：urgent 或 comfort 時為 true，需要照護人員注意
+- sentiment：urgent/comfort 為 negative，happy 為 positive，normal 為 neutral
+
+注意：要理解語意，不是只看關鍵字。
+例如「我不累」應判定為 normal，不是 comfort。
+例如「腿有點痠」應判定為 comfort，不是 urgent。
+例如「好想念我女兒」應判定為 comfort。"""
+
+        try:
+            response = client.models.generate_content(
+                model=self.model_name,
+                contents=[types.Content(
+                    role="user",
+                    parts=[types.Part(text=prompt)]
+                )],
+                config=types.GenerateContentConfig(
+                    temperature=0.1,  # 情緒分析要穩定，temperature 調低
+                    max_output_tokens=200,
+                )
+            )
+
+            import json
+            text = response.text.strip()
+            # 清除可能的 markdown code block
+            text = text.replace("```json", "").replace("```", "").strip()
+            result = json.loads(text)
+            return result
+
+        except Exception as e:
+            print(f"情緒分析失敗，使用預設值：{e}")
+            # 失敗時回傳安全的預設值
+            return {
+                "emotion": "normal",
+                "sentiment": "neutral",
+                "is_urgent": False,
+                "should_record": False,
+                "reason": "分析失敗，使用預設值"
+            }
+
     def chat(self,
              profile: dict,
              conversation_history: list,
