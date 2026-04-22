@@ -59,6 +59,11 @@ async function sendMessage() {
 }
 
 async function processAndRespond(message) {
+    // 鎖住輸入，避免 AI 還沒回應前繼續輸入
+    document.getElementById("text-input").disabled = true;
+    document.getElementById("send-btn").disabled = true;
+    document.getElementById("record-btn").disabled = true;
+
     const thinkingId = addThinking();
     try {
         const res = await fetch(`${API_BASE}/api/chat`, {
@@ -72,10 +77,18 @@ async function processAndRespond(message) {
         chatCount++;
         document.getElementById("chat-count").textContent = chatCount;
         updateEmotionFromMessage(message);
-        speakText(data.message, data.emotion || "normal");
+
+        // 等 TTS 播完再解鎖
+        await speakText(data.message, data.emotion || "normal");
+
     } catch (e) {
         removeThinking(thinkingId);
         addMessage("system", "回應失敗。");
+    } finally {
+        // 不管成功或失敗都解鎖
+        document.getElementById("text-input").disabled = false;
+        document.getElementById("send-btn").disabled = false;
+        document.getElementById("record-btn").disabled = false;
     }
 }
 
@@ -147,18 +160,23 @@ async function sendAudioToSTT(audioBlob) {
 }
 
 async function speakText(text, emotion = "normal") {
-    try {
-        const res = await fetch(`${API_BASE}/api/tts`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: text, emotion: emotion })
-        });
-        const audioBlob = await res.blob();
-        const audio = new Audio(URL.createObjectURL(audioBlob));
-        audio.play();
-    } catch (e) {
-        console.error("TTS 失敗：", e);
-    }
+    return new Promise(async (resolve) => {
+        try {
+            const res = await fetch(`${API_BASE}/api/tts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: text, emotion: emotion })
+            });
+            const audioBlob = await res.blob();
+            const audio = new Audio(URL.createObjectURL(audioBlob));
+            audio.onended = resolve;      // 播完才 resolve
+            audio.onerror = resolve;      // 出錯也 resolve，不卡住
+            audio.play();
+        } catch (e) {
+            console.error("TTS 失敗：", e);
+            resolve();                    // 失敗也 resolve，不卡住
+        }
+    });
 }
 
 function addMessage(role, text) {
