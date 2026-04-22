@@ -1,5 +1,20 @@
 from backend.agents.magic_ai import MagicAI
 from backend.agents.i_safe import ISafe
+from datetime import datetime
+import collections
+
+_agent_logs = collections.deque(maxlen=100)
+
+def _log(agent: str, action: str, detail: str):
+    _agent_logs.appendleft({
+        "time": datetime.now().strftime("%H:%M:%S"),
+        "agent": agent,
+        "action": action,
+        "detail": detail
+    })
+
+def get_logs() -> list:
+    return list(_agent_logs)
 
 # 每個 elder_id 對應各自的 Agent 實例
 _magic_agents: dict[str, MagicAI] = {}
@@ -52,12 +67,18 @@ class Decision:
         3. Decision 整合結果回傳
         """
         # 步驟一：iSafe 分析
+        _log("iSafe", "分析中", f"收到訊息：{user_message[:20]}...")
         safety = self.isafe.analyze(user_message)
+        _log("iSafe", "分析完成", f"emotion={safety['emotion']}, urgent={safety['is_urgent']}")
 
         # 步驟二：MagicAI 生成回應
+        _log("Decision", "協調中", "呼叫 MagicAI 生成回應")
         response = self.magic.chat(user_message)
+        _log("MagicAI", "回應完成", "已儲存對話記憶")
 
         # 步驟三：整合回傳
+        _log("Decision", "完成", f"emotion={safety['emotion']} → TTS 語調調整")
+
         return {
             "message": response,
             "emotion": safety["emotion"],

@@ -177,3 +177,9 @@ def save_profile(req: ElderProfileUpdate):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/agent-logs")
+def get_agent_logs():
+    """取得 Agent 互動 log"""
+    from backend.agents.decision import get_logs
+    return {"logs": get_logs()}

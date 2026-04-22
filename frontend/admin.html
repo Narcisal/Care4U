@@ -4,79 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Care U - 照護人員後台</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif;
-            background-color: #F7F3EE;
-            color: #3D3530;
-        }
-        .btn-primary {
-            background-color: #C17F5A;
-            color: white;
-            transition: background-color 0.2s;
-        }
+        body { font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; background-color: #F7F3EE; color: #3D3530; }
+        .btn-primary { background-color: #C17F5A; color: white; transition: background-color 0.2s; }
         .btn-primary:hover { background-color: #A86844; }
-        #sidebar {
-            position: fixed;
-            top: 0; left: 0;
-            height: 100%;
-            width: 260px;
-            background: #EDE8E3;
-            border-right: 1px solid #D6CEC7;
-            z-index: 50;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
-        }
+        #sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 260px; background: #EDE8E3; border-right: 1px solid #D6CEC7; z-index: 50; transform: translateX(-100%); transition: transform 0.3s ease; }
         #sidebar.open { transform: translateX(0); }
-        #overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.2);
-            z-index: 40; display: none;
-        }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 40; display: none; }
         #overlay.open { display: block; }
-        .nav-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 14px 20px; border-radius: 12px;
-            cursor: pointer; transition: background 0.2s;
-            font-size: 17px; color: #3D3530; margin: 4px 8px;
-        }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: background 0.2s; font-size: 17px; color: #3D3530; margin: 4px 8px; }
         .nav-item:hover { background: #D6CEC7; }
         .nav-item.active { background: #C17F5A; color: white; }
-        .card {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #D6CEC7;
-            padding: 24px;
-        }
-        input, select {
-            width: 100%;
-            padding: 16px 18px;
-            height: 52px;
-            border: 1px solid #D6CEC7;
-            border-radius: 10px;
-            font-size: 17px;
-            background: #F7F3EE;
-            color: #3D3530;
-            box-sizing: border-box;
-            font-family: 'Microsoft JhengHei', sans-serif;
-            line-height: 1.5;
-        }
-
-        label {
-            font-size: 14px;
-            color: #7F8C8D;
-            display: block;
-            margin-bottom: 8px;
-            margin-top: 4px;
-        }
+        .card { background: white; border-radius: 16px; border: 1px solid #D6CEC7; padding: 24px; }
+        input, select { width: 100%; padding: 16px 18px; height: 52px; border: 1px solid #D6CEC7; border-radius: 10px; font-size: 17px; background: #F7F3EE; color: #3D3530; box-sizing: border-box; font-family: 'Microsoft JhengHei', sans-serif; line-height: 1.5; }
+        label { font-size: 14px; color: #7F8C8D; display: block; margin-bottom: 8px; margin-top: 4px; }
+        .agent-card { background: white; border-radius: 16px; border: 1px solid #D6CEC7; padding: 20px; }
+        .agent-dot { width: 10px; height: 10px; border-radius: 50%; background: #27AE60; display: inline-block; margin-right: 8px; animation: pulse-dot 2s infinite; }
+        .agent-dot.inactive { background: #BDC3C7; animation: none; }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .log-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #F0EBE5; font-size: 14px; }
+        .log-time { color: #9B8E87; min-width: 60px; font-family: monospace; }
+        .log-agent { min-width: 80px; font-weight: 500; }
+        .log-agent.MagicAI { color: #C17F5A; }
+        .log-agent.iSafe { color: #4A90E2; }
+        .log-agent.Decision { color: #7B9E87; }
+        .badge { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 500; }
+        .badge-high { background: #FDECEA; color: #922B21; }
+        .badge-low { background: #E8F5EC; color: #2D6A4F; }
+        .sop-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 10px; background: #F7F3EE; margin-bottom: 8px; }
+        .sop-num { width: 28px; height: 28px; border-radius: 50%; background: #C17F5A; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+        .coming-soon { background: #F0EBE5; border-radius: 12px; padding: 32px; text-align: center; color: #9B8E87; font-size: 15px; border: 2px dashed #D6CEC7; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
 <div id="overlay" onclick="closeSidebar()"></div>
 
-<!-- 側邊欄 -->
 <div id="sidebar">
     <div style="padding: 24px 20px 16px; border-bottom: 1px solid #D6CEC7;">
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -90,21 +55,19 @@
     <div style="padding: 12px 0;">
         <div style="font-size: 12px; color: #9B8E87; padding: 8px 20px;">管理功能</div>
         <div class="nav-item active" id="nav-profile" onclick="navigateTo('profile')">
-            <span style="font-size: 20px;">👴</span>
-            <span>長者資料建檔</span>
+            <span style="font-size: 20px;">👴</span><span>長者資料建檔</span>
         </div>
         <div class="nav-item" id="nav-dashboard" onclick="navigateTo('dashboard')">
-            <span style="font-size: 20px;">📋</span>
-            <span>對話紀錄後台</span>
+            <span style="font-size: 20px;">📋</span><span>對話紀錄後台</span>
         </div>
-        <div style="font-size: 12px; color: #9B8E87; padding: 16px 20px 8px;">即將推出</div>
-        <div class="nav-item" style="opacity: 0.4; cursor: not-allowed;">
-            <span style="font-size: 20px;">👁️</span>
-            <span>iSafe 安全監控</span>
+        <div class="nav-item" id="nav-isafe" onclick="navigateTo('isafe')">
+            <span style="font-size: 20px;">👁️</span><span>iSafe 安全監控</span>
         </div>
-        <div class="nav-item" style="opacity: 0.4; cursor: not-allowed;">
-            <span style="font-size: 20px;">🧠</span>
-            <span>決策後台</span>
+        <div class="nav-item" id="nav-decision" onclick="navigateTo('decision')">
+            <span style="font-size: 20px;">🧠</span><span>決策後台</span>
+        </div>
+        <div class="nav-item" id="nav-agents" onclick="navigateTo('agents')">
+            <span style="font-size: 20px;">🔗</span><span>Agent 監控</span>
         </div>
     </div>
     <div style="position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 20px; text-align: center;">
@@ -114,7 +77,7 @@
 
 <!-- 頂部標題列 -->
 <div style="background-color: #EDE8E3; border-bottom: 2px solid #D6CEC7;" class="p-4 flex-shrink-0">
-    <div class="max-w-4xl mx-auto flex items-center gap-3">
+    <div class="max-w-5xl mx-auto flex items-center gap-3">
         <button onclick="openSidebar()" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; color: #3D3530; font-size: 24px;">☰</button>
         <div style="font-size: 28px;">🌸</div>
         <div>
@@ -124,85 +87,48 @@
     </div>
 </div>
 
-<!-- 頁面內容 -->
 <div class="flex-1 overflow-hidden flex flex-col">
 
-    <!-- 長者資料建檔頁面 -->
-    <div id="page-profile" class="max-w-4xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+    <!-- 長者資料建檔 -->
+    <div id="page-profile" class="max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div class="card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                 <h2 style="font-size: 20px; font-weight: 500;">👴 長者資料建檔</h2>
-                <select id="elder-select" onchange="loadElderData(this.value)"
-                    style="width: auto; padding: 8px 12px; font-size: 15px;">
+                <select id="elder-select" onchange="loadElderData(this.value)" style="width: auto; padding: 8px 12px; font-size: 15px; height: auto;">
                     <option value="W001">王大明</option>
+                    <option value="C001">陳秀英</option>
                 </select>
             </div>
-
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <label>姓名</label>
-                    <input id="field-name" type="text" placeholder="王大明">
-                </div>
-                <div>
-                    <label>性別</label>
-                    <select id="field-gender">
-                        <option value="male">男</option>
-                        <option value="female">女</option>
-                    </select>
-                </div>
-                <div>
-                    <label>曾任職業</label>
-                    <input id="field-job" type="text" placeholder="國中數學老師">
-                </div>
-                <div>
-                    <label>說話偏好</label>
-                    <input id="field-tone" type="text" placeholder="尊敬且親切">
-                </div>
-                <div style="grid-column: 1 / -1;">
-                    <label>興趣愛好 <span style="color: #BDC3C7;">（用「、」分隔）</span></label>
-                    <input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋">
-                </div>
-                <div>
-                    <label>身體敏感 <span style="color: #BDC3C7;">（用「、」分隔）</span></label>
-                    <input id="field-sensitivity" type="text" placeholder="怕冷、腰部舊傷">
-                </div>
-                <div>
-                    <label>飲食習慣</label>
-                    <input id="field-diet" type="text" placeholder="喜歡熱豆漿，不吃苦瓜">
-                </div>
+                <div><label>姓名</label><input id="field-name" type="text" placeholder="王大明"></div>
+                <div><label>性別</label><select id="field-gender"><option value="male">男</option><option value="female">女</option></select></div>
+                <div><label>曾任職業</label><input id="field-job" type="text" placeholder="國中數學老師"></div>
+                <div><label>說話偏好</label><input id="field-tone" type="text" placeholder="尊敬且親切"></div>
+                <div style="grid-column: 1 / -1;"><label>興趣愛好 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋"></div>
+                <div><label>身體敏感 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-sensitivity" type="text" placeholder="怕冷、腰部舊傷"></div>
+                <div><label>飲食習慣</label><input id="field-diet" type="text" placeholder="喜歡熱豆漿，不吃苦瓜"></div>
                 <div style="grid-column: 1 / -1;">
                     <label>家人關係</label>
                     <div id="family-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
-                    <button onclick="addFamilyRow()" type="button"
-                        style="width: 100%; padding: 12px; border: 2px dashed #D6CEC7; border-radius: 10px; background: none; color: #9B8E87; font-size: 16px; cursor: pointer; font-family: inherit;">
-                        ＋ 新增家人
-                    </button>
+                    <button onclick="addFamilyRow()" type="button" style="width: 100%; padding: 12px; border: 2px dashed #D6CEC7; border-radius: 10px; background: none; color: #9B8E87; font-size: 16px; cursor: pointer; font-family: inherit;">＋ 新增家人</button>
                 </div>
             </div>
-
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button onclick="loadElderData(document.getElementById('elder-select').value)"
-                    style="flex: 1; padding: 14px; font-size: 17px; background: #D6CEC7; color: #3D3530; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">
-                    🔄 重新載入
-                </button>
-                <button onclick="saveElderProfile()"
-                    class="btn-primary"
-                    style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">
-                    💾 儲存資料
-                </button>
+                <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: #D6CEC7; color: #3D3530; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">🔄 重新載入</button>
+                <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">💾 儲存資料</button>
             </div>
             <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
         </div>
     </div>
 
     <!-- 對話紀錄後台 -->
-    <div id="page-dashboard" class="hidden max-w-4xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+    <div id="page-dashboard" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="card" style="text-align: center;">
                 <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">查詢長者</div>
-                <select id="dash-elder-select" onchange="loadHistory(this.value)"
-                    style="font-size: 16px; text-align: center;">
+                <select id="dash-elder-select" onchange="loadHistory(this.value)" style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
                     <option value="W001">王大明</option>
+                    <option value="C001">陳秀英</option>
                 </select>
             </div>
             <div class="card" style="text-align: center;">
@@ -210,7 +136,17 @@
                 <div id="dash-event-count" style="font-size: 36px; font-weight: 500; color: #C17F5A;">0</div>
             </div>
         </div>
-
+        <div class="card" style="margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">🔊 TTS 語調測試</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button onclick="testTTS('normal', '爺爺，你好！今天感覺怎麼樣呀？')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #F7F3EE; color: #3D3530; font-size: 16px; cursor: pointer; font-family: inherit;">😐 一般語調</button>
+                <button onclick="testTTS('happy', '爺爺！太棒了！你今天氣色真的很好欸！')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #EAFAF1; color: #2D6A4F; font-size: 16px; cursor: pointer; font-family: inherit;">😊 開心語調</button>
+                <button onclick="testTTS('comfort', '爺爺，沒關係的，我在這裡陪你，你說說看。')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #EBF5FB; color: #1A5276; font-size: 16px; cursor: pointer; font-family: inherit;">🤗 安慰語調</button>
+                <button onclick="testTTS('urgent', '爺爺你還好嗎？我馬上去叫護士過來！')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #FDECEA; color: #922B21; font-size: 16px; cursor: pointer; font-family: inherit;">🚨 緊急語調</button>
+                <button onclick="testTTS('remind', '爺爺，8點了，記得吃藥喔，要配溫水。')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #FEF9E7; color: #7D6608; font-size: 16px; cursor: pointer; font-family: inherit; grid-column: 1 / -1;">💊 提醒語調</button>
+            </div>
+            <div id="tts-test-status" style="text-align: center; margin-top: 12px; font-size: 14px; color: #7F8C8D; display: none;">播放中...</div>
+        </div>
         <div class="card">
             <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">📝 近期情緒紀錄</h2>
             <div id="dash-events" style="display: flex; flex-direction: column; gap: 10px;">
@@ -219,40 +155,249 @@
         </div>
     </div>
 
+    <!-- iSafe 安全監控 -->
+    <div id="page-isafe" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">查詢長者</div>
+                <select id="isafe-elder-select" onchange="loadSafety(this.value)" style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
+                    <option value="W001">王大明</option>
+                    <option value="C001">陳秀英</option>
+                </select>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">危險等級</div>
+                <div id="isafe-hazard" style="font-size: 24px; font-weight: 500;">—</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">緊急事件數</div>
+                <div id="isafe-urgent-count" style="font-size: 36px; font-weight: 500; color: #E74C3C;">0</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="card">
+                <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">👁️ 即時監控畫面</h2>
+                <div class="coming-soon">
+                    <div style="font-size: 32px; margin-bottom: 12px;">📷</div>
+                    <div style="font-weight: 500; margin-bottom: 6px;">臉部情緒偵測</div>
+                    <div style="font-size: 13px;">串接 YOLO 後啟用</div>
+                    <div style="font-size: 12px; margin-top: 8px; color: #BDC3C7;">即將推出</div>
+                </div>
+            </div>
+            <div class="card">
+                <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">📍 巡檢與定位</h2>
+                <div class="coming-soon">
+                    <div style="font-size: 32px; margin-bottom: 12px;">🤖</div>
+                    <div style="font-weight: 500; margin-bottom: 6px;">機器人巡檢系統</div>
+                    <div style="font-size: 13px;">硬體整合後啟用</div>
+                    <div style="font-size: 12px; margin-top: 8px; color: #BDC3C7;">即將推出</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">🚨 近期安全事件</h2>
+            <div id="isafe-events" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">載入中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 決策後台 -->
+    <div id="page-decision" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="card">
+                <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">📋 緊急 SOP 流程</h2>
+                <div class="sop-step">
+                    <div class="sop-num">1</div>
+                    <div>
+                        <div style="font-weight: 500; font-size: 15px;">iSafe 偵測異常</div>
+                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">長者說話觸發緊急關鍵字</div>
+                    </div>
+                </div>
+                <div class="sop-step">
+                    <div class="sop-num">2</div>
+                    <div>
+                        <div style="font-weight: 500; font-size: 15px;">Decision 評估危險等級</div>
+                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">LLM 判斷是否為真實緊急狀況</div>
+                    </div>
+                </div>
+                <div class="sop-step">
+                    <div class="sop-num">3</div>
+                    <div>
+                        <div style="font-weight: 500; font-size: 15px;">MagicAI 立即回應</div>
+                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">使用緊急語調安撫長者</div>
+                    </div>
+                </div>
+                <div class="sop-step">
+                    <div class="sop-num">4</div>
+                    <div>
+                        <div style="font-weight: 500; font-size: 15px;">寫入安全事件紀錄</div>
+                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">通知照護人員查看後台</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">⏰ 任務排程</h2>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="background: #F7F3EE; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; font-size: 15px;">💊 早晨服藥提醒</div>
+                            <div style="font-size: 13px; color: #7F8C8D;">每日 08:00</div>
+                        </div>
+                        <span class="badge badge-low">啟用</span>
+                    </div>
+                    <div style="background: #F7F3EE; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; font-size: 15px;">🥛 午間喝水提醒</div>
+                            <div style="font-size: 13px; color: #7F8C8D;">每日 13:00</div>
+                        </div>
+                        <span class="badge badge-low">啟用</span>
+                    </div>
+                    <div style="background: #F7F3EE; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500; font-size: 15px;">🌙 晚間服藥提醒</div>
+                            <div style="font-size: 13px; color: #7F8C8D;">每日 20:00</div>
+                        </div>
+                        <span class="badge badge-low">啟用</span>
+                    </div>
+                    <div style="background: #F0EBE5; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; opacity: 0.6;">
+                        <div>
+                            <div style="font-weight: 500; font-size: 15px;">📞 家人聯絡提醒</div>
+                            <div style="font-size: 13px; color: #7F8C8D;">自動偵測情緒觸發</div>
+                        </div>
+                        <span class="badge" style="background: #F0EBE5; color: #9B8E87;">即將推出</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">🧠 知識大腦管理</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                <div style="background: #F7F3EE; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📚</div>
+                    <div style="font-weight: 500; font-size: 15px; margin-bottom: 4px;">長者個人化資料</div>
+                    <div style="font-size: 13px; color: #7F8C8D;">JSON 格式已啟用</div>
+                    <span class="badge badge-low" style="margin-top: 8px; display: inline-block;">正常</span>
+                </div>
+                <div style="background: #F7F3EE; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🌸</div>
+                    <div style="font-weight: 500; font-size: 15px; margin-bottom: 4px;">精油香氛 RAG</div>
+                    <div style="font-size: 13px; color: #7F8C8D;">情緒對應香氛建議</div>
+                    <span class="badge" style="background: #FEF9E7; color: #7D6608; margin-top: 8px; display: inline-block;">整合中</span>
+                </div>
+                <div style="background: #F7F3EE; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🔍</div>
+                    <div style="font-weight: 500; font-size: 15px; margin-bottom: 4px;">向量記憶搜尋</div>
+                    <div style="font-size: 13px; color: #7F8C8D;">pgvector 升級</div>
+                    <span class="badge" style="background: #F0EBE5; color: #9B8E87; margin-top: 8px; display: inline-block;">即將推出</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Agent 監控 -->
+    <div id="page-agents" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div class="agent-card">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span class="agent-dot" id="dot-magic"></span>
+                    <span style="font-weight: 500; font-size: 16px; color: #C17F5A;">MagicAI</span>
+                </div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">互動代理人</div>
+                <div style="font-size: 13px;">第一線情感陪伴</div>
+                <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="magic-last">尚未啟動</div>
+            </div>
+            <div class="agent-card">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span class="agent-dot" id="dot-isafe"></span>
+                    <span style="font-weight: 500; font-size: 16px; color: #4A90E2;">iSafe</span>
+                </div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">感知代理人</div>
+                <div style="font-size: 13px;">安全監控 + 情緒偵測</div>
+                <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="isafe-last">尚未啟動</div>
+            </div>
+            <div class="agent-card">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span class="agent-dot" id="dot-decision"></span>
+                    <span style="font-weight: 500; font-size: 16px; color: #7B9E87;">Decision</span>
+                </div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">決策代理人</div>
+                <div style="font-size: 13px;">任務調度 + SOP</div>
+                <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="decision-last">尚未啟動</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 500;">🔗 Agent 互動紀錄</h2>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 13px; color: #9B8E87;" id="log-update-time">--</span>
+                    <button onclick="loadAgentLogs()" style="padding: 6px 14px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">重新整理</button>
+                </div>
+            </div>
+            <div id="agent-logs" style="display: flex; flex-direction: column;">
+                <div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無互動紀錄，請先開始對話</div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
 const API_BASE = "http://127.0.0.1:8000";
+const ELDERS = [
+    { id: "W001", name: "王大明" },
+    { id: "C001", name: "陳秀英" }
+];
+
+let agentLogInterval = null;
 
 function openSidebar() {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('overlay').classList.add('open');
 }
-
 function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('open');
 }
 
 function navigateTo(page) {
-    document.getElementById('page-profile').classList.add('hidden');
-    document.getElementById('page-dashboard').classList.add('hidden');
+    ['profile','dashboard','isafe','decision','agents'].forEach(p => {
+        document.getElementById('page-' + p).classList.add('hidden');
+    });
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById('nav-' + page).classList.add('active');
     document.getElementById('page-' + page).classList.remove('hidden');
 
     const titles = {
         profile: ['長者資料建檔', '管理長者個人資料'],
-        dashboard: ['對話紀錄後台', '查看情緒紀錄與事件']
+        dashboard: ['對話紀錄後台', '查看情緒紀錄與事件'],
+        isafe: ['iSafe 安全監控', '感知代理人 — 安全狀態監控'],
+        decision: ['決策後台', '決策代理人 — 任務排程與 SOP 流程'],
+        agents: ['Agent 監控', '三隻代理人的即時互動紀錄']
     };
     document.getElementById('page-title').textContent = titles[page][0];
     document.getElementById('page-subtitle').textContent = titles[page][1];
 
     if (page === 'profile') loadElderData(document.getElementById('elder-select').value);
     if (page === 'dashboard') loadHistory(document.getElementById('dash-elder-select').value);
+    if (page === 'isafe') loadSafety(document.getElementById('isafe-elder-select').value);
+    if (page === 'agents') {
+        loadAgentLogs();
+        agentLogInterval = setInterval(loadAgentLogs, 3000);
+    } else {
+        clearInterval(agentLogInterval);
+    }
     closeSidebar();
 }
 
+// ===== 長者資料建檔 =====
 async function loadElderData(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
@@ -265,10 +410,10 @@ async function loadElderData(elderId) {
         document.getElementById('field-sensitivity').value = (profile.health_notes?.sensitivity || []).join('、');
         document.getElementById('field-diet').value = profile.health_notes?.diet || '';
         const family = profile.persona?.family || {};
-        document.getElementById('field-family').value = Object.entries(family).map(([k, v]) => `${k}：${v}`).join('、');
-    } catch (e) {
-        console.error('載入失敗', e);
-    }
+        document.getElementById('family-list').innerHTML = '';
+        Object.entries(family).forEach(([role, name]) => addFamilyRow(role, name));
+        if (Object.keys(family).length === 0) addFamilyRow();
+    } catch (e) { console.error('載入失敗', e); }
 }
 
 const FAMILY_ROLES = ["女兒", "兒子", "孫子", "孫女", "配偶", "媳婦", "女婿", "外孫", "外孫女", "其他"];
@@ -277,34 +422,21 @@ function addFamilyRow(role = "", name = "") {
     const container = document.getElementById('family-list');
     const row = document.createElement('div');
     row.style.cssText = "display: flex; gap: 10px; align-items: center;";
-    
     const isCustom = role && !FAMILY_ROLES.slice(0, -1).includes(role);
     const displayRole = isCustom ? "其他" : role;
     const customValue = isCustom ? role : "";
-    
     row.innerHTML = `
         <div style="width: 140px; flex-shrink: 0; position: relative;">
-            <select onchange="toggleCustomRole(this)" 
-                style="width: 140px; height: 52px; display: ${isCustom ? 'none' : 'block'};">
+            <select onchange="toggleCustomRole(this)" style="width: 140px; height: 52px; display: ${isCustom ? 'none' : 'block'};">
                 ${FAMILY_ROLES.map(r => `<option value="${r}" ${r === displayRole ? 'selected' : ''}>${r}</option>`).join('')}
             </select>
             <div style="display: ${isCustom ? 'flex' : 'none'}; align-items: center; gap: 4px;">
-                <input type="text" placeholder="輸入稱謂" value="${customValue}"
-                    class="custom-role-input"
-                    style="width: 100px; height: 52px; flex: 1;">
-                <button onclick="resetToSelect(this)" type="button"
-                    style="width: 32px; height: 32px; border-radius: 50%; background: #D6CEC7; border: none; color: #3D3530; font-size: 14px; cursor: pointer; flex-shrink: 0;">
-                    ↩
-                </button>
+                <input type="text" placeholder="輸入稱謂" value="${customValue}" class="custom-role-input" style="width: 100px; height: 52px; flex: 1;">
+                <button onclick="resetToSelect(this)" type="button" style="width: 32px; height: 32px; border-radius: 50%; background: #D6CEC7; border: none; color: #3D3530; font-size: 14px; cursor: pointer; flex-shrink: 0;">↩</button>
             </div>
         </div>
-        <input type="text" placeholder="請輸入姓名" value="${name}"
-            class="family-name-input"
-            style="flex: 1; height: 52px;">
-        <button onclick="this.closest('div[style*=flex]').remove()" type="button"
-            style="width: 44px; height: 44px; border-radius: 50%; background: #FDECEA; border: none; color: #C17B7B; font-size: 20px; cursor: pointer; flex-shrink: 0;">
-            ×
-        </button>
+        <input type="text" placeholder="請輸入姓名" value="${name}" class="family-name-input" style="flex: 1; height: 52px;">
+        <button onclick="this.closest('div[style*=flex]').remove()" type="button" style="width: 44px; height: 44px; border-radius: 50%; background: #FDECEA; border: none; color: #C17B7B; font-size: 20px; cursor: pointer; flex-shrink: 0;">×</button>
     `;
     container.appendChild(row);
 }
@@ -327,21 +459,17 @@ function resetToSelect(btn) {
 }
 
 function getFamilyData() {
-    const rows = document.getElementById('family-list').querySelectorAll('div[style]');
+    const rows = document.getElementById('family-list').querySelectorAll('div[style*=flex]');
     const family = {};
     rows.forEach(row => {
         const select = row.querySelector('select');
         const customInput = row.querySelector('.custom-role-input');
         const nameInput = row.querySelector('.family-name-input');
-        if (!select || !nameInput || !nameInput.value.trim()) return;
-        
-        let role = select.value;
-        if (role === "其他" && customInput && customInput.value.trim()) {
-            role = customInput.value.trim();
-        } else if (role === "其他") {
-            return;
-        }
-        family[role] = nameInput.value.trim();
+        if (!nameInput || !nameInput.value.trim()) return;
+        let role = select ? select.value : '';
+        if (role === "其他" && customInput?.value.trim()) role = customInput.value.trim();
+        else if (role === "其他") return;
+        if (role) family[role] = nameInput.value.trim();
     });
     return family;
 }
@@ -362,7 +490,7 @@ async function saveElderProfile() {
                 hobbies: document.getElementById('field-hobbies').value,
                 sensitivity: document.getElementById('field-sensitivity').value,
                 diet: document.getElementById('field-diet').value,
-                family: document.getElementById('field-family').value,
+                family: JSON.stringify(getFamilyData()),
             })
         });
         const data = await res.json();
@@ -378,20 +506,18 @@ async function saveElderProfile() {
     }
 }
 
+// ===== 對話紀錄後台 =====
 async function loadHistory(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
         const profile = await res.json();
         const events = profile.recent_events || [];
-
         document.getElementById('dash-event-count').textContent = events.length;
-
         const container = document.getElementById('dash-events');
         if (events.length === 0) {
             container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無情緒紀錄</div>';
             return;
         }
-
         container.innerHTML = '';
         events.slice().reverse().forEach(evt => {
             const sentimentColor = evt.sentiment === 'negative' ? '#FDECEA' : '#E8F5EC';
@@ -403,13 +529,118 @@ async function loadHistory(elderId) {
                     <span style="font-weight: 500; color: #3D3530;">${evt.event}</span>
                     <span style="font-size: 13px; color: #7F8C8D;">${evt.date}</span>
                 </div>
-                <div style="font-size: 13px; color: #7F8C8D;">${sentimentText} ${evt.topic_tags ? '｜' + evt.topic_tags.join('、') : ''}</div>
+                <div style="font-size: 13px; color: #7F8C8D;">${sentimentText} ${evt.topic_tags ? '｜' + evt.topic_tags.join('、') : ''}${evt.reason ? ' ｜ ' + evt.reason : ''}</div>
             `;
             container.appendChild(div);
         });
-    } catch (e) {
-        console.error('載入失敗', e);
-    }
+    } catch (e) { console.error('載入失敗', e); }
+}
+
+async function testTTS(emotion, text) {
+    const status = document.getElementById('tts-test-status');
+    status.style.display = 'block';
+    status.textContent = `播放中：${emotion} 語調...`;
+    try {
+        const res = await fetch(`${API_BASE}/api/tts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, emotion })
+        });
+        const audioBlob = await res.blob();
+        const audio = new Audio(URL.createObjectURL(audioBlob));
+        audio.play();
+        audio.onended = () => {
+            status.textContent = '✅ 播放完成';
+            setTimeout(() => status.style.display = 'none', 2000);
+        };
+    } catch (e) { status.textContent = '❌ 播放失敗'; }
+}
+
+// ===== iSafe 安全監控 =====
+async function loadSafety(elderId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/safety/${elderId}`);
+        const data = await res.json();
+        const hazardEl = document.getElementById('isafe-hazard');
+        hazardEl.textContent = data.hazard_level === 'high' ? '🔴 高風險' : '🟢 正常';
+        hazardEl.style.color = data.hazard_level === 'high' ? '#E74C3C' : '#27AE60';
+        document.getElementById('isafe-urgent-count').textContent = data.urgent_count;
+
+        const res2 = await fetch(`${API_BASE}/api/profile/${elderId}`);
+        const profile = await res2.json();
+        const events = (profile.recent_events || []).filter(e =>
+            e.topic_tags && (e.topic_tags.includes('安全警報') || e.topic_tags.includes('情緒'))
+        );
+        const container = document.getElementById('isafe-events');
+        if (events.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無安全事件</div>';
+            return;
+        }
+        container.innerHTML = '';
+        events.slice().reverse().forEach(evt => {
+            const isUrgent = evt.topic_tags?.includes('安全警報');
+            const div = document.createElement('div');
+            div.style.cssText = `background: ${isUrgent ? '#FDECEA' : '#FEF9E7'}; border-radius: 10px; padding: 12px 16px; font-size: 15px;`;
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-weight: 500; color: #3D3530;">${evt.event}</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span class="badge ${isUrgent ? 'badge-high' : ''}" style="${!isUrgent ? 'background:#FEF9E7;color:#7D6608;' : ''}">${isUrgent ? '🚨 緊急' : '⚠️ 注意'}</span>
+                        <span style="font-size: 13px; color: #7F8C8D;">${evt.date}</span>
+                    </div>
+                </div>
+                <div style="font-size: 13px; color: #7F8C8D;">${evt.reason || evt.topic_tags?.join('、') || ''}</div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) { console.error('iSafe 載入失敗', e); }
+}
+
+// ===== Agent 監控 =====
+async function loadAgentLogs() {
+    try {
+        const res = await fetch(`${API_BASE}/api/agent-logs`);
+        const data = await res.json();
+        const logs = data.logs || [];
+
+        document.getElementById('log-update-time').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
+
+        if (logs.length === 0) {
+            document.getElementById('agent-logs').innerHTML =
+                '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無互動紀錄，請先開始對話</div>';
+            return;
+        }
+
+        // 更新 Agent 狀態燈
+        const agents = ['MagicAI', 'iSafe', 'Decision'];
+        const dotMap = { MagicAI: 'dot-magic', iSafe: 'dot-isafe', Decision: 'dot-decision' };
+        const lastMap = { MagicAI: 'magic-last', iSafe: 'isafe-last', Decision: 'decision-last' };
+
+        agents.forEach(agent => {
+            const lastLog = logs.find(l => l.agent === agent);
+            if (lastLog) {
+                document.getElementById(dotMap[agent]).classList.remove('inactive');
+                document.getElementById(lastMap[agent]).textContent = `最後活動：${lastLog.time}`;
+            }
+        });
+
+        const container = document.getElementById('agent-logs');
+        container.innerHTML = '';
+        logs.forEach(log => {
+            const row = document.createElement('div');
+            row.className = 'log-row';
+            const actionColor = log.action === '分析完成' ? '#27AE60' :
+                               log.action === '完成' ? '#4A90E2' :
+                               log.action === '回應完成' ? '#C17F5A' : '#7F8C8D';
+            row.innerHTML = `
+                <span class="log-time">${log.time}</span>
+                <span class="log-agent ${log.agent}">${log.agent}</span>
+                <span style="min-width: 70px; color: ${actionColor}; font-size: 13px;">${log.action}</span>
+                <span style="color: #3D3530; font-size: 13px;">${log.detail}</span>
+            `;
+            container.appendChild(row);
+        });
+    } catch (e) { console.error('Agent log 載入失敗', e); }
 }
 
 window.addEventListener('load', () => {

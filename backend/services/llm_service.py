@@ -124,7 +124,7 @@ class LLMService:
 - normal：日常對話、閒聊、提問
 
 - is_urgent：只有 urgent 等級才為 true
-- should_record：urgent 或 comfort 時為 true，需要照護人員注意
+- should_record：urgent、comfort、happy 時都為 true，記錄情緒變化供照護人員參考
 - sentiment：urgent/comfort 為 negative，happy 為 positive，normal 為 neutral
 
 注意：要理解語意，不是只看關鍵字。

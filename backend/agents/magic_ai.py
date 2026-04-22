@@ -9,8 +9,14 @@ class MagicAI:
         self.elder_id = elder_id
         self.llm = LLMService()
         self.memory = JsonMemoryStore()
-        self.conversation_history = []
         self.profile = self.memory.get_profile(elder_id)
+
+        # 啟動時從 JSON 載入上次的對話歷史
+        self.conversation_history = self.memory.load_conversation(elder_id)
+        if self.conversation_history:
+            print(f"載入 {elder_id} 的對話記憶，共 {len(self.conversation_history)} 則")
+        else:
+            print(f"{elder_id} 沒有對話記憶，從頭開始")
 
     def _get_honorific(self) -> str:
         gender = self.profile.get("gender", "male")
@@ -33,6 +39,9 @@ class MagicAI:
             "role": "model",
             "content": greeting
         })
+
+        # 問候後立刻存一次
+        self.memory.save_conversation(self.elder_id, self.conversation_history)
         return greeting
 
     def chat(self, user_message: str) -> str:
@@ -46,10 +55,18 @@ class MagicAI:
         self.conversation_history.append({"role": "user", "content": user_message})
         self.conversation_history.append({"role": "model", "content": response})
 
-        if len(self.conversation_history) > 20:
-            self.conversation_history = self.conversation_history[-20:]
+        if len(self.conversation_history) > 50:
+            self.conversation_history = self.conversation_history[-50:]
+
+        # 每次對話後存檔
+        self.memory.save_conversation(self.elder_id, self.conversation_history)
 
         return response
+
+    def clear_memory(self):
+        """清除對話記憶（切換長者時呼叫）"""
+        self.conversation_history = []
+        self.memory.clear_conversation(self.elder_id)
 
     def get_history(self) -> list:
         return self.conversation_history
