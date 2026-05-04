@@ -12,7 +12,6 @@ class JsonMemoryStore(MemoryManager):
         return DATA_DIR / f"{elder_id}.json"
 
     def _get_conv_path(self, elder_id: str) -> Path:
-        """對話記憶獨立存一個檔案，避免跟 profile 混在一起"""
         return DATA_DIR / f"{elder_id}_conversation.json"
 
     def get_profile(self, elder_id: str) -> dict:
@@ -23,12 +22,11 @@ class JsonMemoryStore(MemoryManager):
             return json.load(f)
 
     def save_conversation(self, elder_id: str, history: list) -> bool:
-        """把對話歷史存到獨立 JSON 檔案"""
         try:
             data = {
                 "elder_id": elder_id,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "history": history[-50:]  # 最多保留 20 則
+                "history": history[-50:]
             }
             path = self._get_conv_path(elder_id)
             with open(path, "w", encoding="utf-8") as f:
@@ -39,7 +37,6 @@ class JsonMemoryStore(MemoryManager):
             return False
 
     def load_conversation(self, elder_id: str) -> list:
-        """從 JSON 讀取上次的對話歷史"""
         path = self._get_conv_path(elder_id)
         if not path.exists():
             return []
@@ -52,7 +49,6 @@ class JsonMemoryStore(MemoryManager):
             return []
 
     def clear_conversation(self, elder_id: str) -> bool:
-        """清除對話記憶（切換長者或手動清除時用）"""
         path = self._get_conv_path(elder_id)
         if path.exists():
             path.unlink()
@@ -72,6 +68,38 @@ class JsonMemoryStore(MemoryManager):
         profile = self.get_profile(elder_id)
         events = profile.get("recent_events", [])
         return events[-limit:]
+
+    def get_important_memories(self, elder_id: str,
+                                importance_threshold: float = 0.7,
+                                limit: int = 10) -> list:
+        """
+        撈出重要分數高於門檻的長期記憶
+        預設只撈 importance >= 0.7 的事件（長期記憶）
+        """
+        profile = self.get_profile(elder_id)
+        events = profile.get("recent_events", [])
+
+        important = [
+            e for e in events
+            if e.get("importance", 0) >= importance_threshold
+        ]
+
+        # 依重要分數由高到低排序，取前 limit 筆
+        important.sort(key=lambda x: x.get("importance", 0), reverse=True)
+        return important[:limit]
+
+    def get_recent_conversation_summary(self, elder_id: str,
+                                         limit: int = 6) -> list:
+        """
+        取得最近幾則對話，用於注入 Prompt
+        只取 user 說的話，不包含 AI 回應
+        """
+        history = self.load_conversation(elder_id)
+        user_messages = [
+            msg for msg in history
+            if msg.get("role") == "user"
+        ]
+        return user_messages[-limit:]
 
     def update_profile(self, elder_id: str, data: dict) -> bool:
         profile = self.get_profile(elder_id)

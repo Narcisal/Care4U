@@ -45,11 +45,24 @@ class MagicAI:
         return greeting
 
     def chat(self, user_message: str) -> str:
-        """純粹負責生成回應，不做情緒判斷"""
+        """對話前先撈記憶，再生成回應"""
+
+        # 撈近期對話（最近 6 則 user 說的話）
+        recent_messages = self.memory.get_recent_conversation_summary(
+            self.elder_id, limit=6
+        )
+
+        # 撈長期重要記憶（importance >= 0.7）
+        important_memories = self.memory.get_important_memories(
+            self.elder_id, importance_threshold=0.7, limit=8
+        )
+
         response = self.llm.chat(
             profile=self.profile,
             conversation_history=self.conversation_history,
-            user_message=user_message
+            user_message=user_message,
+            recent_messages=recent_messages,
+            important_memories=important_memories
         )
 
         self.conversation_history.append({"role": "user", "content": user_message})
@@ -58,9 +71,7 @@ class MagicAI:
         if len(self.conversation_history) > 50:
             self.conversation_history = self.conversation_history[-50:]
 
-        # 每次對話後存檔
         self.memory.save_conversation(self.elder_id, self.conversation_history)
-
         return response
 
     def clear_memory(self):

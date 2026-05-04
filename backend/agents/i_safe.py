@@ -12,26 +12,23 @@ class ISafe:
         self.llm = LLMService()
 
     def analyze(self, message: str) -> dict:
-        """
-        用 LLM 分析訊息，回傳安全狀態與情緒標籤
-        如果 LLM 失敗，自動降級為關鍵字判斷
-        """
         result = self.llm.analyze_emotion(message)
 
-        # 如果需要記錄，寫入記憶
         if result.get("should_record"):
             self._record_event(
                 message=message,
                 sentiment=result["sentiment"],
                 is_urgent=result["is_urgent"],
-                reason=result.get("reason", "")
+                reason=result.get("reason", ""),
+                importance=result.get("importance", 0.5),
+                memory_type=result.get("memory_type", "short")
             )
 
         return result
 
     def _record_event(self, message: str, sentiment: str,
-                      is_urgent: bool, reason: str = ""):
-        """寫入情緒或安全事件到記憶"""
+                    is_urgent: bool, reason: str = "",
+                    importance: float = 0.5, memory_type: str = "short"):
         topic_tags = ["安全警報"] if is_urgent else ["情緒"]
         self.memory.add_event(
             elder_id=self.elder_id,
@@ -39,6 +36,8 @@ class ISafe:
                 "event": f"說了：{message[:50]}",
                 "sentiment": sentiment,
                 "emotion_score": -0.9 if is_urgent else -0.7,
+                "importance": importance,
+                "memory_type": memory_type,
                 "topic_tags": topic_tags,
                 "reason": reason,
                 "source": "voice"

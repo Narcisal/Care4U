@@ -74,6 +74,9 @@ async function processAndRespond(message) {
         const data = await res.json();
         removeThinking(thinkingId);
         addMessage("ai", data.message);
+        if (data.image) {
+            addImageMessage(data.image);
+        }
         chatCount++;
         document.getElementById("chat-count").textContent = chatCount;
         updateEmotionFromMessage(message);
@@ -276,4 +279,22 @@ try {
     document.getElementById("clear-btn").addEventListener("click", clearChat);
 } catch(e) {
     console.error("事件綁定失敗：", e);
+}
+
+function addImageMessage(imageBase64) {
+    const container = document.getElementById("chat-container");
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex items-start gap-2";
+    wrapper.innerHTML = `
+        <div class="text-2xl">🌸</div>
+        <div class="chat-bubble-ai px-4 py-4 rounded-2xl rounded-tl-none shadow-sm" style="max-width: 320px;">
+            <img src="${imageBase64}"
+                 style="width: 100%; border-radius: 10px; cursor: pointer;"
+                 onclick="window.open('${imageBase64}', '_blank')"
+                 alt="AI 生成圖片" />
+            <p style="font-size: 13px; color: #9B8E87; margin-top: 8px; text-align: center;">✨ AI 為您生成的圖片</p>
+        </div>
+    `;
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
 }

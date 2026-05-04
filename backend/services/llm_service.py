@@ -1,4 +1,7 @@
 import os
+import time
+import re
+import json
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -12,19 +15,38 @@ class LLMService:
     def __init__(self, model_name: str = "gemini-2.5-flash"):
         self.model_name = model_name
     
-    def build_system_prompt(self, profile: dict) -> str:
+    def build_system_prompt(self, profile: dict,
+                            recent_messages: list = None,
+                            important_memories: list = None) -> str:
         name = profile.get("name", "長者")
         gender = profile.get("gender", "male")
         honorific = "爺爺" if gender == "male" else "奶奶"
         persona = profile.get("persona", {})
         health = profile.get("health_notes", {})
         events = profile.get("recent_events", [])
-        
-        recent = ""
+
+        # 最近情緒事件（原有）
+        recent_events_text = ""
         if events:
-            recent = "\n".join([
+            recent_events_text = "\n".join([
                 f"- {e['date']}：{e['event']}（情緒：{e['sentiment']}）"
                 for e in events[-3:]
+            ])
+
+        # 近期對話摘要（新增）
+        recent_conv_text = ""
+        if recent_messages:
+            recent_conv_text = "\n".join([
+                f"- {msg['content']}"
+                for msg in recent_messages
+            ])
+
+        # 長期重要記憶（新增）
+        long_term_text = ""
+        if important_memories:
+            long_term_text = "\n".join([
+                f"- [{e.get('date', '')}] {e['event']}（重要度：{e.get('importance', 0):.1f}）"
+                for e in important_memories
             ])
 
         prompt = f"""你是一個 AI 陪伴助理，在長照機構陪伴{name}{honorific}。
@@ -41,8 +63,14 @@ class LLMService:
     - 身體敏感：{', '.join(health.get('sensitivity', []))}
     - 飲食習慣：{health.get('diet', '無特殊')}
 
-    【最近發生的事】
-    {recent if recent else '尚無紀錄'}
+    【長期重要記憶 — 長者曾說過的重要事情，請記住並在對話中自然帶入】
+    {long_term_text if long_term_text else '尚無長期記憶'}
+
+    【近期對話摘要 — 長者最近說過的話】
+    {recent_conv_text if recent_conv_text else '尚無近期對話'}
+
+    【最近情緒事件】
+    {recent_events_text if recent_events_text else '尚無紀錄'}
 
     【回應的優先順序 — 請依序判斷】
 
@@ -67,9 +95,8 @@ class LLMService:
 
     第四優先：陪伴與懷舊
     - 根據背景引導有意義的話題
-    → 職業：數學、教書的故事
-    → 興趣：鄧麗君的歌、象棋
-    → 家人：小玲、小寶的近況
+    → 職業、興趣、家人話題
+    → 若長期記憶有提到特定事件，可以主動帶入
 
     【說話風格】
     - 自然口語，像真實家人，不要公式化
@@ -92,84 +119,105 @@ class LLMService:
         return prompt
 
     def analyze_emotion(self, message: str) -> dict:
-        """
-        用 LLM 判斷長者訊息的情緒狀態
-        回傳格式：
-        {
-            "emotion": "urgent" | "comfort" | "happy" | "normal",
-            "sentiment": "negative" | "positive" | "neutral",
-            "is_urgent": bool,
-            "should_record": bool,
-            "reason": str
-        }
-        """
         prompt = f"""你是一個長照系統的情緒分析模組。
-請分析以下長者說的話，判斷情緒狀態。
+    請分析以下長者說的話，判斷情緒狀態與記憶重要性。
 
-長者說的話：「{message}」
+    長者說的話：「{message}」
 
-請用 JSON 格式回答，只回傳 JSON，不要有其他文字：
-{{
-  "emotion": "urgent 或 comfort 或 happy 或 normal",
-  "sentiment": "negative 或 positive 或 neutral",
-  "is_urgent": true 或 false,
-  "should_record": true 或 false,
-  "reason": "一句話說明判斷原因"
-}}
+    請用 JSON 格式回答，只回傳 JSON，不要有其他文字：
+    {{
+    "emotion": "urgent 或 comfort 或 happy 或 normal",
+    "sentiment": "negative 或 positive 或 neutral",
+    "is_urgent": true 或 false,
+    "should_record": true 或 false,
+    "reason": "一句話說明判斷原因",
+    "importance": 0.0到1.0之間的數字,
+    "memory_type": "long 或 short"
+    }}
 
-判斷標準：
-- urgent：身體不適、疼痛、跌倒、頭暈、胸痛、呼吸困難、求救
-- comfort：情緒低落、難過、孤單、思念、委屈、哭泣、憂鬱
-- happy：開心、高興、感謝、分享好事、說笑
-- normal：日常對話、閒聊、提問
+    【情緒判斷標準】
+    - urgent：身體不適、疼痛、跌倒、頭暈、胸痛、呼吸困難、求救
+    - comfort：情緒低落、難過、孤單、思念、委屈、哭泣、憂鬱
+    - happy：開心、高興、感謝、分享好事、說笑
+    - normal：日常對話、閒聊、提問
+    - is_urgent：只有 urgent 等級才為 true
+    - should_record：urgent、comfort、happy 時都為 true
+    - sentiment：urgent/comfort 為 negative，happy 為 positive，normal 為 neutral
 
-- is_urgent：只有 urgent 等級才為 true
-- should_record：urgent、comfort、happy 時都為 true，記錄情緒變化供照護人員參考
-- sentiment：urgent/comfort 為 negative，happy 為 positive，normal 為 neutral
+    【importance 判斷標準】
+    importance 衡量的是「這件事對了解這位長者有多重要」，與情緒無關。
 
-注意：要理解語意，不是只看關鍵字。
-例如「我不累」應判定為 normal，不是 comfort。
-例如「腿有點痠」應判定為 comfort，不是 urgent。
-例如「好想念我女兒」應判定為 comfort。"""
+    高重要性（0.7-1.0）→ memory_type = "long"：
+    - 提到家人名字、關係細節（「我女兒叫小玲」）
+    - 提到特定地點、重要回憶（「我以前住大稻埕」）
+    - 個人偏好細節（「我最愛吃媽媽做的滷肉飯」）
+    - 職業故事、人生重要事件（「我當了三十年老師」）
 
-        try:
-            response = client.models.generate_content(
-                model=self.model_name,
-                contents=[types.Content(
-                    role="user",
-                    parts=[types.Part(text=prompt)]
-                )],
-                config=types.GenerateContentConfig(
-                    temperature=0.1,  # 情緒分析要穩定，temperature 調低
-                    max_output_tokens=200,
+    中重要性（0.4-0.6）→ memory_type = "short"：
+    - 近期發生的事（「昨天女兒來看我」）
+    - 重複出現的話題
+
+    低重要性（0.1-0.3）→ memory_type = "short"：
+    - 日常閒聊、天氣、時間
+    - 無具體內容的回應（「嗯嗯」「是喔」「好啊」）
+
+    注意：要理解語意，不是只看關鍵字。
+    例如「我不累」→ normal，importance=0.1
+    例如「好想念我女兒小玲」→ comfort，importance=0.8（有家人名字）
+    例如「我年輕時在大稻埕開布行」→ normal，importance=0.9（重要人生背景）"""
+
+
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=self.model_name,
+                    contents=[types.Content(
+                        role="user",
+                        parts=[types.Part(text=prompt)]
+                    )],
+                    config=types.GenerateContentConfig(
+                        temperature=0.1,
+                        max_output_tokens=2048,
+                        response_mime_type="application/json",
+                    )
                 )
+
+                text = response.text.strip()
+                result = json.loads(text)
+                result.setdefault("importance", 0.3)
+                result.setdefault("memory_type", "short")
+                print(f"情緒分析結果：emotion={result['emotion']}, importance={result['importance']}")
+                return result
+
+            except Exception as e:
+                if "503" in str(e) and attempt < 2:
+                    print(f"Gemini 過載，2秒後重試（第 {attempt+1} 次）...")
+                    time.sleep(2)
+                    continue
+                print(f"情緒分析失敗，原始回傳：{response.text if 'response' in dir() else '無回應'}")
+                print(f"錯誤：{e}")
+                return {
+                    "emotion": "normal",
+                    "sentiment": "neutral",
+                    "is_urgent": False,
+                    "should_record": False,
+                    "reason": "分析失敗，使用預設值",
+                    "importance": 0.3,
+                    "memory_type": "short"
+                }
+    def chat(self,
+            profile: dict,
+            conversation_history: list,
+            user_message: str,
+            recent_messages: list = None,
+            important_memories: list = None) -> str:
+        try:
+            system_prompt = self.build_system_prompt(
+                profile,
+                recent_messages=recent_messages,
+                important_memories=important_memories
             )
 
-            import json
-            text = response.text.strip()
-            # 清除可能的 markdown code block
-            text = text.replace("```json", "").replace("```", "").strip()
-            result = json.loads(text)
-            return result
-
-        except Exception as e:
-            print(f"情緒分析失敗，使用預設值：{e}")
-            # 失敗時回傳安全的預設值
-            return {
-                "emotion": "normal",
-                "sentiment": "neutral",
-                "is_urgent": False,
-                "should_record": False,
-                "reason": "分析失敗，使用預設值"
-            }
-
-    def chat(self,
-             profile: dict,
-             conversation_history: list,
-             user_message: str) -> str:
-        try:
-            system_prompt = self.build_system_prompt(profile)
-            
             history = []
             for msg in conversation_history:
                 role = "user" if msg["role"] == "user" else "model"
@@ -179,7 +227,7 @@ class LLMService:
                         parts=[types.Part(text=msg["content"])]
                     )
                 )
-            
+
             history.append(
                 types.Content(
                     role="user",
@@ -193,12 +241,12 @@ class LLMService:
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=0.9,
-                    max_output_tokens=2000,
+                    max_output_tokens=10000,
                 )
             )
-            
+
             return response.text
-            
+
         except Exception as e:
             print(f"LLM 錯誤：{e}")
             return "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"

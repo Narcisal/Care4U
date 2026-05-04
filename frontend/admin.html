@@ -507,33 +507,94 @@ async function saveElderProfile() {
 }
 
 // ===== 對話紀錄後台 =====
+// ===== 對話紀錄後台 =====
 async function loadHistory(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
         const profile = await res.json();
         const events = profile.recent_events || [];
         document.getElementById('dash-event-count').textContent = events.length;
+
         const container = document.getElementById('dash-events');
         if (events.length === 0) {
             container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無情緒紀錄</div>';
             return;
         }
+
+        // 分成長期記憶和短期記憶
+        const longMemory = events.filter(e => e.memory_type === 'long' || e.importance >= 0.7);
+        const shortMemory = events.filter(e => e.memory_type !== 'long' && e.importance < 0.7);
+
         container.innerHTML = '';
-        events.slice().reverse().forEach(evt => {
-            const sentimentColor = evt.sentiment === 'negative' ? '#FDECEA' : '#E8F5EC';
-            const sentimentText = evt.sentiment === 'negative' ? '😢 負向' : '😊 正向';
-            const div = document.createElement('div');
-            div.style.cssText = `background: ${sentimentColor}; border-radius: 10px; padding: 12px 16px; font-size: 15px;`;
-            div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-weight: 500; color: #3D3530;">${evt.event}</span>
-                    <span style="font-size: 13px; color: #7F8C8D;">${evt.date}</span>
-                </div>
-                <div style="font-size: 13px; color: #7F8C8D;">${sentimentText} ${evt.topic_tags ? '｜' + evt.topic_tags.join('、') : ''}${evt.reason ? ' ｜ ' + evt.reason : ''}</div>
+
+        // 長期重要記憶區塊
+        if (longMemory.length > 0) {
+            const longTitle = document.createElement('div');
+            longTitle.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px; margin-top: 4px;';
+            longTitle.innerHTML = `
+                <span style="font-size: 15px; font-weight: 500; color: #8E44AD;">🔮 長期重要記憶</span>
+                <span style="font-size: 12px; color: #9B8E87;">importance ≥ 0.7，永久保留</span>
             `;
-            container.appendChild(div);
-        });
+            container.appendChild(longTitle);
+
+            longMemory.slice().reverse().forEach(evt => renderEvent(evt, container, true));
+
+            const divider = document.createElement('div');
+            divider.style.cssText = 'border-top: 1px dashed #D6CEC7; margin: 16px 0;';
+            container.appendChild(divider);
+        }
+
+        // 短期記憶區塊
+        const shortTitle = document.createElement('div');
+        shortTitle.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px;';
+        shortTitle.innerHTML = `
+            <span style="font-size: 15px; font-weight: 500; color: #7F8C8D;">📝 近期情緒紀錄</span>
+        `;
+        container.appendChild(shortTitle);
+
+        if (shortMemory.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'text-align: center; color: #BDC3C7; padding: 16px; font-size: 14px;';
+            empty.textContent = '尚無近期紀錄';
+            container.appendChild(empty);
+        } else {
+            shortMemory.slice().reverse().forEach(evt => renderEvent(evt, container, false));
+        }
+
     } catch (e) { console.error('載入失敗', e); }
+}
+
+function renderEvent(evt, container, isLong) {
+    const importance = evt.importance || 0;
+    const sentimentColor = evt.sentiment === 'negative' ? '#FDECEA' :
+                           evt.sentiment === 'positive' ? '#E8F5EC' : '#F7F3EE';
+    const sentimentText = evt.sentiment === 'negative' ? '😢 負向' :
+                          evt.sentiment === 'positive' ? '😊 正向' : '😐 中性';
+
+    // 長期記憶加上特殊邊框
+    const borderStyle = isLong ? 'border: 2px solid #C9A8E0;' : 'border: 1px solid transparent;';
+
+    const div = document.createElement('div');
+    div.style.cssText = `background: ${sentimentColor}; border-radius: 10px; padding: 12px 16px; font-size: 15px; margin-bottom: 8px; ${borderStyle}`;
+    div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+            <span style="font-weight: 500; color: #3D3530; flex: 1;">${evt.event}</span>
+            <span style="font-size: 13px; color: #7F8C8D; margin-left: 8px; white-space: nowrap;">${evt.date}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 13px; color: #7F8C8D;">${sentimentText}</span>
+            ${evt.topic_tags ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${evt.topic_tags.join('、')}</span>` : ''}
+            ${evt.reason ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${evt.reason}</span>` : ''}
+            ${isLong ? `
+                <span style="margin-left: auto; font-size: 12px; background: #F4ECF7; color: #8E44AD; padding: 2px 8px; border-radius: 6px; font-weight: 500;">
+                    🔮 重要 ${importance.toFixed(1)}
+                </span>` : importance > 0 ? `
+                <span style="margin-left: auto; font-size: 12px; color: #BDC3C7;">
+                    重要度 ${importance.toFixed(1)}
+                </span>` : ''}
+        </div>
+    `;
+    container.appendChild(div);
 }
 
 async function testTTS(emotion, text) {

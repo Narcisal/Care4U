@@ -53,6 +53,118 @@
       "source": "voice",
       "id": "d73d2908",
       "date": "2026-04-14"
+    },
+    {
+      "event": "說了：我懷念和我老婆憶起唱歌跳舞",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.85,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達對已故或不在身邊的妻子及共同活動的懷念，屬於思念情緒。",
+      "source": "voice",
+      "id": "7deeb8e9",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：我懷念和我老婆憶起唱歌跳舞",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達對已逝或不在身邊的妻子及共同活動的思念與懷念。",
+      "source": "voice",
+      "id": "bf6dd2a2",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：謝謝你陪我說話 現在心情不錯",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.35,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達感謝並明確表示心情愉悅。",
+      "source": "voice",
+      "id": "c18c324e",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：我想和她說我想回家 我好難受",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達想回家且感到難受，顯示情緒低落或不適。",
+      "source": "voice",
+      "id": "80b81947",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：今天天氣冷 有點難受",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表達身體因天氣冷而感到不適。",
+      "source": "voice",
+      "id": "f6da646b",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：今天天起冷 有點難受",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表示因天氣寒冷而感到身體不適，屬於身體不適的緊急情況。",
+      "source": "voice",
+      "id": "d4440562",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：今天天氣冷 有點難受",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表示因天氣寒冷而感到身體不適。",
+      "source": "voice",
+      "id": "e67873ec",
+      "date": "2026-04-28"
+    },
+    {
+      "event": "說了：今天天氣冷 有點難受",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表示身體因天氣冷而感到不適。",
+      "source": "voice",
+      "id": "9f71752a",
+      "date": "2026-04-28"
     }
   ]
 }
