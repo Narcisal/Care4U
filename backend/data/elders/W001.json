@@ -165,6 +165,316 @@
       "source": "voice",
       "id": "9f71752a",
       "date": "2026-04-28"
+    },
+    {
+      "event": "說了：我今天很難過。",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.3,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達難過情緒，屬於情緒低落。",
+      "source": "voice",
+      "spoken_at": "2026-05-10 02:32:18",
+      "id": "f4438f49",
+      "date": "2026-05-10",
+      "time": "02:32:18"
+    },
+    {
+      "event": "說了：感覺還不錯。",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達正面感受，情緒良好。",
+      "source": "voice",
+      "spoken_at": "2026-05-10 02:43:46",
+      "id": "78905d80",
+      "date": "2026-05-10",
+      "time": "02:43:46"
+    },
+    {
+      "event": "說了：今天天氣好冷,有點難過。",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達難過情緒",
+      "source": "voice",
+      "spoken_at": "2026-05-10 02:49:22",
+      "id": "682bc3a1",
+      "date": "2026-05-10",
+      "time": "02:49:22"
+    },
+    {
+      "event": "說了：豆漿很好喝。",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.7,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達對豆漿的喜愛與滿足。",
+      "source": "voice",
+      "spoken_at": "2026-05-10 02:57:37",
+      "id": "3fd872cf",
+      "date": "2026-05-10",
+      "time": "02:57:37"
+    },
+    {
+      "event": "說了：我女兒叫小玲，她在台北當護士",
+      "sentiment": "neutral",
+      "emotion_score": -0.7,
+      "importance": 0.9,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者陳述女兒姓名與職業",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:05:45",
+      "id": "a025caae",
+      "date": "2026-05-11",
+      "time": "03:05:45"
+    },
+    {
+      "event": "說了：我昨晚夢到在雲上面種花",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分享愉快的夢境內容",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:07:19",
+      "id": "50b8c83e",
+      "date": "2026-05-11",
+      "time": "03:07:19"
+    },
+    {
+      "event": "說了：我好懷念年輕時住苗栗老家",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達對年輕時老家的思念與懷舊。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:08:00",
+      "id": "e8f7de73",
+      "date": "2026-05-11",
+      "time": "03:08:00"
+    },
+    {
+      "event": "說了：復健動作怎麼做，膝蓋很痠",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表示膝蓋痠痛，屬於身體不適。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:08:42",
+      "id": "13ecd1c9",
+      "date": "2026-05-11",
+      "time": "03:08:42"
+    },
+    {
+      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 1.0,
+      "memory_type": "long",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "長者持續情緒低落，建議照護人員關心。",
+      "source": "trend_analysis",
+      "spoken_at": "2026-05-11 03:09:27",
+      "id": "7b762ac2",
+      "date": "2026-05-11",
+      "time": "03:09:27"
+    },
+    {
+      "event": "說了：我今天很難過",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達難過情緒",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:09:23",
+      "id": "a5289376",
+      "date": "2026-05-11",
+      "time": "03:09:23"
+    },
+    {
+      "event": "說了：我好孤單沒人陪",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達孤單情緒",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:10:06",
+      "id": "f3afe614",
+      "date": "2026-05-11",
+      "time": "03:10:06"
+    },
+    {
+      "event": "說了：我不想說話心情很差",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.4,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達心情低落，不想說話",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:10:49",
+      "id": "be48a401",
+      "date": "2026-05-11",
+      "time": "03:10:49"
+    },
+    {
+      "event": "說了：我頭很暈，感覺快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者頭暈且有跌倒風險，需立即關注",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:12:24",
+      "id": "bae1ee5e",
+      "date": "2026-05-11",
+      "time": "03:12:24"
+    },
+    {
+      "event": "說了：謝謝你，心情好多了",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達感謝與心情好轉",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:13:05",
+      "id": "30d339f4",
+      "date": "2026-05-11",
+      "time": "03:13:05"
+    },
+    {
+      "event": "說了：你記得我女兒的事嗎",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者提問女兒事宜，可能帶有思念或分享意圖。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:14:23",
+      "id": "ec246b9c",
+      "date": "2026-05-11",
+      "time": "03:14:23"
+    },
+    {
+      "event": "說了：復健動作怎麼做，膝蓋很痠",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表達膝蓋痠痛，身體不適。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:27:55",
+      "id": "dcbb8f8f",
+      "date": "2026-05-11",
+      "time": "03:27:55"
+    },
+    {
+      "event": "說了：復健動作怎麼做，膝蓋很痠",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者表達膝蓋痠痛，身體不適。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:29:23",
+      "id": "a3b0f30e",
+      "date": "2026-05-11",
+      "time": "03:29:23"
+    },
+    {
+      "event": "說了：我昨晚夢到在雲上面種花",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分享愉快的夢境內容",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:30:40",
+      "id": "eec2d3d2",
+      "date": "2026-05-11",
+      "time": "03:30:40"
+    },
+    {
+      "event": "說了：我好懷念年輕時住的老家",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "表達對老家的思念與懷舊",
+      "source": "voice",
+      "spoken_at": "2026-05-11 03:31:18",
+      "id": "6d8228b5",
+      "date": "2026-05-11",
+      "time": "03:31:18"
     }
-  ]
+  ],
+  "memory_summary": {
+    "content": "王大明爺爺",
+    "updated_at": "2026-05-11 03:14:37",
+    "based_on_events": 10
+  }
 }

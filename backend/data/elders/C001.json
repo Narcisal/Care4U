@@ -1,0 +1,45 @@
+{
+  "elder_id": "C001",
+  "name": "陳秀英",
+  "gender": "female",
+  "persona": {
+    "former_job": "國小老師",
+    "hobbies": [
+      "種花",
+      "看台灣劇",
+      "煮菜"
+    ],
+    "family": {
+      "兒子": "阿明",
+      "媳婦": "小惠",
+      "孫子": "小寶"
+    },
+    "tone_preference": "親切溫柔"
+  },
+  "health_notes": {
+    "sensitivity": [
+      "怕熱",
+      "膝蓋退化"
+    ],
+    "diet": "喜歡清淡，不吃辣"
+  },
+  "memory_summary": {},
+  "recent_events": [
+    {
+      "event": "說了：我夢到我所有的家人都來看我了",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者分享夢到家人來訪，表達開心。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 09:13:06",
+      "id": "fa631c4f",
+      "date": "2026-05-11",
+      "time": "09:13:06"
+    }
+  ]
+}

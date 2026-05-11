@@ -1,18 +1,23 @@
+import os
+from dotenv import load_dotenv
 from backend.services.llm_service import LLMService
-from backend.memory.json_store import JsonMemoryStore
+from backend.memory.vector_store import VectorMemoryStore
+from backend.services.embedding_service import EmbeddingService
 from datetime import datetime
 
+load_dotenv()
+
 class MagicAI:
-    """第一線情感陪伴 Agent，專注對話品質"""
 
     def __init__(self, elder_id: str):
         self.elder_id = elder_id
         self.llm = LLMService()
-        self.memory = JsonMemoryStore()
+        self.memory = VectorMemoryStore()
+        self.embedding = EmbeddingService()
         self.profile = self.memory.get_profile(elder_id)
-
-        # 啟動時從 JSON 載入上次的對話歷史
         self.conversation_history = self.memory.load_conversation(elder_id)
+        self._chat_count = 0
+
         if self.conversation_history:
             print(f"載入 {elder_id} 的對話記憶，共 {len(self.conversation_history)} 則")
         else:
@@ -39,20 +44,26 @@ class MagicAI:
             "role": "model",
             "content": greeting
         })
-
-        # 問候後立刻存一次
         self.memory.save_conversation(self.elder_id, self.conversation_history)
         return greeting
 
     def chat(self, user_message: str) -> str:
-        """對話前先撈記憶，再生成回應"""
-
-        # 撈近期對話（最近 6 則 user 說的話）
         recent_messages = self.memory.get_recent_conversation_summary(
             self.elder_id, limit=6
         )
 
-        # 撈長期重要記憶（importance >= 0.7）
+        similar_memories = []
+        try:
+            query_embedding = self.embedding.embed(user_message)
+            if query_embedding:
+                similar_memories = self.memory.search_similar_memories(
+                    self.elder_id, query_embedding, limit=5
+                )
+                if similar_memories:
+                    print(f"找到 {len(similar_memories)} 筆相關記憶")
+        except Exception as e:
+            print(f"向量搜尋失敗（不影響對話）：{e}")
+
         important_memories = self.memory.get_important_memories(
             self.elder_id, importance_threshold=0.7, limit=8
         )
@@ -62,7 +73,8 @@ class MagicAI:
             conversation_history=self.conversation_history,
             user_message=user_message,
             recent_messages=recent_messages,
-            important_memories=important_memories
+            important_memories=important_memories,
+            similar_memories=similar_memories
         )
 
         self.conversation_history.append({"role": "user", "content": user_message})
@@ -72,10 +84,65 @@ class MagicAI:
             self.conversation_history = self.conversation_history[-50:]
 
         self.memory.save_conversation(self.elder_id, self.conversation_history)
+
+        self._chat_count += 1
+        if self._chat_count % 10 == 0:
+            self._summarize_memories()
+
         return response
 
+    def _summarize_memories(self):
+        try:
+            events = self.memory.get_recent_events(self.elder_id, limit=10)
+            if len(events) < 5:
+                return
+
+            name = self.profile.get("name", "長者")
+            honorific = self._get_honorific()
+
+            events_text = "\n".join([
+                f"- {e.get('date', '')}：{e.get('event', '')}（情緒：{e.get('sentiment', '')}）"
+                for e in events
+            ])
+
+            prompt = f"""請把以下關於{name}{honorific}的對話紀錄，彙整成一段簡短的摘要（100字以內）：
+
+{events_text}
+
+要求：
+- 用第三人稱描述
+- 重點放在長者的情緒狀態和重要事件
+- 不要列點，用自然語句
+- 只回傳摘要文字，不要其他說明"""
+
+            from google import genai
+            from google.genai import types
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.3,
+                    max_output_tokens=10000,
+                )
+            )
+
+            summary = response.text.strip()
+            print(f"記憶彙整完成：{summary[:50]}...")
+
+            profile = self.memory.get_profile(self.elder_id)
+            if profile:
+                profile["memory_summary"] = {
+                    "content": summary,
+                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "based_on_events": len(events)
+                }
+                self.memory._save(self.elder_id, profile)
+
+        except Exception as e:
+            print(f"記憶彙整失敗（不影響對話）：{e}")
+
     def clear_memory(self):
-        """清除對話記憶（切換長者時呼叫）"""
         self.conversation_history = []
         self.memory.clear_conversation(self.elder_id)
 

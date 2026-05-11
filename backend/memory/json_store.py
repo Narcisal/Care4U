@@ -59,7 +59,12 @@ class JsonMemoryStore(MemoryManager):
         if not profile:
             return False
         event["id"] = str(uuid.uuid4())[:8]
-        event["date"] = datetime.now().strftime("%Y-%m-%d")
+        if "spoken_at" in event:
+            event["date"] = event["spoken_at"][:10]
+            event["time"] = event["spoken_at"][11:]
+        else:
+            event["date"] = datetime.now().strftime("%Y-%m-%d")
+            event["time"] = datetime.now().strftime("%H:%M:%S")
         profile["recent_events"].append(event)
         profile["recent_events"] = profile["recent_events"][-50:]
         return self._save(elder_id, profile)
@@ -72,28 +77,17 @@ class JsonMemoryStore(MemoryManager):
     def get_important_memories(self, elder_id: str,
                                 importance_threshold: float = 0.7,
                                 limit: int = 10) -> list:
-        """
-        撈出重要分數高於門檻的長期記憶
-        預設只撈 importance >= 0.7 的事件（長期記憶）
-        """
         profile = self.get_profile(elder_id)
         events = profile.get("recent_events", [])
-
         important = [
             e for e in events
             if e.get("importance", 0) >= importance_threshold
         ]
-
-        # 依重要分數由高到低排序，取前 limit 筆
         important.sort(key=lambda x: x.get("importance", 0), reverse=True)
         return important[:limit]
 
     def get_recent_conversation_summary(self, elder_id: str,
                                          limit: int = 6) -> list:
-        """
-        取得最近幾則對話，用於注入 Prompt
-        只取 user 說的話，不包含 AI 回應
-        """
         history = self.load_conversation(elder_id)
         user_messages = [
             msg for msg in history

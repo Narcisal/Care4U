@@ -116,8 +116,33 @@
             <div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: #D6CEC7; color: #3D3530; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">🔄 重新載入</button>
                 <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">💾 儲存資料</button>
+                <div style="margin-top: 12px;">
+                    <button onclick="startCareSession()"
+                        style="width: 100%; padding: 14px; font-size: 17px;
+                               background: #7B9E87; color: white; border: none;
+                               border-radius: 16px; cursor: pointer; font-family: inherit;">
+                        🌟 開始陪伴這位長者
+                    </button>
+                </div>
             </div>
             <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
+
+            <!-- 網路搜尋補充背景資料 -->
+            <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
+                <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
+                    🔍 網路搜尋補充背景資料
+                    <span style="font-size: 12px;">（搜尋長者的公開資料，如著作、職業成就）</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input id="search-keywords" type="text" placeholder="輸入關鍵字，如：著作名稱、任職機構"
+                        style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
+                    <button onclick="searchElderBackground()"
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #4A90E2; color: white; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        🔍 搜尋
+                    </button>
+                </div>
+                <div id="search-result" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px;"></div>
+            </div>
         </div>
     </div>
 
@@ -136,6 +161,7 @@
                 <div id="dash-event-count" style="font-size: 36px; font-weight: 500; color: #C17F5A;">0</div>
             </div>
         </div>
+
         <div class="card" style="margin-bottom: 16px;">
             <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">🔊 TTS 語調測試</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -147,6 +173,15 @@
             </div>
             <div id="tts-test-status" style="text-align: center; margin-top: 12px; font-size: 14px; color: #7F8C8D; display: none;">播放中...</div>
         </div>
+
+        <div id="memory-summary-card" class="card" style="margin-bottom: 16px; display: none;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span style="font-size: 18px; font-weight: 500;">🧠 記憶彙整摘要</span>
+                <span id="summary-updated" style="font-size: 12px; color: #9B8E87;"></span>
+            </div>
+            <div id="memory-summary-text" style="font-size: 15px; color: #3D3530; line-height: 1.8; background: #F7F3EE; border-radius: 10px; padding: 14px;">
+            </div>
+        </div>
         <div class="card">
             <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">📝 近期情緒紀錄</h2>
             <div id="dash-events" style="display: flex; flex-direction: column; gap: 10px;">
@@ -157,7 +192,7 @@
 
     <!-- iSafe 安全監控 -->
     <div id="page-isafe" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="card" style="text-align: center;">
                 <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">查詢長者</div>
                 <select id="isafe-elder-select" onchange="loadSafety(this.value)" style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
@@ -172,6 +207,10 @@
             <div class="card" style="text-align: center;">
                 <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">緊急事件數</div>
                 <div id="isafe-urgent-count" style="font-size: 36px; font-weight: 500; color: #E74C3C;">0</div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">趨勢警報數</div>
+                <div id="isafe-trend-count" style="font-size: 36px; font-weight: 500; color: #E67E22;">0</div>
             </div>
         </div>
 
@@ -206,7 +245,6 @@
 
     <!-- 決策後台 -->
     <div id="page-decision" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
-
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="card">
                 <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">📋 緊急 SOP 流程</h2>
@@ -293,8 +331,8 @@
                 <div style="background: #F7F3EE; border-radius: 12px; padding: 16px; text-align: center;">
                     <div style="font-size: 24px; margin-bottom: 8px;">🔍</div>
                     <div style="font-weight: 500; font-size: 15px; margin-bottom: 4px;">向量記憶搜尋</div>
-                    <div style="font-size: 13px; color: #7F8C8D;">pgvector 升級</div>
-                    <span class="badge" style="background: #F0EBE5; color: #9B8E87; margin-top: 8px; display: inline-block;">即將推出</span>
+                    <div style="font-size: 13px; color: #7F8C8D;">pgvector 已啟用</div>
+                    <span class="badge badge-low" style="margin-top: 8px; display: inline-block;">正常</span>
                 </div>
             </div>
         </div>
@@ -302,7 +340,6 @@
 
     <!-- Agent 監控 -->
     <div id="page-agents" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
-
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="agent-card">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
@@ -351,12 +388,14 @@
 
 <script>
 const API_BASE = "http://127.0.0.1:8000";
-const ELDERS = [
-    { id: "W001", name: "王大明" },
-    { id: "C001", name: "陳秀英" }
-];
-
 let agentLogInterval = null;
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+}
 
 function openSidebar() {
     document.getElementById('sidebar').classList.add('open');
@@ -365,6 +404,12 @@ function openSidebar() {
 function closeSidebar() {
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('overlay').classList.remove('open');
+}
+
+function startCareSession() {
+    const elderId = document.getElementById('elder-select').value;
+    const url = `/?elder=${elderId}`;
+    window.open(url, '_blank');
 }
 
 function navigateTo(page) {
@@ -506,7 +551,53 @@ async function saveElderProfile() {
     }
 }
 
-// ===== 對話紀錄後台 =====
+async function searchElderBackground() {
+    const elderId = document.getElementById('elder-select').value;
+    const name = document.getElementById('field-name').value;
+    const keywords = document.getElementById('search-keywords').value
+        .split(/[,，、\s]+/)
+        .filter(k => k.trim());
+    const resultEl = document.getElementById('search-result');
+
+    if (!name) {
+        alert('請先填入長者姓名！');
+        return;
+    }
+
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#F7F3EE';
+    resultEl.style.color = '#7F8C8D';
+    resultEl.textContent = '🔍 搜尋中...';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/search-background`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: elderId,
+                name: name,
+                keywords: keywords.length > 0 ? keywords : [name]
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            resultEl.style.background = '#E8F5EC';
+            resultEl.style.color = '#2D6A4F';
+            resultEl.innerHTML = `✅ 找到背景資料！已存入長期記憶。<br>
+                <span style="font-size: 13px; margin-top: 6px; display: block;">${escapeHtml(data.summary)}</span>`;
+        } else {
+            resultEl.style.background = '#FEF9E7';
+            resultEl.style.color = '#7D6608';
+            resultEl.textContent = '⚠️ ' + data.message;
+        }
+    } catch (e) {
+        resultEl.style.background = '#FDECEA';
+        resultEl.style.color = '#922B21';
+        resultEl.textContent = '❌ 搜尋失敗，請確認後端是否正常運行';
+    }
+}
+
 // ===== 對話紀錄後台 =====
 async function loadHistory(elderId) {
     try {
@@ -515,19 +606,31 @@ async function loadHistory(elderId) {
         const events = profile.recent_events || [];
         document.getElementById('dash-event-count').textContent = events.length;
 
+        // 顯示記憶彙整摘要
+        const summaryCard = document.getElementById('memory-summary-card');
+        const summaryText = document.getElementById('memory-summary-text');
+        const summaryUpdated = document.getElementById('summary-updated');
+        const summary = profile.memory_summary;
+
+        if (summary && summary.content) {
+            summaryCard.style.display = 'block';
+            summaryText.textContent = summary.content;
+            summaryUpdated.textContent = `最後更新：${summary.updated_at || ''} （基於 ${summary.based_on_events || 0} 筆事件）`;
+        } else {
+            summaryCard.style.display = 'none';
+        }
+
         const container = document.getElementById('dash-events');
         if (events.length === 0) {
             container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無情緒紀錄</div>';
             return;
         }
 
-        // 分成長期記憶和短期記憶
         const longMemory = events.filter(e => e.memory_type === 'long' || e.importance >= 0.7);
         const shortMemory = events.filter(e => e.memory_type !== 'long' && e.importance < 0.7);
 
         container.innerHTML = '';
 
-        // 長期重要記憶區塊
         if (longMemory.length > 0) {
             const longTitle = document.createElement('div');
             longTitle.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px; margin-top: 4px;';
@@ -536,7 +639,6 @@ async function loadHistory(elderId) {
                 <span style="font-size: 12px; color: #9B8E87;">importance ≥ 0.7，永久保留</span>
             `;
             container.appendChild(longTitle);
-
             longMemory.slice().reverse().forEach(evt => renderEvent(evt, container, true));
 
             const divider = document.createElement('div');
@@ -544,12 +646,9 @@ async function loadHistory(elderId) {
             container.appendChild(divider);
         }
 
-        // 短期記憶區塊
         const shortTitle = document.createElement('div');
         shortTitle.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px;';
-        shortTitle.innerHTML = `
-            <span style="font-size: 15px; font-weight: 500; color: #7F8C8D;">📝 近期情緒紀錄</span>
-        `;
+        shortTitle.innerHTML = `<span style="font-size: 15px; font-weight: 500; color: #7F8C8D;">📝 近期情緒紀錄</span>`;
         container.appendChild(shortTitle);
 
         if (shortMemory.length === 0) {
@@ -560,7 +659,6 @@ async function loadHistory(elderId) {
         } else {
             shortMemory.slice().reverse().forEach(evt => renderEvent(evt, container, false));
         }
-
     } catch (e) { console.error('載入失敗', e); }
 }
 
@@ -570,28 +668,21 @@ function renderEvent(evt, container, isLong) {
                            evt.sentiment === 'positive' ? '#E8F5EC' : '#F7F3EE';
     const sentimentText = evt.sentiment === 'negative' ? '😢 負向' :
                           evt.sentiment === 'positive' ? '😊 正向' : '😐 中性';
-
-    // 長期記憶加上特殊邊框
     const borderStyle = isLong ? 'border: 2px solid #C9A8E0;' : 'border: 1px solid transparent;';
 
     const div = document.createElement('div');
     div.style.cssText = `background: ${sentimentColor}; border-radius: 10px; padding: 12px 16px; font-size: 15px; margin-bottom: 8px; ${borderStyle}`;
     div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-            <span style="font-weight: 500; color: #3D3530; flex: 1;">${evt.event}</span>
-            <span style="font-size: 13px; color: #7F8C8D; margin-left: 8px; white-space: nowrap;">${evt.date}</span>
+            <span style="font-weight: 500; color: #3D3530; flex: 1;">${escapeHtml(evt.event)}</span>
+            <span style="font-size: 13px; color: #7F8C8D; margin-left: 8px; white-space: nowrap;">${evt.date} ${evt.time || ''}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span style="font-size: 13px; color: #7F8C8D;">${sentimentText}</span>
             ${evt.topic_tags ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${evt.topic_tags.join('、')}</span>` : ''}
-            ${evt.reason ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${evt.reason}</span>` : ''}
-            ${isLong ? `
-                <span style="margin-left: auto; font-size: 12px; background: #F4ECF7; color: #8E44AD; padding: 2px 8px; border-radius: 6px; font-weight: 500;">
-                    🔮 重要 ${importance.toFixed(1)}
-                </span>` : importance > 0 ? `
-                <span style="margin-left: auto; font-size: 12px; color: #BDC3C7;">
-                    重要度 ${importance.toFixed(1)}
-                </span>` : ''}
+            ${evt.reason ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${escapeHtml(evt.reason)}</span>` : ''}
+            ${isLong ? `<span style="margin-left: auto; font-size: 12px; background: #F4ECF7; color: #8E44AD; padding: 2px 8px; border-radius: 6px; font-weight: 500;">🔮 重要 ${importance.toFixed(1)}</span>` :
+              importance > 0 ? `<span style="margin-left: auto; font-size: 12px; color: #BDC3C7;">重要度 ${importance.toFixed(1)}</span>` : ''}
         </div>
     `;
     container.appendChild(div);
@@ -622,35 +713,62 @@ async function loadSafety(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/safety/${elderId}`);
         const data = await res.json();
+
         const hazardEl = document.getElementById('isafe-hazard');
         hazardEl.textContent = data.hazard_level === 'high' ? '🔴 高風險' : '🟢 正常';
         hazardEl.style.color = data.hazard_level === 'high' ? '#E74C3C' : '#27AE60';
         document.getElementById('isafe-urgent-count').textContent = data.urgent_count;
 
+        const trendEl = document.getElementById('isafe-trend-count');
+        if (trendEl) {
+            trendEl.textContent = data.trend_alerts || 0;
+            trendEl.style.color = data.trend_alerts > 0 ? '#E74C3C' : '#27AE60';
+        }
+
         const res2 = await fetch(`${API_BASE}/api/profile/${elderId}`);
         const profile = await res2.json();
         const events = (profile.recent_events || []).filter(e =>
-            e.topic_tags && (e.topic_tags.includes('安全警報') || e.topic_tags.includes('情緒'))
+            e.topic_tags && (
+                e.topic_tags.includes('安全警報') ||
+                e.topic_tags.includes('情緒') ||
+                e.topic_tags.includes('趨勢警報')
+            )
         );
+
         const container = document.getElementById('isafe-events');
         if (events.length === 0) {
             container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無安全事件</div>';
             return;
         }
+
         container.innerHTML = '';
         events.slice().reverse().forEach(evt => {
+            const isTrend = evt.topic_tags?.includes('趨勢警報');
             const isUrgent = evt.topic_tags?.includes('安全警報');
+
+            let bgColor, badgeText;
+            if (isTrend) {
+                bgColor = '#FEF3CD';
+                badgeText = '📈 趨勢警報';
+            } else if (isUrgent) {
+                bgColor = '#FDECEA';
+                badgeText = '🚨 緊急';
+            } else {
+                bgColor = '#FEF9E7';
+                badgeText = '⚠️ 注意';
+            }
+
             const div = document.createElement('div');
-            div.style.cssText = `background: ${isUrgent ? '#FDECEA' : '#FEF9E7'}; border-radius: 10px; padding: 12px 16px; font-size: 15px;`;
+            div.style.cssText = `background: ${bgColor}; border-radius: 10px; padding: 12px 16px; font-size: 15px; margin-bottom: 8px;`;
             div.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-weight: 500; color: #3D3530;">${evt.event}</span>
+                    <span style="font-weight: 500; color: #3D3530;">${escapeHtml(evt.event)}</span>
                     <div style="display: flex; gap: 8px; align-items: center;">
-                        <span class="badge ${isUrgent ? 'badge-high' : ''}" style="${!isUrgent ? 'background:#FEF9E7;color:#7D6608;' : ''}">${isUrgent ? '🚨 緊急' : '⚠️ 注意'}</span>
-                        <span style="font-size: 13px; color: #7F8C8D;">${evt.date}</span>
+                        <span class="badge ${isUrgent ? 'badge-high' : ''}" style="${!isUrgent && !isTrend ? 'background:#FEF9E7;color:#7D6608;' : ''}">${badgeText}</span>
+                        <span style="font-size: 13px; color: #7F8C8D;">${evt.date} ${evt.time || ''}</span>
                     </div>
                 </div>
-                <div style="font-size: 13px; color: #7F8C8D;">${evt.reason || evt.topic_tags?.join('、') || ''}</div>
+                <div style="font-size: 13px; color: #7F8C8D;">${escapeHtml(evt.reason || evt.topic_tags?.join('、') || '')}</div>
             `;
             container.appendChild(div);
         });
@@ -672,16 +790,15 @@ async function loadAgentLogs() {
             return;
         }
 
-        // 更新 Agent 狀態燈
-        const agents = ['MagicAI', 'iSafe', 'Decision'];
         const dotMap = { MagicAI: 'dot-magic', iSafe: 'dot-isafe', Decision: 'dot-decision' };
         const lastMap = { MagicAI: 'magic-last', iSafe: 'isafe-last', Decision: 'decision-last' };
 
-        agents.forEach(agent => {
+        ['MagicAI', 'iSafe', 'Decision'].forEach(agent => {
             const lastLog = logs.find(l => l.agent === agent);
             if (lastLog) {
-                document.getElementById(dotMap[agent]).classList.remove('inactive');
-                document.getElementById(lastMap[agent]).textContent = `最後活動：${lastLog.time}`;
+                document.getElementById(dotMap[agent])?.classList.remove('inactive');
+                const el = document.getElementById(lastMap[agent]);
+                if (el) el.textContent = `最後活動：${lastLog.time}`;
             }
         });
 
@@ -692,12 +809,13 @@ async function loadAgentLogs() {
             row.className = 'log-row';
             const actionColor = log.action === '分析完成' ? '#27AE60' :
                                log.action === '完成' ? '#4A90E2' :
-                               log.action === '回應完成' ? '#C17F5A' : '#7F8C8D';
+                               log.action === '回應完成' ? '#C17F5A' :
+                               log.action === '降級' ? '#E74C3C' : '#7F8C8D';
             row.innerHTML = `
                 <span class="log-time">${log.time}</span>
                 <span class="log-agent ${log.agent}">${log.agent}</span>
                 <span style="min-width: 70px; color: ${actionColor}; font-size: 13px;">${log.action}</span>
-                <span style="color: #3D3530; font-size: 13px;">${log.detail}</span>
+                <span style="color: #3D3530; font-size: 13px;">${escapeHtml(log.detail)}</span>
             `;
             container.appendChild(row);
         });

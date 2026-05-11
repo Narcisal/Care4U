@@ -56,12 +56,15 @@ def generate_image(message: str, trigger_type: str) -> str | None:
             )
         )
 
-        for part in response.candidates[0].content.parts:
+        print(f"圖片回應 parts 數量：{len(response.candidates[0].content.parts)}")
+        for i, part in enumerate(response.candidates[0].content.parts):
+            print(f"Part {i}: type={type(part)}, has_inline_data={part.inline_data is not None}")
             if part.inline_data is not None:
                 image_data = base64.b64encode(part.inline_data.data).decode("utf-8")
                 mime_type = part.inline_data.mime_type
+                print(f"圖片生成成功！mime_type={mime_type}")
                 return f"data:{mime_type};base64,{image_data}"
-
+        print("圖片生成：沒有找到圖片資料")
         return None
 
     except Exception as e:

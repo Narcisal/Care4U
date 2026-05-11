@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Care U - 智慧照護陪伴</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -58,7 +59,10 @@
             </div>
             <div class="text-right">
                 <div style="font-size: 16px; color: #7F8C8D;">陪伴對象</div>
-                <div id="elder-name" class="font-bold" style="font-size: 26px; color: #C17F5A;">載入中...</div>
+                <div id="elder-name-display"
+                    style="font-size: 22px; font-weight: bold; color: #C17F5A;">
+                    載入中...
+                </div>
             </div>
         </div>
     </div>
@@ -67,15 +71,18 @@
     <div class="max-w-3xl w-full mx-auto p-4 flex flex-col gap-3 flex-1 overflow-hidden">
 
         <!-- 情緒狀態列 -->
-        <div style="background: white; border: 1px solid #E0E0E0; border-radius: 16px;" class="p-4 flex items-center gap-4 flex-shrink-0">
+        <div style="background: white; border: 1px solid #E0E0E0; border-radius: 16px;"
+             class="p-4 flex items-center gap-4 flex-shrink-0">
             <div id="status-icon" class="text-3xl">💛</div>
             <div>
                 <div style="font-size: 16px; color: #7F8C8D;">目前情緒狀態</div>
-                <div id="emotion-status" class="font-semibold" style="font-size: 22px; color: #3D3530;">等待對話...</div>
+                <div id="emotion-status" class="font-semibold"
+                     style="font-size: 22px; color: #3D3530;">等待對話...</div>
             </div>
             <div class="ml-auto text-right">
                 <div style="font-size: 16px; color: #7F8C8D;">對話輪數</div>
-                <div id="chat-count" class="font-bold" style="font-size: 30px; color: #C17F5A;">0</div>
+                <div id="chat-count" class="font-bold"
+                     style="font-size: 30px; color: #C17F5A;">0</div>
             </div>
         </div>
 
@@ -97,26 +104,43 @@
             <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.2s"></div>
             <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.3s"></div>
             <div class="w-1 h-5 rounded wave-bar" style="background:#C17F5A; animation-delay:0.4s"></div>
-            <span class="ml-3 font-semibold" id="voice-status" style="color:#C17F5A; font-size:20px;">正在錄音...</span>
+            <span class="ml-3 font-semibold" id="voice-status"
+                  style="color:#C17F5A; font-size:20px;">正在錄音...</span>
         </div>
 
         <!-- 文字輸入區 -->
-        <div style="background: white; border: 1px solid #D6CEC7; border-radius: 16px;" class="p-3 flex gap-3 flex-shrink-0">
+        <div style="background: white; border: 1px solid #D6CEC7; border-radius: 16px;"
+             class="p-3 flex gap-3 flex-shrink-0">
             <input id="text-input" type="text" placeholder="輸入訊息..."
-                style="font-size: 22px; border: 2px solid #D6CEC7; border-radius: 12px; padding: 14px 16px; background: #F0EBE5; color: #3D3530;"
+                style="font-size: 22px; border: 2px solid #D6CEC7; border-radius: 12px;
+                       padding: 14px 16px; background: #F0EBE5; color: #3D3530;"
                 class="flex-1 focus:outline-none disabled:opacity-50" disabled />
-            <button id="send-btn" class="btn-primary px-6 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed" style="font-size: 22px;" disabled>送出</button>
+            <button id="send-btn"
+                class="btn-primary px-6 rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                style="font-size: 22px;" disabled>
+                送出
+            </button>
         </div>
 
         <!-- 控制按鈕 -->
         <div class="flex gap-3 flex-shrink-0">
-            <button id="start-btn" class="btn-primary flex-1 rounded-2xl font-bold" style="font-size: 24px; padding: 20px;">🌟 開始對話</button>
-            <button id="record-btn" class="btn-voice rounded-2xl font-bold disabled:opacity-40 disabled:cursor-not-allowed" style="font-size: 22px; padding: 20px 32px;" disabled>🎙️ 語音輸入</button>
-            <button id="clear-btn" class="rounded-2xl font-bold" style="background: #D6CEC7; color: #3D3530; font-size: 22px; padding: 20px 28px;">清除</button>
+            <button id="start-btn" class="btn-primary flex-1 rounded-2xl font-bold"
+                style="font-size: 24px; padding: 20px;">
+                🌟 開始對話
+            </button>
+            <button id="record-btn"
+                class="btn-voice rounded-2xl font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                style="font-size: 22px; padding: 20px 32px;" disabled>
+                🎙️ 語音輸入
+            </button>
+            <button id="clear-btn" class="rounded-2xl font-bold"
+                style="background: #D6CEC7; color: #3D3530; font-size: 22px; padding: 20px 28px;">
+                清除
+            </button>
         </div>
 
     </div>
 
-    <script src="/static/app.js?v=7"></script>
+    <script src="/static/app.js?v=8"></script>
 </body>
 </html>

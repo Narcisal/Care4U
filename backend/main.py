@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
+from typing import Optional
 from backend.agents.decision import Decision, clear_agent
 from backend.services.stt_service import STTService
 from backend.services.tts_service import TTSService
@@ -22,22 +23,17 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 stt = STTService(model_size="medium", device="cpu")
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
-
-# main.py 現在只維護 Decision Agent 的字典
 decisions: dict[str, Decision] = {}
-
 
 def get_decision(elder_id: str) -> Decision:
     if elder_id not in decisions:
         decisions[elder_id] = Decision(elder_id)
     return decisions[elder_id]
 
-
-# ====== 資料格式 ======
-
 class ChatRequest(BaseModel):
     elder_id: str
     message: str
+    speed_emotion: str = "normal"
 
 class GreetRequest(BaseModel):
     elder_id: str
@@ -57,8 +53,10 @@ class ElderProfileUpdate(BaseModel):
     diet: str
     family: str
 
-
-# ====== 路由 ======
+class ElderSearchRequest(BaseModel):
+    elder_id: str
+    name: str
+    keywords: list
 
 @app.get("/")
 def read_root():
@@ -80,7 +78,7 @@ def greet(req: GreetRequest):
 def chat(req: ChatRequest):
     try:
         decision = get_decision(req.elder_id)
-        return decision.chat(req.message)
+        return decision.chat(req.message, req.speed_emotion)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -88,10 +86,16 @@ def chat(req: ChatRequest):
 async def speech_to_text(audio: UploadFile = File(...)):
     try:
         audio_bytes = await audio.read()
-        text = stt.transcribe(audio_bytes)
-        if not text:
-            return {"text": "", "success": False}
-        return {"text": text, "success": True}
+        result = stt.transcribe_with_speed(audio_bytes)
+        if not result["text"]:
+            return {"text": "", "success": False, "speed_emotion": "normal"}
+        return {
+            "text": result["text"],
+            "success": True,
+            "speed_emotion": result["speed_emotion"],
+            "speech_rate": result["speech_rate"],
+            "duration": result["duration"]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -125,12 +129,16 @@ def get_history(elder_id: str):
 
 @app.get("/api/safety/{elder_id}")
 def get_safety(elder_id: str):
-    """新增：取得長者安全狀態（後台用）"""
     try:
         decision = get_decision(elder_id)
         return decision.get_safety_status()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/agent-logs")
+def get_agent_logs():
+    from backend.agents.decision import get_logs
+    return {"logs": get_logs()}
 
 @app.post("/api/profile/save")
 def save_profile(req: ElderProfileUpdate):
@@ -169,7 +177,6 @@ def save_profile(req: ElderProfileUpdate):
         with open(data_path, "w", encoding="utf-8") as f:
             json.dump(profile, f, ensure_ascii=False, indent=2)
 
-        # 清除所有相關 Agent 快取
         clear_agent(req.elder_id)
         decisions.pop(req.elder_id, None)
 
@@ -177,9 +184,75 @@ def save_profile(req: ElderProfileUpdate):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/switch-elder")
+def switch_elder(req: GreetRequest):
+    try:
+        # 清除舊的 agent
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/api/agent-logs")
-def get_agent_logs():
-    """取得 Agent 互動 log"""
-    from backend.agents.decision import get_logs
-    return {"logs": get_logs()}
+@app.post("/api/profile/search-background")
+def search_elder_background(req: ElderSearchRequest):
+    try:
+        from backend.tools.search_service import SearchService
+        from backend.memory.vector_store import VectorMemoryStore
+        from backend.services.embedding_service import EmbeddingService
+        from backend.services.llm_service import LLMService
+
+        search = SearchService()
+        result = search.search_elder_background(req.name, req.keywords)
+
+        if not result["found"]:
+            return {"success": False, "message": "找不到相關公開資料"}
+
+        llm = LLMService()
+        filtered = search.filter_relevant_info(result["summary"], req.name, llm)
+
+        if filtered == "無相關公開資料" or not filtered:
+            return {"success": False, "message": "找不到相關公開資料"}
+
+        memory = VectorMemoryStore()
+        embedding_service = EmbeddingService()
+
+        event = {
+            "event": f"背景資料：{filtered}",
+            "sentiment": "neutral",
+            "emotion_score": 0.0,
+            "importance": 0.9,
+            "memory_type": "long",
+            "topic_tags": ["背景資料", "公開資訊"],
+            "reason": f"來源：{', '.join([s['title'] for s in result['sources'][:2]])}",
+            "source": "web_search"
+        }
+
+        memory.add_event(req.elder_id, event)
+
+        try:
+            emb = embedding_service.embed(filtered)
+            if emb:
+                cursor = memory._get_cursor()
+                if cursor:
+                    cursor.execute("""
+                        SELECT id FROM elder_memories
+                        WHERE elder_id = %s
+                        ORDER BY created_at DESC LIMIT 1
+                    """, (req.elder_id,))
+                    row = cursor.fetchone()
+                    if row:
+                        memory.update_embedding(row['id'], emb)
+        except Exception as e:
+            print(f"向量生成失敗：{e}")
+
+        return {
+            "success": True,
+            "message": f"找到 {req.name} 的背景資料",
+            "summary": filtered,
+            "sources": result["sources"]
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
