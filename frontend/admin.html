@@ -127,23 +127,62 @@
             </div>
             <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
 
-            <!-- 網路搜尋補充背景資料 -->
-            <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
-                <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
-                    🔍 網路搜尋補充背景資料
-                    <span style="font-size: 12px;">（搜尋長者的公開資料，如著作、職業成就）</span>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <input id="search-keywords" type="text" placeholder="輸入關鍵字，如：著作名稱、任職機構"
-                        style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
-                    <button onclick="searchElderBackground()"
-                        style="padding: 10px 20px; border-radius: 10px; border: none; background: #4A90E2; color: white; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap;">
-                        🔍 搜尋
-                    </button>
-                </div>
-                <div id="search-result" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px;"></div>
-            </div>
+    <!-- 網路搜尋補充背景資料 -->
+    <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
+        <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
+            🔍 網路搜尋補充背景資料
+            <span style="font-size: 12px;">（搜尋長者的公開資料，如著作、職業成就）</span>
         </div>
+        <div style="display: flex; gap: 10px;">
+            <input id="search-keywords" type="text" placeholder="輸入關鍵字，如：著作名稱、任職機構"
+                style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
+            <button onclick="searchElderBackground()"
+                style="padding: 10px 20px; border-radius: 10px; border: none; background: #4A90E2; color: white; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                🔍 搜尋
+            </button>
+        </div>
+        <div id="search-result" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px;"></div>
+
+        <!-- 生平資料顯示與編輯 -->
+        <div id="biography-section" style="margin-top: 16px; display: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 14px; font-weight: 500; color: #3D3530;">📖 長者生平資料</span>
+                <button onclick="toggleBiographyEdit()"
+                    id="bio-edit-btn"
+                    style="padding: 4px 12px; border-radius: 8px; border: 1px solid #D6CEC7;
+                        background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">
+                    ✏️ 編輯
+                </button>
+            </div>
+            <div id="biography-display"
+                style="padding: 12px; background: white; border-radius: 10px;
+                        font-size: 14px; color: #3D3530; line-height: 1.8;">
+            </div>
+            <textarea id="biography-edit"
+                style="display: none; width: 100%; padding: 12px; border: 1px solid #D6CEC7;
+                    border-radius: 10px; font-size: 14px; background: white;
+                    color: #3D3530; font-family: inherit; line-height: 1.8;
+                    resize: vertical; min-height: 120px; box-sizing: border-box;">
+            </textarea>
+            <button id="bio-save-btn" onclick="saveBiography()"
+                style="display: none; margin-top: 8px; padding: 10px 20px; border-radius: 10px;
+                    border: none; background: #C17F5A; color: white; font-size: 14px;
+                    cursor: pointer; font-family: inherit;">
+                💾 儲存生平資料
+            </button>
+        </div>
+
+        <!-- 開始陪伴按鈕 -->
+        <div style="margin-top: 12px;">
+            <button onclick="startCareSession()"
+                style="width: 100%; padding: 14px; font-size: 17px;
+                    background: #7B9E87; color: white; border: none;
+                    border-radius: 16px; cursor: pointer; font-family: inherit;">
+                🌟 開始陪伴這位長者
+            </button>
+        </div>
+    </div>
+    </div>
     </div>
 
     <!-- 對話紀錄後台 -->
@@ -458,6 +497,20 @@ async function loadElderData(elderId) {
         document.getElementById('family-list').innerHTML = '';
         Object.entries(family).forEach(([role, name]) => addFamilyRow(role, name));
         if (Object.keys(family).length === 0) addFamilyRow();
+
+        // 顯示生平資料
+        const bioSection = document.getElementById('biography-section');
+        const bioDisplay = document.getElementById('biography-display');
+        const bioEdit = document.getElementById('biography-edit');
+        const biography = profile.elder_biography;
+
+        if (biography && biography.content) {
+            bioSection.style.display = 'block';
+            bioDisplay.textContent = biography.content;
+            bioEdit.value = biography.content;
+        } else {
+            bioSection.style.display = 'none';
+        }
     } catch (e) { console.error('載入失敗', e); }
 }
 
@@ -567,7 +620,7 @@ async function searchElderBackground() {
     resultEl.style.display = 'block';
     resultEl.style.background = '#F7F3EE';
     resultEl.style.color = '#7F8C8D';
-    resultEl.textContent = '🔍 搜尋中...';
+    resultEl.textContent = '🔍 搜尋並整理生平資料中...';
 
     try {
         const res = await fetch(`${API_BASE}/api/profile/search-background`, {
@@ -584,8 +637,14 @@ async function searchElderBackground() {
         if (data.success) {
             resultEl.style.background = '#E8F5EC';
             resultEl.style.color = '#2D6A4F';
-            resultEl.innerHTML = `✅ 找到背景資料！已存入長期記憶。<br>
-                <span style="font-size: 13px; margin-top: 6px; display: block;">${escapeHtml(data.summary)}</span>`;
+            resultEl.innerHTML = `✅ 已整理生平資料！AI 會在對話中自然帶入。`;
+
+            const bioSection = document.getElementById('biography-section');
+            const bioDisplay = document.getElementById('biography-display');
+            const bioEdit = document.getElementById('biography-edit');
+            bioSection.style.display = 'block';
+            bioDisplay.textContent = data.biography;
+            bioEdit.value = data.biography;
         } else {
             resultEl.style.background = '#FEF9E7';
             resultEl.style.color = '#7D6608';
@@ -594,7 +653,7 @@ async function searchElderBackground() {
     } catch (e) {
         resultEl.style.background = '#FDECEA';
         resultEl.style.color = '#922B21';
-        resultEl.textContent = '❌ 搜尋失敗，請確認後端是否正常運行';
+        resultEl.textContent = '❌ 搜尋失敗';
     }
 }
 
@@ -706,6 +765,109 @@ async function testTTS(emotion, text) {
             setTimeout(() => status.style.display = 'none', 2000);
         };
     } catch (e) { status.textContent = '❌ 播放失敗'; }
+}
+
+async function searchElderBackground() {
+    const elderId = document.getElementById('elder-select').value;
+    const name = document.getElementById('field-name').value;
+    const keywords = document.getElementById('search-keywords').value
+        .split(/[,，、\s]+/)
+        .filter(k => k.trim());
+    const resultEl = document.getElementById('search-result');
+
+    if (!name) {
+        alert('請先填入長者姓名！');
+        return;
+    }
+
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#F7F3EE';
+    resultEl.style.color = '#7F8C8D';
+    resultEl.textContent = '🔍 搜尋並整理生平資料中...';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/search-background`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: elderId,
+                name: name,
+                keywords: keywords.length > 0 ? keywords : [name]
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            resultEl.style.background = '#E8F5EC';
+            resultEl.style.color = '#2D6A4F';
+            resultEl.innerHTML = `✅ 已整理生平資料！AI 會在對話中自然帶入。`;
+
+            const bioSection = document.getElementById('biography-section');
+            const bioDisplay = document.getElementById('biography-display');
+            const bioEdit = document.getElementById('biography-edit');
+            bioSection.style.display = 'block';
+            bioDisplay.textContent = data.biography;
+            bioEdit.value = data.biography;
+        } else {
+            resultEl.style.background = '#FEF9E7';
+            resultEl.style.color = '#7D6608';
+            resultEl.textContent = '⚠️ ' + data.message;
+        }
+    } catch (e) {
+        resultEl.style.background = '#FDECEA';
+        resultEl.style.color = '#922B21';
+        resultEl.textContent = '❌ 搜尋失敗';
+    }
+}
+
+function toggleBiographyEdit() {
+    const display = document.getElementById('biography-display');
+    const edit = document.getElementById('biography-edit');
+    const saveBtn = document.getElementById('bio-save-btn');
+    const editBtn = document.getElementById('bio-edit-btn');
+
+    if (edit.style.display === 'none') {
+        display.style.display = 'none';
+        edit.style.display = 'block';
+        saveBtn.style.display = 'block';
+        editBtn.textContent = '✕ 取消';
+    } else {
+        display.style.display = 'block';
+        edit.style.display = 'none';
+        saveBtn.style.display = 'none';
+        editBtn.textContent = '✏️ 編輯';
+    }
+}
+
+async function saveBiography() {
+    const elderId = document.getElementById('elder-select').value;
+    const content = document.getElementById('biography-edit').value.trim();
+    if (!content) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/save-biography`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: elderId,
+                biography: content
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('biography-display').textContent = content;
+            toggleBiographyEdit();
+            alert('✅ 生平資料已儲存！');
+        }
+    } catch (e) {
+        alert('❌ 儲存失敗');
+    }
+}
+
+function startCareSession() {
+    const elderId = document.getElementById('elder-select').value;
+    const url = `/?elder=${elderId}`;
+    window.open(url, '_blank');
 }
 
 // ===== iSafe 安全監控 =====

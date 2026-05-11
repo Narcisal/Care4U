@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,6 +59,10 @@ class ElderSearchRequest(BaseModel):
     name: str
     keywords: list
 
+class BiographyUpdateRequest(BaseModel):
+    elder_id: str
+    biography: str
+
 @app.get("/")
 def read_root():
     return FileResponse("frontend/index.html")
@@ -65,6 +70,15 @@ def read_root():
 @app.get("/admin")
 def admin_page():
     return FileResponse("frontend/admin.html")
+
+@app.post("/api/switch-elder")
+def switch_elder(req: GreetRequest):
+    try:
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/greet")
 def greet(req: GreetRequest):
@@ -149,7 +163,13 @@ def save_profile(req: ElderProfileUpdate):
             with open(data_path, "r", encoding="utf-8") as f:
                 profile = json.load(f)
         else:
-            profile = {"elder_id": req.elder_id, "recent_events": []}
+            profile = {
+                "elder_id": req.elder_id,
+                "recent_events": [],
+                "memory_summary": {},
+                "elder_biography": {},
+                "biography_usage_count": 0
+            }
 
         profile["name"] = req.name
         profile["gender"] = req.gender
@@ -168,10 +188,6 @@ def save_profile(req: ElderProfileUpdate):
             family = json.loads(req.family)
         except Exception:
             family = {}
-            for item in req.family.split("、"):
-                if "：" in item:
-                    role, name = item.split("：", 1)
-                    family[role.strip()] = name.strip()
         profile["persona"]["family"] = family
 
         with open(data_path, "w", encoding="utf-8") as f:
@@ -185,23 +201,12 @@ def save_profile(req: ElderProfileUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/switch-elder")
-def switch_elder(req: GreetRequest):
-    try:
-        # 清除舊的 agent
-        clear_agent(req.elder_id)
-        decisions.pop(req.elder_id, None)
-        return {"success": True}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
 @app.post("/api/profile/search-background")
 def search_elder_background(req: ElderSearchRequest):
     try:
         from backend.tools.search_service import SearchService
         from backend.memory.vector_store import VectorMemoryStore
         from backend.services.embedding_service import EmbeddingService
-        from backend.services.llm_service import LLMService
 
         search = SearchService()
         result = search.search_elder_background(req.name, req.keywords)
@@ -209,30 +214,42 @@ def search_elder_background(req: ElderSearchRequest):
         if not result["found"]:
             return {"success": False, "message": "找不到相關公開資料"}
 
-        llm = LLMService()
-        filtered = search.filter_relevant_info(result["summary"], req.name, llm)
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            return {"success": False, "message": "找不到長者資料"}
 
-        if filtered == "無相關公開資料" or not filtered:
+        biography = search.generate_biography(
+            result["summary"], req.name, profile
+        )
+
+        if not biography or biography == "無相關公開資料":
             return {"success": False, "message": "找不到相關公開資料"}
 
-        memory = VectorMemoryStore()
-        embedding_service = EmbeddingService()
+        profile["elder_biography"] = {
+            "content": biography,
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "sources": result["sources"],
+            "manually_edited": False
+        }
+        profile["biography_usage_count"] = 0
+        memory._save(req.elder_id, profile)
 
+        embedding_service = EmbeddingService()
         event = {
-            "event": f"背景資料：{filtered}",
+            "event": f"生平資料：{biography[:100]}",
             "sentiment": "neutral",
             "emotion_score": 0.0,
-            "importance": 0.9,
+            "importance": 0.95,
             "memory_type": "long",
-            "topic_tags": ["背景資料", "公開資訊"],
-            "reason": f"來源：{', '.join([s['title'] for s in result['sources'][:2]])}",
+            "topic_tags": ["生平資料", "背景資訊"],
+            "reason": "網路搜尋整理的生平文章",
             "source": "web_search"
         }
-
         memory.add_event(req.elder_id, event)
 
         try:
-            emb = embedding_service.embed(filtered)
+            emb = embedding_service.embed(biography)
             if emb:
                 cursor = memory._get_cursor()
                 if cursor:
@@ -247,12 +264,42 @@ def search_elder_background(req: ElderSearchRequest):
         except Exception as e:
             print(f"向量生成失敗：{e}")
 
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+
         return {
             "success": True,
-            "message": f"找到 {req.name} 的背景資料",
-            "summary": filtered,
+            "message": f"已整理 {req.name} 的生平資料",
+            "biography": biography,
             "sources": result["sources"]
         }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile/save-biography")
+def save_biography(req: BiographyUpdateRequest):
+    try:
+        from backend.memory.vector_store import VectorMemoryStore
+
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="找不到長者資料")
+
+        profile["elder_biography"] = {
+            "content": req.biography,
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "sources": profile.get("elder_biography", {}).get("sources", []),
+            "manually_edited": True
+        }
+        profile["biography_usage_count"] = 0
+        memory._save(req.elder_id, profile)
+
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+
+        return {"success": True, "message": "生平資料已儲存"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

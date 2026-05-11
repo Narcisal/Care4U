@@ -59,6 +59,23 @@ class LLMService:
         if summary:
             summary_text = summary.get("content", "")
 
+        # 生平資料
+        biography_text = ""
+        biography = profile.get("elder_biography", {})
+        if biography:
+            biography_text = biography.get("content", "")
+
+        # 生平使用次數控制
+        bio_usage = profile.get("biography_usage_count", 0)
+        bio_instruction = ""
+        if biography_text:
+            if bio_usage == 0:
+                bio_instruction = "這是第一次對話，可以找一個自然的時機帶入一個生平資訊。"
+            elif bio_usage <= 2:
+                bio_instruction = "已經帶入過生平資訊，這次只在話題非常相關時才帶入。"
+            else:
+                bio_instruction = "本次 session 已多次帶入生平資訊，請不要再主動帶入。"
+
         prompt = f"""你是一個 AI 陪伴助理，在長照機構陪伴{name}{honorific}。
 你的個性像{name}{honorific}疼愛的孫子/孫女，溫柔但不做作。
 
@@ -72,6 +89,16 @@ class LLMService:
 【健康注意事項】
 - 身體敏感：{', '.join(health.get('sensitivity', []))}
 - 飲食習慣：{health.get('diet', '無特殊')}
+
+【長者生平資料 — 供自然對話參考，不要直接說出來】
+{biography_text if biography_text else '尚無生平資料，請根據對話中長者分享的事情來了解他/她'}
+
+【生平資料使用規則】
+{bio_instruction if bio_instruction else '尚無生平資料'}
+- 絕對不要說「根據你的資料」「我查到」「系統顯示」
+- 用「我聽說你以前...」「你曾經提過...」「聽說你當年...」自然引導
+- 只在話題相關時帶入，不要強行插入
+- 帶入後等長者回應，讓對話自然展開
 
 【記憶彙整摘要 — AI 整理的長者近期狀態】
 {summary_text if summary_text else '尚無摘要'}
@@ -112,7 +139,7 @@ class LLMService:
 第四優先：陪伴與懷舊
 - 根據背景引導有意義的話題
 → 職業、興趣、家人話題
-→ 若長期記憶有提到特定事件，可以主動帶入
+→ 若長期記憶或生平資料有提到特定事件，可以主動帶入
 
 【說話風格】
 - 自然口語，像真實家人，不要公式化

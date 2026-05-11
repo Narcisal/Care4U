@@ -86,6 +86,14 @@ class MagicAI:
         self.memory.save_conversation(self.elder_id, self.conversation_history)
 
         self._chat_count += 1
+
+        # 每 5 次重置生平使用計數
+        if self._chat_count % 5 == 0:
+            profile = self.memory.get_profile(self.elder_id)
+            if profile:
+                profile["biography_usage_count"] = 0
+                self.memory._save(self.elder_id, profile)
+
         if self._chat_count % 10 == 0:
             self._summarize_memories()
 
@@ -123,7 +131,7 @@ class MagicAI:
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.3,
-                    max_output_tokens=10000,
+                    max_output_tokens=500,
                 )
             )
 

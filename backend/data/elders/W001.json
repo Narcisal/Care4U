@@ -470,11 +470,111 @@
       "id": "6d8228b5",
       "date": "2026-05-11",
       "time": "03:31:18"
+    },
+    {
+      "event": "生平資料：王大明先生曾是台南市立文賢",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.95,
+      "memory_type": "long",
+      "topic_tags": [
+        "生平資料",
+        "背景資訊"
+      ],
+      "reason": "網路搜尋整理的生平文章",
+      "source": "web_search",
+      "id": "7fea64c3",
+      "date": "2026-05-11",
+      "time": "18:52:27"
+    },
+    {
+      "event": "生平資料：王大明先生曾是一位電腦工程師，退休",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.95,
+      "memory_type": "long",
+      "topic_tags": [
+        "生平資料",
+        "背景資訊"
+      ],
+      "reason": "網路搜尋整理的生平文章",
+      "source": "web_search",
+      "id": "c674d8bb",
+      "date": "2026-05-11",
+      "time": "18:54:25"
+    },
+    {
+      "event": "生平資料：王大明先生曾是一位在台南市立文賢",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.95,
+      "memory_type": "long",
+      "topic_tags": [
+        "生平資料",
+        "背景資訊"
+      ],
+      "reason": "網路搜尋整理的生平文章",
+      "source": "web_search",
+      "id": "649a9afc",
+      "date": "2026-05-11",
+      "time": "18:54:49"
+    },
+    {
+      "event": "生平資料：王大明先生曾是一位電腦工程師，",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.95,
+      "memory_type": "long",
+      "topic_tags": [
+        "生平資料",
+        "背景資訊"
+      ],
+      "reason": "網路搜尋整理的生平文章",
+      "source": "web_search",
+      "id": "bfcc8812",
+      "date": "2026-05-11",
+      "time": "21:16:40"
+    },
+    {
+      "event": "說了：我懷念以前",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.7,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "表達對過去的思念，屬於情緒低落。",
+      "source": "voice",
+      "spoken_at": "2026-05-11 21:21:26",
+      "id": "877fa0fc",
+      "date": "2026-05-11",
+      "time": "21:21:26"
     }
   ],
   "memory_summary": {
     "content": "王大明爺爺",
     "updated_at": "2026-05-11 03:14:37",
     "based_on_events": 10
-  }
+  },
+  "elder_biography": {
+    "content": "王大明先生曾是一位電腦工程師，",
+    "updated_at": "2026-05-11 21:27:03",
+    "sources": [
+      {
+        "title": "【來崇明學聰明】數學老師怎麼教？ 數學老師說：「我們的教學宗旨 ...",
+        "url": "https://www.facebook.com/CMJH.Tainan/videos/%E4%BE%86%E5%B4%87%E6%98%8E%E5%AD%B8%E8%81%B0%E6%98%8E%E6%95%B8%E5%AD%B8%E8%80%81%E5%B8%AB%E6%80%8E%E9%BA%BC%E6%95%99%E6%95%B8%E5%AD%B8%E8%80%81%E5%B8%AB%E8%AA%AA%E6%88%91%E5%80%91%E7%9A%84%E6%95%99%E5%AD%B8%E5%AE%97%E6%97%A8%E6%98%AF%E7%85%A7%E9%A1%A7%E5%88%B0%E6%AF%8F%E4%B8%80%E4%BD%8D%E5%AD%B8%E7%94%9F%E6%89%80%E4%BB%A5%E7%B5%95%E4%B8%8D%E6%94%BE%E6%A3%84%E6%AF%8F%E4%B8%80%E4%BD%8D%E5%AD%A9%E5%AD%90%E9%87%8D%E8%A6%96%E6%AF%8F%E4%BD%8D%E5%AD%A9%E5%AD%90%E7%9A%84%E6%BD%9B%E5%8A%9B/1314631961906413/"
+      },
+      {
+        "title": "目前學校現況揭露！ 🏫🔍 #校園生活#現況揭示#堅持真實#快來八卦 ...",
+        "url": "https://www.instagram.com/reel/DVxc3Y8DE7x/"
+      },
+      {
+        "title": "神助金榜題名永康武龍宮首辦考生祈福- 2025國中教育會考 - 自由時報",
+        "url": "https://features.ltn.com.tw/cap/2025/article/breakingnews/1291763"
+      }
+    ],
+    "manually_edited": true
+  },
+  "biography_usage_count": 0
 }
