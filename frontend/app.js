@@ -1,5 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
-let ELDER_ID = urlParams.get("elder") || "W001";
+let ELDER_ID = urlParams.get("elder") || null;
+let SELECTED_PERSONA = "ai";
 const API_BASE = "http://127.0.0.1:8000";
 
 let chatCount = 0;
@@ -21,6 +22,7 @@ function enableButtons() {
 }
 
 async function loadElderProfile() {
+    if (!ELDER_ID) return;
     try {
         const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
         const profile = await res.json();
@@ -367,4 +369,106 @@ try {
     document.getElementById("clear-btn").addEventListener("click", clearChat);
 } catch (e) {
     console.error("事件綁定失敗：", e);
+}
+async function loadWelcomePersonas(elderId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        const data = await res.json();
+        const personas = data.personas || {};
+        const activeId = data.active_persona || 'ai';
+
+        const container = document.getElementById('welcome-persona-list');
+        container.innerHTML = '';
+
+        Object.entries(personas).forEach(([id, persona]) => {
+            const isSelected = id === activeId;
+            const div = document.createElement('div');
+            div.id = `persona-btn-${id}`;
+            div.onclick = () => selectPersona(id);
+            div.style.cssText = `
+                padding: 16px 20px; border-radius: 12px; cursor: pointer;
+                border: 2px solid ${isSelected ? '#C17F5A' : '#D6CEC7'};
+                background: ${isSelected ? '#FEF3E8' : 'white'};
+                display: flex; align-items: center; gap: 12px;
+                transition: all 0.2s;
+            `;
+            div.innerHTML = `
+                <div style="font-size: 32px;">
+                    ${id === 'ai' ? '🤖' : '👤'}
+                </div>
+                <div>
+                    <div style="font-size: 20px; font-weight: bold; color: #3D3530;">
+                        ${persona.name}
+                    </div>
+                    <div style="font-size: 14px; color: #7F8C8D;">
+                        ${persona.relation ? persona.relation : 'AI 陪伴助理'}
+                    </div>
+                </div>
+                ${isSelected ? '<div style="margin-left: auto; color: #C17F5A; font-size: 20px;">✓</div>' : ''}
+            `;
+            container.appendChild(div);
+            if (isSelected) SELECTED_PERSONA = id;
+        });
+    } catch (e) {
+        console.error('載入人格失敗', e);
+    }
+}
+
+function selectPersona(personaId) {
+    SELECTED_PERSONA = personaId;
+    const elderId = document.getElementById('welcome-elder-select').value;
+
+    // 更新選擇狀態
+    document.querySelectorAll('[id^="persona-btn-"]').forEach(btn => {
+        const id = btn.id.replace('persona-btn-', '');
+        const isSelected = id === personaId;
+        btn.style.border = `2px solid ${isSelected ? '#C17F5A' : '#D6CEC7'}`;
+        btn.style.background = isSelected ? '#FEF3E8' : 'white';
+
+        // 更新勾選標記
+        const lastChild = btn.lastElementChild;
+        if (isSelected) {
+            if (!lastChild || !lastChild.textContent.includes('✓')) {
+                const check = document.createElement('div');
+                check.style.cssText = 'margin-left: auto; color: #C17F5A; font-size: 20px;';
+                check.textContent = '✓';
+                btn.appendChild(check);
+            }
+        } else {
+            if (lastChild && lastChild.textContent.includes('✓')) {
+                lastChild.remove();
+            }
+        }
+    });
+}
+
+async function enterChat() {
+    ELDER_ID = document.getElementById('welcome-elder-select').value;
+
+    // 切換人格
+    try {
+        await fetch(`${API_BASE}/api/profile/persona/switch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: ELDER_ID,
+                persona_id: SELECTED_PERSONA
+            })
+        });
+    } catch (e) {
+        console.error('切換人格失敗', e);
+    }
+
+    // 隱藏初始畫面，顯示主畫面
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('main-screen').classList.remove('hidden');
+
+    await loadElderProfile();
+}
+if (ELDER_ID) {
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('main-screen').classList.remove('hidden');
+    loadElderProfile();
+} else {
+    loadWelcomePersonas('W001');
 }

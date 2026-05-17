@@ -40,6 +40,36 @@ class Decision:
         self.elder_id = elder_id
         self.magic = _get_magic(elder_id)
         self.isafe = _get_isafe(elder_id)
+        self._setup_persona()
+
+    def _setup_persona(self):
+        """根據 active_persona 設定 TTS 引擎"""
+        try:
+            from backend.memory.vector_store import VectorMemoryStore
+            from backend.services.tts_service import TTSService
+            memory = VectorMemoryStore()
+            profile = memory.get_profile(self.elder_id)
+            personas = profile.get("personas", {})
+            active_id = profile.get("active_persona", "ai")
+            active = personas.get(active_id, personas.get("ai", {}))
+
+            self.tts = TTSService()
+            engine = active.get("voice_engine", "edge")
+            voice_path = active.get("voice_path")
+
+            if engine == "breezyvoice" and voice_path:
+                self.tts.set_engine("breezyvoice", voice_path)
+                print(f"TTS 切換為 BreezyVoice，聲音樣本：{voice_path}")
+            else:
+                self.tts.reset_engine()
+
+            self.active_persona = active
+            print(f"人格設定：{active.get('name', 'AI 助理')}")
+        except Exception as e:
+            print(f"人格設定失敗：{e}")
+            from backend.services.tts_service import TTSService
+            self.tts = TTSService()
+            self.active_persona = {"name": "AI 助理", "honorific": "爺爺"}
 
     def greet(self) -> dict:
         try:
@@ -47,18 +77,20 @@ class Decision:
             return {
                 "message": greeting,
                 "emotion": "normal",
-                "elder_id": self.elder_id
+                "elder_id": self.elder_id,
+                "persona_name": self.active_persona.get("name", "AI 助理")
             }
         except Exception as e:
             _log("MagicAI", "錯誤", f"問候失敗：{str(e)[:50]}")
             return {
                 "message": "你好！今天感覺怎麼樣呀？",
                 "emotion": "normal",
-                "elder_id": self.elder_id
+                "elder_id": self.elder_id,
+                "persona_name": "AI 助理"
             }
 
     def chat(self, user_message: str,
-             speed_emotion: str = "normal") -> dict:
+            speed_emotion: str = "normal") -> dict:
 
         safety = self._run_isafe(user_message, speed_emotion)
         response = self._run_magic(user_message)
@@ -66,7 +98,7 @@ class Decision:
         health_info = self._run_health_search(user_message)
 
         _log("Decision", "完成",
-             f"emotion={safety['emotion']} → TTS 語調調整")
+            f"emotion={safety['emotion']} → TTS 語調調整")
 
         return {
             "message": response,
@@ -77,7 +109,8 @@ class Decision:
             "elder_id": self.elder_id,
             "history_length": len(self.magic.get_history()),
             "image": image_data,
-            "health_info": health_info
+            "health_info": health_info,
+            "persona_name": self.active_persona.get("name", "AI 助理")
         }
 
     def _run_isafe(self, message: str,

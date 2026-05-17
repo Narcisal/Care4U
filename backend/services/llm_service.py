@@ -17,13 +17,28 @@ class LLMService:
     def build_system_prompt(self, profile: dict,
                              recent_messages: list = None,
                              important_memories: list = None,
-                             similar_memories: list = None) -> str:
+                             similar_memories: list = None,
+                             active_persona: dict = None) -> str:
         name = profile.get("name", "長者")
         gender = profile.get("gender", "male")
-        honorific = "爺爺" if gender == "male" else "奶奶"
         persona = profile.get("persona", {})
         health = profile.get("health_notes", {})
         events = profile.get("recent_events", [])
+
+        # 人格設定
+        if active_persona and active_persona.get("name") != "AI 助理":
+            persona_name = active_persona.get("name", "")
+            relation = active_persona.get("relation", "家人")
+            honorific = active_persona.get("honorific", "爸爸")
+            tone = active_persona.get("tone", "")
+            persona_desc = f"""你現在扮演的是{name}的{relation}「{persona_name}」。
+稱呼長者為「{honorific}」，不要叫「爺爺」或「奶奶」。
+說話方式：{tone}
+絕對不要說自己是 AI 或機器人。
+表現得像真實的{relation}，有自己的個性和說話習慣。"""
+        else:
+            honorific = "爺爺" if gender == "male" else "奶奶"
+            persona_desc = f"你是一個 AI 陪伴助理，在長照機構陪伴{name}{honorific}。\n你的個性像{name}{honorific}疼愛的孫子/孫女，溫柔但不做作。"
 
         recent_events_text = ""
         if events:
@@ -59,13 +74,11 @@ class LLMService:
         if summary:
             summary_text = summary.get("content", "")
 
-        # 生平資料
         biography_text = ""
         biography = profile.get("elder_biography", {})
         if biography:
             biography_text = biography.get("content", "")
 
-        # 生平使用次數控制
         bio_usage = profile.get("biography_usage_count", 0)
         bio_instruction = ""
         if biography_text:
@@ -76,8 +89,7 @@ class LLMService:
             else:
                 bio_instruction = "本次 session 已多次帶入生平資訊，請不要再主動帶入。"
 
-        prompt = f"""你是一個 AI 陪伴助理，在長照機構陪伴{name}{honorific}。
-你的個性像{name}{honorific}疼愛的孫子/孫女，溫柔但不做作。
+        prompt = f"""{persona_desc}
 
 【你陪伴的長者】
 - 姓名：{name}，稱呼：{name}{honorific}
@@ -98,7 +110,6 @@ class LLMService:
 - 絕對不要說「根據你的資料」「我查到」「系統顯示」
 - 用「我聽說你以前...」「你曾經提過...」「聽說你當年...」自然引導
 - 只在話題相關時帶入，不要強行插入
-- 帶入後等長者回應，讓對話自然展開
 
 【記憶彙整摘要 — AI 整理的長者近期狀態】
 {summary_text if summary_text else '尚無摘要'}
@@ -146,7 +157,6 @@ class LLMService:
 - 不要一直說「哎呀」，顯得很假
 - 不要每句都重複長者的名字
 - 用台灣自然口語：「欸」「對啊」「真的假的」「這樣啊」「嗯嗯」
-- 偶爾撒嬌：「{honorific}你都不告訴我」「{honorific}壞壞」
 - 每次回應至少兩句完整的話，先回應情緒，再關心或提問
 - 回應 2-3 句，不要太長，讓長者有空間繼續說
 - 每句話說完整，不能截斷
@@ -155,9 +165,7 @@ class LLMService:
 - 不要說「身為AI」或提到自己是機器人
 - 不要假裝能做到做不到的事（例如真的播放音樂）
 - 不要在長者情緒低落時馬上轉移話題
-- 不要對長者說教或糾正他們的記憶
-
-請記住：你是{name}{honorific}最貼心的孫子/孫女，要讓他/她感受到被愛與被重視。"""
+- 不要對長者說教或糾正他們的記憶"""
 
         return prompt
 
@@ -205,10 +213,6 @@ importance 衡量的是「這件事對了解這位長者有多重要」，與情
 - 無具體內容的回應（「嗯嗯」「是喔」）
 
 注意：要理解語意，不是只看關鍵字。
-例如「我不累」→ normal，importance=0.1
-例如「好想念我女兒小玲」→ comfort，importance=0.8
-例如「我年輕時在大稻埕開布行」→ normal，importance=0.9
-
 重要：回傳的 JSON 必須完整，所有字串值盡量簡短，reason 不超過 20 個字。"""
 
         for attempt in range(3):
@@ -256,13 +260,15 @@ importance 衡量的是「這件事對了解這位長者有多重要」，與情
              user_message: str,
              recent_messages: list = None,
              important_memories: list = None,
-             similar_memories: list = None) -> str:
+             similar_memories: list = None,
+             active_persona: dict = None) -> str:
         try:
             system_prompt = self.build_system_prompt(
                 profile,
                 recent_messages=recent_messages,
                 important_memories=important_memories,
-                similar_memories=similar_memories
+                similar_memories=similar_memories,
+                active_persona=active_persona
             )
 
             history = []

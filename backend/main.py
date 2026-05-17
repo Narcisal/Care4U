@@ -10,6 +10,7 @@ from typing import Optional
 from backend.agents.decision import Decision, clear_agent
 from backend.services.stt_service import STTService
 from backend.services.tts_service import TTSService
+from fastapi import Form
 
 app = FastAPI(title="AI Care U")
 
@@ -301,5 +302,143 @@ def save_biography(req: BiographyUpdateRequest):
 
         return {"success": True, "message": "生平資料已儲存"}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+class PersonaAddRequest(BaseModel):
+    elder_id: str
+    persona_id: str
+    name: str
+    relation: str
+    honorific: str
+    tone: str
+    voice_engine: str = "edge"
+    voice_path: str = None
+
+class PersonaDeleteRequest(BaseModel):
+    elder_id: str
+    persona_id: str
+
+class PersonaSwitchRequest(BaseModel):
+    elder_id: str
+    persona_id: str
+
+@app.get("/api/profile/{elder_id}/personas")
+def get_personas(elder_id: str):
+    try:
+        from backend.memory.vector_store import VectorMemoryStore
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(elder_id)
+        return {
+            "personas": profile.get("personas", {}),
+            "active_persona": profile.get("active_persona", "ai")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile/persona/add")
+def add_persona(req: PersonaAddRequest):
+    try:
+        from backend.memory.vector_store import VectorMemoryStore
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="找不到長者資料")
+
+        if "personas" not in profile:
+            profile["personas"] = {}
+
+        profile["personas"][req.persona_id] = {
+            "name": req.name,
+            "relation": req.relation,
+            "voice_engine": req.voice_engine,
+            "voice_path": req.voice_path,
+            "honorific": req.honorific,
+            "tone": req.tone
+        }
+        memory._save(req.elder_id, profile)
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+        return {"success": True, "message": f"已新增人格：{req.name}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile/persona/delete")
+def delete_persona(req: PersonaDeleteRequest):
+    try:
+        from backend.memory.vector_store import VectorMemoryStore
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="找不到長者資料")
+
+        if req.persona_id == "ai":
+            raise HTTPException(status_code=400, detail="不能刪除 AI 助理")
+
+        personas = profile.get("personas", {})
+        if req.persona_id in personas:
+            del personas[req.persona_id]
+            profile["personas"] = personas
+
+        if profile.get("active_persona") == req.persona_id:
+            profile["active_persona"] = "ai"
+
+        memory._save(req.elder_id, profile)
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+        return {"success": True, "message": "已刪除人格"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile/persona/switch")
+def switch_persona(req: PersonaSwitchRequest):
+    try:
+        from backend.memory.vector_store import VectorMemoryStore
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="找不到長者資料")
+
+        personas = profile.get("personas", {})
+        if req.persona_id not in personas:
+            raise HTTPException(status_code=404, detail="找不到此人格")
+
+        profile["active_persona"] = req.persona_id
+        memory._save(req.elder_id, profile)
+        clear_agent(req.elder_id)
+        decisions.pop(req.elder_id, None)
+        return {
+            "success": True,
+            "message": f"已切換到：{personas[req.persona_id]['name']}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile/persona/upload-voice")
+async def upload_voice(
+    elder_id: str = Form(...),
+    persona_id: str = Form(...),
+    voice: UploadFile = File(...)
+):
+    try:
+        import shutil
+        voices_dir = Path(f"backend/data/elders/{elder_id}_voices")
+        voices_dir.mkdir(exist_ok=True)
+
+        voice_path = voices_dir / f"{persona_id}.wav"
+        with open(voice_path, "wb") as f:
+            shutil.copyfileobj(voice.file, f)
+
+        from backend.memory.vector_store import VectorMemoryStore
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(elder_id)
+        if profile and "personas" in profile and persona_id in profile["personas"]:
+            profile["personas"][persona_id]["voice_path"] = str(voice_path)
+            profile["personas"][persona_id]["voice_engine"] = "breezyvoice"
+            memory._save(elder_id, profile)
+
+        clear_agent(elder_id)
+        decisions.pop(elder_id, None)
+        return {"success": True, "message": "語音樣本已上傳", "path": str(voice_path)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

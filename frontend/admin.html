@@ -69,6 +69,9 @@
         <div class="nav-item" id="nav-agents" onclick="navigateTo('agents')">
             <span style="font-size: 20px;">🔗</span><span>Agent 監控</span>
         </div>
+        <div class="nav-item" id="nav-persona" onclick="navigateTo('persona')">
+            <span style="font-size: 20px;">🎭</span><span>人格設定</span>
+        </div>
     </div>
     <div style="position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 20px; text-align: center;">
         <a href="/" style="font-size: 13px; color: #C17F5A; text-decoration: none;">← 返回長者對話頁面</a>
@@ -423,8 +426,74 @@
         </div>
     </div>
 
-</div>
+        <!-- 人格設定 -->
+    <div id="page-persona" class="hidden max-w-5xl w-full mx-auto pt-0 px-4 pb-4 flex-1 overflow-y-auto">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">選擇長者</div>
+                <select id="persona-elder-select" onchange="loadPersonas(this.value)"
+                    style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
+                    <option value="W001">王大明</option>
+                    <option value="C001">陳秀英</option>
+                </select>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">目前使用人格</div>
+                <div id="active-persona-name" style="font-size: 24px; font-weight: 500; color: #C17F5A;">AI 助理</div>
+            </div>
+        </div>
 
+        <!-- 現有人格列表 -->
+        <div class="card" style="margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">目前陪伴者</h2>
+            <div id="persona-list" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="text-align: center; color: #BDC3C7; padding: 24px;">載入中...</div>
+            </div>
+        </div>
+
+        <!-- 新增人格 -->
+        <div class="card">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">新增陪伴者人格</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label>人格 ID（英文）</label>
+                    <input id="persona-id" type="text" placeholder="daughter / son / friend">
+                </div>
+                <div>
+                    <label>名字</label>
+                    <input id="persona-name" type="text" placeholder="小玲">
+                </div>
+                <div>
+                    <label>關係</label>
+                    <input id="persona-relation" type="text" placeholder="女兒">
+                </div>
+                <div>
+                    <label>長者稱呼（長者叫他/她什麼）</label>
+                    <input id="persona-honorific" type="text" placeholder="爸爸 / 媽媽">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label>說話風格</label>
+                    <input id="persona-tone" type="text"
+                        placeholder="親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label>上傳語音樣本（wav，30秒清晰人聲）</label>
+                    <input id="persona-voice" type="file" accept=".wav"
+                        style="height: auto; padding: 10px;">
+                </div>
+            </div>
+            <button onclick="addPersona()"
+                style="width: 100%; margin-top: 16px; padding: 14px; font-size: 17px;
+                    background: #C17F5A; color: white; border: none;
+                    border-radius: 16px; cursor: pointer; font-family: inherit;">
+                新增陪伴者
+            </button>
+            <div id="persona-message" style="display: none; text-align: center; margin-top: 12px;
+                padding: 12px; border-radius: 10px; font-size: 15px;"></div>
+        </div>
+    </div>
+
+</div>
 <script>
 const API_BASE = "http://127.0.0.1:8000";
 let agentLogInterval = null;
@@ -452,7 +521,7 @@ function startCareSession() {
 }
 
 function navigateTo(page) {
-    ['profile','dashboard','isafe','decision','agents'].forEach(p => {
+    ['profile','dashboard','isafe','decision','agents','persona'].forEach(p => {
         document.getElementById('page-' + p).classList.add('hidden');
     });
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -464,7 +533,8 @@ function navigateTo(page) {
         dashboard: ['對話紀錄後台', '查看情緒紀錄與事件'],
         isafe: ['iSafe 安全監控', '感知代理人 — 安全狀態監控'],
         decision: ['決策後台', '決策代理人 — 任務排程與 SOP 流程'],
-        agents: ['Agent 監控', '三隻代理人的即時互動紀錄']
+        agents: ['Agent 監控', '三隻代理人的即時互動紀錄'],
+        persona: ['人格設定', '管理長者的陪伴者人格'],
     };
     document.getElementById('page-title').textContent = titles[page][0];
     document.getElementById('page-subtitle').textContent = titles[page][1];
@@ -472,6 +542,8 @@ function navigateTo(page) {
     if (page === 'profile') loadElderData(document.getElementById('elder-select').value);
     if (page === 'dashboard') loadHistory(document.getElementById('dash-elder-select').value);
     if (page === 'isafe') loadSafety(document.getElementById('isafe-elder-select').value);
+    if (page === 'persona') loadPersonas(document.getElementById('persona-elder-select').value);
+
     if (page === 'agents') {
         loadAgentLogs();
         agentLogInterval = setInterval(loadAgentLogs, 3000);
@@ -987,6 +1059,163 @@ async function loadAgentLogs() {
 window.addEventListener('load', () => {
     loadElderData('W001');
 });
+// ===== 人格設定 =====
+async function loadPersonas(elderId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        const data = await res.json();
+        const personas = data.personas || {};
+        const activeId = data.active_persona || 'ai';
+
+        // 更新目前使用人格
+        const activeName = personas[activeId]?.name || 'AI 助理';
+        document.getElementById('active-persona-name').textContent = activeName;
+
+        // 顯示人格列表
+        const container = document.getElementById('persona-list');
+        container.innerHTML = '';
+
+        Object.entries(personas).forEach(([id, persona]) => {
+            const isActive = id === activeId;
+            const div = document.createElement('div');
+            div.style.cssText = `
+                background: ${isActive ? '#FEF3E8' : '#F7F3EE'};
+                border: ${isActive ? '2px solid #C17F5A' : '1px solid #D6CEC7'};
+                border-radius: 12px; padding: 16px;
+                display: flex; align-items: center; justify-content: space-between;
+            `;
+            div.innerHTML = `
+                <div>
+                    <div style="font-weight: 500; font-size: 16px; color: #3D3530;">
+                        ${escapeHtml(persona.name)}
+                        ${isActive ? '<span style="font-size: 12px; color: #C17F5A; margin-left: 8px;">使用中</span>' : ''}
+                    </div>
+                    <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">
+                        ${persona.relation ? escapeHtml(persona.relation) + '｜' : ''}
+                        稱呼：${escapeHtml(persona.honorific || '')}｜
+                        引擎：${persona.voice_engine === 'breezyvoice' ? 'BreezyVoice' : 'Edge TTS'}
+                        ${persona.voice_path ? '｜已上傳語音' : ''}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    ${!isActive ? `
+                    <button onclick="switchPersona('${elderId}', '${id}')"
+                        style="padding: 8px 16px; border-radius: 8px; border: none;
+                               background: #7B9E87; color: white; font-size: 14px;
+                               cursor: pointer; font-family: inherit;">
+                        切換
+                    </button>` : ''}
+                    ${id !== 'ai' ? `
+                    <button onclick="deletePersona('${elderId}', '${id}')"
+                        style="padding: 8px 16px; border-radius: 8px; border: none;
+                               background: #FDECEA; color: #922B21; font-size: 14px;
+                               cursor: pointer; font-family: inherit;">
+                        刪除
+                    </button>` : ''}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) { console.error('載入人格失敗', e); }
+}
+
+async function addPersona() {
+    const elderId = document.getElementById('persona-elder-select').value;
+    const msgEl = document.getElementById('persona-message');
+
+    const personaId = document.getElementById('persona-id').value.trim();
+    const name = document.getElementById('persona-name').value.trim();
+    const relation = document.getElementById('persona-relation').value.trim();
+    const honorific = document.getElementById('persona-honorific').value.trim();
+    const tone = document.getElementById('persona-tone').value.trim();
+    const voiceFile = document.getElementById('persona-voice').files[0];
+
+    if (!personaId || !name || !honorific) {
+        alert('請填寫 ID、名字和稱呼！');
+        return;
+    }
+
+    msgEl.style.display = 'block';
+    msgEl.style.background = '#F7F3EE';
+    msgEl.style.color = '#7F8C8D';
+    msgEl.textContent = '新增中...';
+
+    try {
+        // 先新增人格
+        const res = await fetch(`${API_BASE}/api/profile/persona/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: elderId,
+                persona_id: personaId,
+                name, relation, honorific, tone
+            })
+        });
+        const data = await res.json();
+
+        // 如果有語音樣本，上傳
+        if (data.success && voiceFile) {
+            msgEl.textContent = '上傳語音樣本中...';
+            const formData = new FormData();
+            formData.append('elder_id', elderId);
+            formData.append('persona_id', personaId);
+            formData.append('voice', voiceFile);
+
+            await fetch(`${API_BASE}/api/profile/persona/upload-voice`, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        if (data.success) {
+            msgEl.style.background = '#E8F5EC';
+            msgEl.style.color = '#2D6A4F';
+            msgEl.textContent = '✅ ' + data.message;
+            loadPersonas(elderId);
+
+            // 清空表單
+            document.getElementById('persona-id').value = '';
+            document.getElementById('persona-name').value = '';
+            document.getElementById('persona-relation').value = '';
+            document.getElementById('persona-honorific').value = '';
+            document.getElementById('persona-tone').value = '';
+            document.getElementById('persona-voice').value = '';
+        }
+    } catch (e) {
+        msgEl.style.background = '#FDECEA';
+        msgEl.style.color = '#922B21';
+        msgEl.textContent = '❌ 新增失敗';
+    }
+}
+
+async function switchPersona(elderId, personaId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/persona/switch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, persona_id: personaId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadPersonas(elderId);
+        }
+    } catch (e) { console.error('切換失敗', e); }
+}
+
+async function deletePersona(elderId, personaId) {
+    if (!confirm('確定要刪除這個人格嗎？')) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/persona/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, persona_id: personaId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            loadPersonas(elderId);
+        }
+    } catch (e) { console.error('刪除失敗', e); }
+}
 </script>
 </body>
 </html>

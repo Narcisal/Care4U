@@ -26,7 +26,7 @@ class JsonMemoryStore(MemoryManager):
             data = {
                 "elder_id": elder_id,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "history": history[-50:]
+                "history": history[-20:]
             }
             path = self._get_conv_path(elder_id)
             with open(path, "w", encoding="utf-8") as f:

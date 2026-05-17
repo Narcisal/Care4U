@@ -15,13 +15,9 @@ class MagicAI:
         self.memory = VectorMemoryStore()
         self.embedding = EmbeddingService()
         self.profile = self.memory.get_profile(elder_id)
-        self.conversation_history = self.memory.load_conversation(elder_id)
+        self.conversation_history = []  # 不再從檔案載入
         self._chat_count = 0
-
-        if self.conversation_history:
-            print(f"載入 {elder_id} 的對話記憶，共 {len(self.conversation_history)} 則")
-        else:
-            print(f"{elder_id} 沒有對話記憶，從頭開始")
+        print(f"{elder_id} 開始新的對話 session")
 
     def _get_honorific(self) -> str:
         gender = self.profile.get("gender", "male")
@@ -37,14 +33,16 @@ class MagicAI:
             time_greeting = "晚安"
 
         name = self.profile.get("name", "長者")
-        honorific = self._get_honorific()
+        personas = self.profile.get("personas", {})
+        active_id = self.profile.get("active_persona", "ai")
+        active_persona = personas.get(active_id, personas.get("ai", {}))
+        honorific = active_persona.get("honorific", self._get_honorific())
         greeting = f"{name}{honorific}，{time_greeting}！今天感覺怎麼樣呀？"
 
         self.conversation_history.append({
             "role": "model",
             "content": greeting
         })
-        self.memory.save_conversation(self.elder_id, self.conversation_history)
         return greeting
 
     def chat(self, user_message: str) -> str:
@@ -68,13 +66,18 @@ class MagicAI:
             self.elder_id, importance_threshold=0.7, limit=8
         )
 
+        personas = self.profile.get("personas", {})
+        active_id = self.profile.get("active_persona", "ai")
+        active_persona = personas.get(active_id, personas.get("ai", {}))
+
         response = self.llm.chat(
             profile=self.profile,
             conversation_history=self.conversation_history,
             user_message=user_message,
             recent_messages=recent_messages,
             important_memories=important_memories,
-            similar_memories=similar_memories
+            similar_memories=similar_memories,
+            active_persona=active_persona
         )
 
         self.conversation_history.append({"role": "user", "content": user_message})
@@ -82,8 +85,6 @@ class MagicAI:
 
         if len(self.conversation_history) > 50:
             self.conversation_history = self.conversation_history[-50:]
-
-        self.memory.save_conversation(self.elder_id, self.conversation_history)
 
         self._chat_count += 1
 
