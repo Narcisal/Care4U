@@ -7,6 +7,8 @@ let chatCount = 0;
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
+let currentPersonaAvatar = "/static/avatars/ai_assistant.png";
+let currentElderAvatar = "/static/avatars/elder_male.png";
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -18,7 +20,7 @@ function escapeHtml(text) {
 function enableButtons() {
     document.getElementById("text-input").removeAttribute("disabled");
     document.getElementById("send-btn").removeAttribute("disabled");
-    document.getElementById("record-btn").removeAttribute("disabled");
+    document.getElementById("hold-talk-btn").removeAttribute("disabled");
 }
 
 async function loadElderProfile() {
@@ -159,9 +161,9 @@ async function startRecording() {
         mediaRecorder.start();
         isRecording = true;
 
-        const btn = document.getElementById("record-btn");
-        btn.textContent = "⏹️ 停止錄音";
-        document.getElementById("voice-visualizer").classList.remove("hidden");
+        document.getElementById("hold-talk-btn").classList.add("recording");
+        document.getElementById("hold-talk-btn").textContent = "🔴 錄音中...";
+        document.getElementById("recording-indicator").classList.add("active");
         document.getElementById("voice-status").textContent = "正在錄音...";
 
     } catch (e) {
@@ -173,8 +175,8 @@ function stopRecording() {
     if (mediaRecorder && isRecording) {
         mediaRecorder.stop();
         isRecording = false;
-        const btn = document.getElementById("record-btn");
-        btn.textContent = "🎙️ 語音輸入";
+        document.getElementById("hold-talk-btn").classList.remove("recording");
+        document.getElementById("hold-talk-btn").textContent = "🎙️ 按住說話";
         document.getElementById("voice-status").textContent = "辨識中...";
     }
 }
@@ -188,15 +190,14 @@ async function sendAudioToSTT(audioBlob) {
             body: formData
         });
         const data = await res.json();
-        document.getElementById("voice-visualizer").classList.add("hidden");
-        if (data.success && data.text) {
+            document.getElementById("recording-indicator").classList.remove("active");        if (data.success && data.text) {
             addMessage("user", data.text);
             await processAndRespond(data.text, data.speed_emotion || "normal");
         } else {
             addMessage("system", "語音辨識失敗，請再試一次。");
         }
     } catch (e) {
-        document.getElementById("voice-visualizer").classList.add("hidden");
+        document.getElementById("recording-indicator").classList.remove("active");
         addMessage("system", "語音傳送失敗。");
     }
 }
@@ -223,30 +224,31 @@ async function speakText(text, emotion = "normal") {
 
 function addMessage(role, text) {
     const container = document.getElementById("chat-container");
-    const placeholder = container.querySelector(".text-center");
+    const placeholder = container.querySelector(".chat-empty");
     if (placeholder) placeholder.remove();
-    const wrapper = document.createElement("div");
-    const safeText = escapeHtml(text);
+
+    const row = document.createElement("div");
 
     if (role === "ai") {
-        wrapper.className = "flex items-start gap-2";
-        wrapper.innerHTML = `
-            <div class="text-2xl">🌸</div>
-            <div class="chat-bubble-ai px-5 py-4 rounded-2xl rounded-tl-none max-w-xs lg:max-w-md shadow-sm">
-                <p class="text-lg leading-relaxed">${safeText}</p>
-            </div>`;
+        const avatarSrc = currentPersonaAvatar || "/static/avatars/ai_assistant.png";
+        row.className = "msg-row";
+        row.innerHTML = `
+            <img class="msg-avatar" src="${avatarSrc}" alt="AI">
+            <div class="msg-bubble ai">${escapeHtml(text)}</div>
+        `;
     } else if (role === "user") {
-        wrapper.className = "flex items-start gap-2 justify-end";
-        wrapper.innerHTML = `
-            <div class="chat-bubble-user px-5 py-4 rounded-2xl rounded-tr-none max-w-xs lg:max-w-md shadow-sm">
-                <p class="text-lg leading-relaxed">${safeText}</p>
-            </div>
-            <div class="text-2xl">👴</div>`;
+        const elderAvatar = currentElderAvatar || "/static/avatars/elder_male.png";
+        row.className = "msg-row user";
+        row.innerHTML = `
+            <img class="msg-avatar" src="${elderAvatar}" alt="長者">
+            <div class="msg-bubble user">${escapeHtml(text)}</div>
+        `;
     } else {
-        wrapper.className = "text-center text-gray-400 text-sm";
-        wrapper.textContent = text;
+        row.style.cssText = "text-align:center;color:#BDC3C7;font-size:16px;padding:8px;";
+        row.textContent = text;
     }
-    container.appendChild(wrapper);
+
+    container.appendChild(row);
     container.scrollTop = container.scrollHeight;
 }
 
@@ -255,16 +257,17 @@ function addThinking() {
     const id = "thinking-" + Date.now();
     const div = document.createElement("div");
     div.id = id;
-    div.className = "flex items-start gap-2";
+    div.className = "msg-row";
     div.innerHTML = `
-        <div class="text-2xl">🌸</div>
-        <div class="bg-gray-100 px-4 py-3 rounded-2xl rounded-tl-none shadow">
-            <div class="flex gap-1 items-center">
-                <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0s"></div>
-                <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0.15s"></div>
-                <div class="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0.3s"></div>
+        <div class="msg-avatar ai">🌸</div>
+        <div class="msg-bubble ai" style="padding: 16px 20px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+                <div style="width:10px;height:10px;background:#D6CEC7;border-radius:50%;animation:bounce 1s infinite;animation-delay:0s"></div>
+                <div style="width:10px;height:10px;background:#D6CEC7;border-radius:50%;animation:bounce 1s infinite;animation-delay:0.15s"></div>
+                <div style="width:10px;height:10px;background:#D6CEC7;border-radius:50%;animation:bounce 1s infinite;animation-delay:0.3s"></div>
             </div>
-        </div>`;
+        </div>
+    `;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     return id;
@@ -276,21 +279,11 @@ function removeThinking(id) {
 }
 
 function addImageMessage(imageBase64) {
-    const container = document.getElementById("chat-container");
-    const wrapper = document.createElement("div");
-    wrapper.className = "flex items-start gap-2";
-    wrapper.innerHTML = `
-        <div class="text-2xl">🌸</div>
-        <div class="chat-bubble-ai px-4 py-4 rounded-2xl rounded-tl-none shadow-sm" style="max-width: 320px;">
-            <img src="${imageBase64}"
-                 style="width: 100%; border-radius: 10px; cursor: pointer;"
-                 onclick="window.open('${imageBase64}', '_blank')"
-                 alt="AI 生成圖片" />
-            <p style="font-size: 13px; color: #9B8E87; margin-top: 8px; text-align: center;">✨ AI 為您生成的圖片</p>
-        </div>
-    `;
-    container.appendChild(wrapper);
-    container.scrollTop = container.scrollHeight;
+    const frame = document.getElementById("image-frame");
+    const img = document.getElementById("image-frame-img");
+    frame.style.display = "block";
+    img.src = imageBase64;
+    img.onclick = () => window.open(imageBase64, '_blank');
 }
 
 function addHealthCard(info) {
@@ -333,24 +326,22 @@ function addTrendAlert(alertMsg) {
 }
 
 function updateEmotionStatus(emoji, text) {
-    const statusEl = document.getElementById("emotion-status");
-    const iconEl = document.getElementById("status-icon");
-    if (statusEl) statusEl.textContent = `${emoji} ${text}`;
-    if (iconEl) iconEl.textContent = emoji;
+    const el = document.getElementById("emotion-display");
+    if (el) el.textContent = `${emoji} ${text}`;
 }
 
 function clearChat() {
     document.getElementById("chat-container").innerHTML =
-        `<div class="text-center text-gray-400 text-sm py-8">點擊「開始對話」來啟動陪伴系統</div>`;
+        `<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">請點擊下方「開始對話」<br>來啟動陪伴系統</div></div>`;
     chatCount = 0;
     document.getElementById("chat-count").textContent = "0";
-    document.getElementById("emotion-status").textContent = "等待對話...";
-    document.getElementById("status-icon").textContent = "💛";
+    document.getElementById("emotion-display").textContent = "💛 等待對話...";
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
-    document.getElementById("record-btn").disabled = true;
+    document.getElementById("hold-talk-btn").disabled = true;
     document.getElementById("start-btn").textContent = "🌟 開始對話";
     document.getElementById("start-btn").disabled = false;
+    document.getElementById("image-frame").style.display = "none";
 }
 
 try {
@@ -363,7 +354,12 @@ try {
     document.getElementById("text-input").addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
-    document.getElementById("record-btn").addEventListener("click", toggleRecording);
+    const holdBtn = document.getElementById("hold-talk-btn");
+    holdBtn.addEventListener("mousedown", startRecording);
+    holdBtn.addEventListener("mouseup", stopRecording);
+    holdBtn.addEventListener("mouseleave", () => { if (isRecording) stopRecording(); });
+    holdBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startRecording(); });
+    holdBtn.addEventListener("touchend", stopRecording);
     document.getElementById("send-btn").addEventListener("click", sendMessage);
     document.getElementById("start-btn").addEventListener("click", startSession);
     document.getElementById("clear-btn").addEventListener("click", clearChat);
@@ -380,64 +376,97 @@ async function loadWelcomePersonas(elderId) {
         const container = document.getElementById('welcome-persona-list');
         container.innerHTML = '';
 
+        const avatarMap = {
+            'ai': '/static/avatars/ai_assistant.png',
+            'daughter': '/static/avatars/daughter.png',
+            'son': '/static/avatars/son.png',
+            'granddaughter': '/static/avatars/granddaughter.png',
+            'grandson': '/static/avatars/grandson.png',
+        };
+
         Object.entries(personas).forEach(([id, persona]) => {
             const isSelected = id === activeId;
+            const avatarSrc = persona.avatar_path
+                ? `/static/avatars/${persona.avatar_path}`
+                : (avatarMap[id] || '/static/avatars/ai_assistant.png');
+
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
-            div.onclick = () => selectPersona(id);
-            div.style.cssText = `
-                padding: 16px 20px; border-radius: 12px; cursor: pointer;
-                border: 2px solid ${isSelected ? '#C17F5A' : '#D6CEC7'};
-                background: ${isSelected ? '#FEF3E8' : 'white'};
-                display: flex; align-items: center; gap: 12px;
-                transition: all 0.2s;
-            `;
+            div.className = `persona-option${isSelected ? ' selected' : ''}`;
+            div.onclick = () => selectPersona(id, avatarSrc, persona.name, persona.relation);
             div.innerHTML = `
-                <div style="font-size: 32px;">
-                    ${id === 'ai' ? '🤖' : '👤'}
-                </div>
-                <div>
-                    <div style="font-size: 20px; font-weight: bold; color: #3D3530;">
-                        ${persona.name}
-                    </div>
-                    <div style="font-size: 14px; color: #7F8C8D;">
-                        ${persona.relation ? persona.relation : 'AI 陪伴助理'}
-                    </div>
-                </div>
-                ${isSelected ? '<div style="margin-left: auto; color: #C17F5A; font-size: 20px;">✓</div>' : ''}
+                <img class="persona-avatar" src="${avatarSrc}" alt="${persona.name}">
+                <div class="persona-name">${persona.name}</div>
+                <div class="persona-rel">${persona.relation || 'AI 陪伴助理'}</div>
+                ${isSelected ? '<div class="persona-check">✓</div>' : ''}
             `;
             container.appendChild(div);
-            if (isSelected) SELECTED_PERSONA = id;
+
+            if (isSelected) {
+                SELECTED_PERSONA = id;
+                currentPersonaAvatar = avatarSrc;
+            }
         });
     } catch (e) {
         console.error('載入人格失敗', e);
     }
 }
 
-function selectPersona(personaId) {
+function selectPersona(personaId, avatarSrc, name, relation) {
     SELECTED_PERSONA = personaId;
-    const elderId = document.getElementById('welcome-elder-select').value;
+    currentPersonaAvatar = avatarSrc;
 
-    // 更新選擇狀態
-    document.querySelectorAll('[id^="persona-btn-"]').forEach(btn => {
-        const id = btn.id.replace('persona-btn-', '');
-        const isSelected = id === personaId;
-        btn.style.border = `2px solid ${isSelected ? '#C17F5A' : '#D6CEC7'}`;
-        btn.style.background = isSelected ? '#FEF3E8' : 'white';
+    document.querySelectorAll('.persona-option').forEach(btn => {
+        btn.classList.remove('selected');
+        const check = btn.querySelector('.persona-check');
+        if (check) check.remove();
+    });
 
-        // 更新勾選標記
-        const lastChild = btn.lastElementChild;
-        if (isSelected) {
-            if (!lastChild || !lastChild.textContent.includes('✓')) {
-                const check = document.createElement('div');
-                check.style.cssText = 'margin-left: auto; color: #C17F5A; font-size: 20px;';
-                check.textContent = '✓';
-                btn.appendChild(check);
-            }
-        } else {
-            if (lastChild && lastChild.textContent.includes('✓')) {
-                lastChild.remove();
-            }
+    const selected = document.getElementById(`persona-btn-${personaId}`);
+    if (selected) {
+        selected.classList.add('selected');
+        const check = document.createElement('div');
+        check.className = 'persona-check';
+        check.textContent = '✓';
+        selected.appendChild(check);
+    }
+}
+
+async function speakText(text, emotion = "normal") {
+    return new Promise(async (resolve) => {
+        try {
+            // 開始說話：加光暈
+            const portrait = document.getElementById("persona-portrait");
+            const ring1 = document.getElementById("speaking-ring-1");
+            const ring2 = document.getElementById("speaking-ring-2");
+            if (portrait) portrait.classList.add("speaking");
+            if (ring1) ring1.classList.add("active");
+            if (ring2) ring2.classList.add("active");
+
+            const res = await fetch(`${API_BASE}/api/tts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, emotion })
+            });
+            const audioBlob = await res.blob();
+            const audio = new Audio(URL.createObjectURL(audioBlob));
+            audio.onended = () => {
+                // 停止說話：移除光暈
+                if (portrait) portrait.classList.remove("speaking");
+                if (ring1) ring1.classList.remove("active");
+                if (ring2) ring2.classList.remove("active");
+                resolve();
+            };
+            audio.onerror = () => {
+                if (portrait) portrait.classList.remove("speaking");
+                if (ring1) ring1.classList.remove("active");
+                if (ring2) ring2.classList.remove("active");
+                resolve();
+            };
+            audio.play();
+        } catch (e) {
+            console.error("TTS 失敗：", e);
+            resolve();
         }
     });
 }
@@ -445,29 +474,128 @@ function selectPersona(personaId) {
 async function enterChat() {
     ELDER_ID = document.getElementById('welcome-elder-select').value;
 
-    // 切換人格
     try {
         await fetch(`${API_BASE}/api/profile/persona/switch`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                elder_id: ELDER_ID,
-                persona_id: SELECTED_PERSONA
-            })
+            body: JSON.stringify({ elder_id: ELDER_ID, persona_id: SELECTED_PERSONA })
         });
     } catch (e) {
         console.error('切換人格失敗', e);
     }
 
-    // 隱藏初始畫面，顯示主畫面
     document.getElementById('welcome-screen').style.display = 'none';
-    document.getElementById('main-screen').classList.remove('hidden');
+    document.getElementById('main-screen').style.display = 'flex';
 
-    await loadElderProfile();
+    // 更新右側頭像
+    const portrait = document.getElementById('persona-portrait');
+    if (portrait) portrait.src = currentPersonaAvatar;
+
+    // 根據性別設定長者頭像
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
+        const profile = await res.json();
+        const nameEl = document.getElementById("elder-name-display");
+        if (nameEl) nameEl.textContent = profile.name || "未知";
+
+        currentElderAvatar = profile.gender === 'female'
+            ? '/static/avatars/elder_female.png'
+            : '/static/avatars/elder_male.png';
+
+        // 更新右側人格名稱
+        const personas = profile.personas || {};
+        const activePersona = personas[SELECTED_PERSONA] || {};
+        const nameDisplay = document.getElementById('persona-portrait-name');
+        const relDisplay = document.getElementById('persona-portrait-rel');
+        if (nameDisplay) nameDisplay.textContent = activePersona.name || 'AI 助理';
+        if (relDisplay) relDisplay.textContent = activePersona.relation || '您的智慧照護陪伴';
+    } catch (e) {
+        console.error('載入長者資料失敗', e);
+    }
+}
+async function showPersonaSwitcher() {
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}/personas`);
+        const data = await res.json();
+        const personas = data.personas || {};
+        const activeId = data.active_persona || 'ai';
+
+        const avatarMap = {
+            'ai': '/static/avatars/ai_assistant.png',
+            'daughter': '/static/avatars/daughter.png',
+            'son': '/static/avatars/son.png',
+            'granddaughter': '/static/avatars/granddaughter.png',
+            'grandson': '/static/avatars/grandson.png',
+        };
+
+        const container = document.getElementById('switcher-persona-list');
+        container.innerHTML = '';
+
+        Object.entries(personas).forEach(([id, persona]) => {
+            const isActive = id === activeId;
+            const avatarSrc = persona.avatar_path
+                ? `/static/avatars/${persona.avatar_path}`
+                : (avatarMap[id] || '/static/avatars/ai_assistant.png');
+
+            const div = document.createElement('div');
+            div.style.cssText = `
+                display: flex; align-items: center; gap: 16px; padding: 14px 18px;
+                border-radius: 14px; cursor: pointer;
+                border: 2px solid ${isActive ? 'var(--orange)' : 'var(--border)'};
+                background: ${isActive ? '#FEF3E8' : 'white'};
+                transition: all 0.2s;
+            `;
+            div.innerHTML = `
+                <img src="${avatarSrc}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+                <div>
+                    <div style="font-size:20px;font-weight:700;color:var(--text-dark);">${persona.name}</div>
+                    <div style="font-size:14px;color:var(--text-light);">${persona.relation || 'AI 陪伴助理'}</div>
+                </div>
+                ${isActive ? '<div style="margin-left:auto;color:var(--orange);font-size:20px;">✓ 使用中</div>' : ''}
+            `;
+            if (!isActive) {
+                div.onclick = () => switchPersonaInChat(id, avatarSrc, persona.name, persona.relation);
+            }
+            container.appendChild(div);
+        });
+
+        document.getElementById('persona-switcher').style.display = 'flex';
+    } catch (e) {
+        console.error('載入人格失敗', e);
+    }
+}
+
+async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
+    try {
+        await fetch(`${API_BASE}/api/profile/persona/switch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: ELDER_ID, persona_id: personaId })
+        });
+
+        // 更新右側頭像
+        currentPersonaAvatar = avatarSrc;
+        document.getElementById('persona-portrait').src = avatarSrc;
+        document.getElementById('persona-portrait-name').textContent = name;
+        document.getElementById('persona-portrait-rel').textContent = relation || 'AI 陪伴助理';
+
+        closeSwitcher();
+
+        // 清除對話重新開始
+        clearChat();
+        addMessage('system', `已切換到 ${name}，請重新開始對話`);
+
+    } catch (e) {
+        console.error('切換失敗', e);
+    }
+}
+
+function closeSwitcher() {
+    document.getElementById('persona-switcher').style.display = 'none';
 }
 if (ELDER_ID) {
     document.getElementById('welcome-screen').style.display = 'none';
-    document.getElementById('main-screen').classList.remove('hidden');
+    document.getElementById('main-screen').style.display = 'flex';
     loadElderProfile();
 } else {
     loadWelcomePersonas('W001');

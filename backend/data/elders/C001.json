@@ -5,7 +5,11 @@
   "persona": {
     "former_job": "國小老師",
     "tone_preference": "親切溫柔",
-    "hobbies": ["種花", "看台灣劇", "煮菜"],
+    "hobbies": [
+      "種花",
+      "看台灣劇",
+      "煮菜"
+    ],
     "family": {
       "兒子": "阿明",
       "媳婦": "小惠",
@@ -13,7 +17,10 @@
     }
   },
   "health_notes": {
-    "sensitivity": ["怕熱", "膝蓋退化"],
+    "sensitivity": [
+      "怕熱",
+      "膝蓋退化"
+    ],
     "diet": "喜歡清淡，不吃辣"
   },
   "personas": {

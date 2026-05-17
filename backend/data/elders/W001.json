@@ -37,7 +37,7 @@
       "tone": "親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」"
     }
   },
-  "active_persona": "daughter",
+  "active_persona": "ai",
   "recent_events": [
     {
       "event": "說了：我懷念和我老婆憶起唱歌跳舞",
@@ -110,6 +110,22 @@
       "id": "6458b966",
       "date": "2026-05-17",
       "time": "16:00:57"
+    },
+    {
+      "event": "說了：喝了熱粥很開心",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.3,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達對喝熱粥感到開心。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 16:29:47",
+      "id": "5797d0cc",
+      "date": "2026-05-17",
+      "time": "16:29:47"
     }
   ],
   "memory_summary": {},
