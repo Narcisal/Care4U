@@ -6,6 +6,7 @@
     <title>AI Care U - 照護人員後台</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         body { font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; background-color: #F7F3EE; color: #3D3530; }
         .btn-primary { background-color: #C17F5A; color: white; transition: background-color 0.2s; }
@@ -105,6 +106,14 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div><label>姓名</label><input id="field-name" type="text" placeholder="王大明"></div>
                 <div><label>性別</label><select id="field-gender"><option value="male">男</option><option value="female">女</option></select></div>
+                <div>
+                    <label>認知狀態</label>
+                    <select id="field-cognitive-status" style="height: 52px;">
+                        <option value="normal">正常</option>
+                        <option value="mild_dementia">輕度認知障礙</option>
+                        <option value="moderate_dementia">中度認知障礙</option>
+                    </select>
+                </div>
                 <div><label>曾任職業</label><input id="field-job" type="text" placeholder="國中數學老師"></div>
                 <div><label>說話偏好</label><input id="field-tone" type="text" placeholder="尊敬且親切"></div>
                 <div style="grid-column: 1 / -1;"><label>興趣愛好 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋"></div>
@@ -119,17 +128,51 @@
             <div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: #D6CEC7; color: #3D3530; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">🔄 重新載入</button>
                 <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">💾 儲存資料</button>
-                <div style="margin-top: 12px;">
-                    <button onclick="startCareSession()"
-                        style="width: 100%; padding: 14px; font-size: 17px;
-                               background: #7B9E87; color: white; border: none;
-                               border-radius: 16px; cursor: pointer; font-family: inherit;">
-                        🌟 開始陪伴這位長者
-                    </button>
-                </div>
             </div>
+                            <!-- 語言模式切換 -->
+                <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
+                    <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
+                        🗣️ 語音辨識語言設定
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="setLanguage('zh')" id="btn-lang-zh"
+                            style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #C17F5A;
+                                background: #C17F5A; color: white; font-size: 16px;
+                                cursor: pointer; font-family: inherit;">
+                            🇹🇼 華語模式
+                        </button>
+                        <button onclick="setLanguage('tai')" id="btn-lang-tai"
+                            style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #D6CEC7;
+                                background: white; color: #3D3530; font-size: 16px;
+                                cursor: pointer; font-family: inherit;">
+                            🎙️ 台語模式
+                        </button>
+                    </div>
+                    <div id="lang-status" style="text-align: center; margin-top: 8px; font-size: 13px; color: #7F8C8D;">
+                        目前：華語模式
+                    </div>
+                </div>
             <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
 
+    <!-- 家人提供資訊 -->
+<div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
+    <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
+        👨‍👩‍👧 家人提供的資訊
+        <span style="font-size: 12px;">（照護人員與家人面談後填寫）</span>
+    </div>
+    <div id="family-notes-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;"></div>
+    <div style="display: flex; gap: 10px;">
+        <input id="new-family-note" type="text"
+            placeholder="例如：女兒說爸爸年輕時很愛唱歌，常在教會唱詩歌"
+            style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
+        <button onclick="addFamilyNote()"
+            style="padding: 10px 20px; border-radius: 10px; border: none;
+                   background: #7B9E87; color: white; font-size: 15px;
+                   cursor: pointer; font-family: inherit; white-space: nowrap;">
+            ＋ 新增
+        </button>
+    </div>
+</div>
     <!-- 網路搜尋補充背景資料 -->
     <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
         <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
@@ -190,45 +233,115 @@
 
     <!-- 對話紀錄後台 -->
     <div id="page-dashboard" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+
+        <!-- 頂部選擇長者 + 統計 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="card" style="text-align: center;">
                 <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">查詢長者</div>
-                <select id="dash-elder-select" onchange="loadHistory(this.value)" style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
+                <select id="dash-elder-select" onchange="loadHistory(this.value)"
+                    style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
                     <option value="W001">王大明</option>
                     <option value="C001">陳秀英</option>
                 </select>
             </div>
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">近期情緒事件</div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">總紀錄數</div>
                 <div id="dash-event-count" style="font-size: 36px; font-weight: 500; color: #C17F5A;">0</div>
             </div>
-        </div>
-
-        <div class="card" style="margin-bottom: 16px;">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">🔊 TTS 語調測試</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <button onclick="testTTS('normal', '爺爺，你好！今天感覺怎麼樣呀？')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #F7F3EE; color: #3D3530; font-size: 16px; cursor: pointer; font-family: inherit;">😐 一般語調</button>
-                <button onclick="testTTS('happy', '爺爺！太棒了！你今天氣色真的很好欸！')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #EAFAF1; color: #2D6A4F; font-size: 16px; cursor: pointer; font-family: inherit;">😊 開心語調</button>
-                <button onclick="testTTS('comfort', '爺爺，沒關係的，我在這裡陪你，你說說看。')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #EBF5FB; color: #1A5276; font-size: 16px; cursor: pointer; font-family: inherit;">🤗 安慰語調</button>
-                <button onclick="testTTS('urgent', '爺爺你還好嗎？我馬上去叫護士過來！')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #FDECEA; color: #922B21; font-size: 16px; cursor: pointer; font-family: inherit;">🚨 緊急語調</button>
-                <button onclick="testTTS('remind', '爺爺，8點了，記得吃藥喔，要配溫水。')" style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7; background: #FEF9E7; color: #7D6608; font-size: 16px; cursor: pointer; font-family: inherit; grid-column: 1 / -1;">💊 提醒語調</button>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">今日紀錄</div>
+                <div id="dash-today-count" style="font-size: 36px; font-weight: 500; color: #7B9E87;">0</div>
             </div>
-            <div id="tts-test-status" style="text-align: center; margin-top: 12px; font-size: 14px; color: #7F8C8D; display: none;">播放中...</div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">重要記憶</div>
+                <div id="dash-important-count" style="font-size: 36px; font-weight: 500; color: #8E44AD;">0</div>
+            </div>
         </div>
 
+        <!-- 情緒折線圖 -->
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 500;">📈 情緒趨勢圖</h2>
+                <span style="font-size: 13px; color: #9B8E87;">近期情緒變化</span>
+            </div>
+            <canvas id="emotion-chart" height="120"></canvas>
+        </div>
+
+        <!-- 記憶彙整摘要 -->
         <div id="memory-summary-card" class="card" style="margin-bottom: 16px; display: none;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                 <span style="font-size: 18px; font-weight: 500;">🧠 記憶彙整摘要</span>
                 <span id="summary-updated" style="font-size: 12px; color: #9B8E87;"></span>
             </div>
-            <div id="memory-summary-text" style="font-size: 15px; color: #3D3530; line-height: 1.8; background: #F7F3EE; border-radius: 10px; padding: 14px;">
+            <div id="memory-summary-text"
+                style="font-size: 15px; color: #3D3530; line-height: 1.8;
+                    background: #F7F3EE; border-radius: 10px; padding: 14px;">
             </div>
         </div>
-        <div class="card">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">📝 近期情緒紀錄</h2>
-            <div id="dash-events" style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">載入中...</div>
+
+        <!-- 重要記憶區塊 -->
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 500;">🔮 重要記憶</h2>
+                <span style="font-size: 12px; color: #9B8E87;">importance ≥ 0.7，永久保留</span>
             </div>
+            <div id="dash-important-events" style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="text-align: center; color: #BDC3C7; padding: 16px; font-size: 14px;">載入中...</div>
+            </div>
+        </div>
+
+        <!-- 時間軸 + 可展開原始紀錄 -->
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 500;">⏰ 今日時間軸</h2>
+                <button onclick="toggleAllRecords()"
+                    style="padding: 6px 14px; border-radius: 8px; border: 1px solid #D6CEC7;
+                        background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;"
+                    id="toggle-records-btn">
+                    ▶ 展開完整紀錄
+                </button>
+            </div>
+            <div id="dash-timeline" style="display: flex; flex-direction: column; gap: 6px;">
+                <div style="text-align: center; color: #BDC3C7; padding: 16px; font-size: 14px;">載入中...</div>
+            </div>
+
+            <!-- 完整紀錄（預設收起） -->
+            <div id="dash-all-records" style="display: none; margin-top: 16px;
+                border-top: 1px dashed #D6CEC7; padding-top: 16px;">
+                <div style="font-size: 14px; font-weight: 500; color: #7F8C8D; margin-bottom: 12px;">
+                    📝 完整紀錄
+                </div>
+                <div id="dash-events" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- TTS 語調測試 -->
+        <div class="card" style="margin-bottom: 16px;">
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">🔊 TTS 語調測試</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button onclick="testTTS('normal', '爺爺，你好！今天感覺怎麼樣呀？')"
+                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
+                        background: #F7F3EE; color: #3D3530; font-size: 16px;
+                        cursor: pointer; font-family: inherit;">😐 一般語調</button>
+                <button onclick="testTTS('happy', '爺爺！太棒了！你今天氣色真的很好欸！')"
+                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
+                        background: #EAFAF1; color: #2D6A4F; font-size: 16px;
+                        cursor: pointer; font-family: inherit;">😊 開心語調</button>
+                <button onclick="testTTS('comfort', '爺爺，沒關係的，我在這裡陪你，你說說看。')"
+                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
+                        background: #EBF5FB; color: #1A5276; font-size: 16px;
+                        cursor: pointer; font-family: inherit;">🤗 安慰語調</button>
+                <button onclick="testTTS('urgent', '爺爺你還好嗎？我馬上去叫護士過來！')"
+                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
+                        background: #FDECEA; color: #922B21; font-size: 16px;
+                        cursor: pointer; font-family: inherit;">🚨 緊急語調</button>
+                <button onclick="testTTS('remind', '爺爺，8點了，記得吃藥喔，要配溫水。')"
+                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
+                        background: #FEF9E7; color: #7D6608; font-size: 16px;
+                        cursor: pointer; font-family: inherit; grid-column: 1 / -1;">💊 提醒語調</button>
+            </div>
+            <div id="tts-test-status" style="text-align: center; margin-top: 12px;
+                font-size: 14px; color: #7F8C8D; display: none;">播放中...</div>
         </div>
     </div>
 
@@ -476,6 +589,13 @@
                     <input id="persona-tone" type="text"
                         placeholder="親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」">
                 </div>
+                <div style="grid-column: 1 / -1; display: flex; gap: 24px; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                        <input type="checkbox" id="persona-deceased"
+                            style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="font-size: 16px; color: #3D3530;">此親人已過世</span>
+                    </label>
+                </div>
                 <div style="grid-column: 1 / -1;">
                     <label>上傳語音樣本（wav，30秒清晰人聲）</label>
                     <input id="persona-voice" type="file" accept=".wav"
@@ -560,6 +680,7 @@ async function loadElderData(elderId) {
         const profile = await res.json();
         document.getElementById('field-name').value = profile.name || '';
         document.getElementById('field-gender').value = profile.gender || 'male';
+        document.getElementById('field-cognitive-status').value = profile.cognitive_status || 'normal';
         document.getElementById('field-job').value = profile.persona?.former_job || '';
         document.getElementById('field-tone').value = profile.persona?.tone_preference || '';
         document.getElementById('field-hobbies').value = (profile.persona?.hobbies || []).join('、');
@@ -583,6 +704,7 @@ async function loadElderData(elderId) {
         } else {
             bioSection.style.display = 'none';
         }
+        renderFamilyNotes(profile.family_notes || []);
     } catch (e) { console.error('載入失敗', e); }
 }
 
@@ -655,6 +777,7 @@ async function saveElderProfile() {
                 elder_id: elderId,
                 name: document.getElementById('field-name').value,
                 gender: document.getElementById('field-gender').value,
+                cognitive_status: document.getElementById('field-cognitive-status').value,
                 former_job: document.getElementById('field-job').value,
                 tone_preference: document.getElementById('field-tone').value,
                 hobbies: document.getElementById('field-hobbies').value,
@@ -730,67 +853,189 @@ async function searchElderBackground() {
 }
 
 // ===== 對話紀錄後台 =====
+let emotionChartInstance = null;
+
 async function loadHistory(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
         const profile = await res.json();
         const events = profile.recent_events || [];
+        const today = new Date().toISOString().split('T')[0];
+
+        // 統計數字
         document.getElementById('dash-event-count').textContent = events.length;
+        document.getElementById('dash-today-count').textContent =
+            events.filter(e => e.date === today).length;
+        const importantEvents = events.filter(e => e.importance >= 0.7);
+        document.getElementById('dash-important-count').textContent = importantEvents.length;
 
-        // 顯示記憶彙整摘要
+        // 記憶彙整摘要
         const summaryCard = document.getElementById('memory-summary-card');
-        const summaryText = document.getElementById('memory-summary-text');
-        const summaryUpdated = document.getElementById('summary-updated');
         const summary = profile.memory_summary;
-
         if (summary && summary.content) {
             summaryCard.style.display = 'block';
-            summaryText.textContent = summary.content;
-            summaryUpdated.textContent = `最後更新：${summary.updated_at || ''} （基於 ${summary.based_on_events || 0} 筆事件）`;
+            document.getElementById('memory-summary-text').textContent = summary.content;
+            document.getElementById('summary-updated').textContent =
+                `最後更新：${summary.updated_at || ''} （基於 ${summary.based_on_events || 0} 筆事件）`;
         } else {
             summaryCard.style.display = 'none';
         }
 
-        const container = document.getElementById('dash-events');
-        if (events.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無情緒紀錄</div>';
-            return;
-        }
+        // 情緒折線圖
+        renderEmotionChart(events);
 
-        const longMemory = events.filter(e => e.memory_type === 'long' || e.importance >= 0.7);
-        const shortMemory = events.filter(e => e.memory_type !== 'long' && e.importance < 0.7);
+        // 重要記憶
+        renderImportantMemory(importantEvents);
 
-        container.innerHTML = '';
+        // 今日時間軸
+        const todayEvents = events.filter(e => e.date === today).reverse();
+        renderTimeline(todayEvents);
 
-        if (longMemory.length > 0) {
-            const longTitle = document.createElement('div');
-            longTitle.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px; margin-top: 4px;';
-            longTitle.innerHTML = `
-                <span style="font-size: 15px; font-weight: 500; color: #8E44AD;">🔮 長期重要記憶</span>
-                <span style="font-size: 12px; color: #9B8E87;">importance ≥ 0.7，永久保留</span>
-            `;
-            container.appendChild(longTitle);
-            longMemory.slice().reverse().forEach(evt => renderEvent(evt, container, true));
+        // 完整紀錄
+        renderAllRecords(events);
 
-            const divider = document.createElement('div');
-            divider.style.cssText = 'border-top: 1px dashed #D6CEC7; margin: 16px 0;';
-            container.appendChild(divider);
-        }
-
-        const shortTitle = document.createElement('div');
-        shortTitle.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px;';
-        shortTitle.innerHTML = `<span style="font-size: 15px; font-weight: 500; color: #7F8C8D;">📝 近期情緒紀錄</span>`;
-        container.appendChild(shortTitle);
-
-        if (shortMemory.length === 0) {
-            const empty = document.createElement('div');
-            empty.style.cssText = 'text-align: center; color: #BDC3C7; padding: 16px; font-size: 14px;';
-            empty.textContent = '尚無近期紀錄';
-            container.appendChild(empty);
-        } else {
-            shortMemory.slice().reverse().forEach(evt => renderEvent(evt, container, false));
-        }
     } catch (e) { console.error('載入失敗', e); }
+}
+
+function renderEmotionChart(events) {
+    const ctx = document.getElementById('emotion-chart').getContext('2d');
+
+    // 取最近 20 筆有情緒的事件
+    const recent = events.slice(-20).filter(e => e.sentiment);
+    const labels = recent.map(e => `${e.date} ${e.time ? e.time.substring(0,5) : ''}`);
+    const scores = recent.map(e => {
+        if (e.emotion_score !== undefined && e.emotion_score !== null) {
+            return e.emotion_score;
+        }
+        if (e.sentiment === 'positive') return 0.7;
+        if (e.sentiment === 'neutral') return 0;
+        return -0.7;
+    });
+    const colors = scores.map(s =>
+        s > 0.3 ? '#27AE60' : s > -0.3 ? '#F39C12' : '#E74C3C'
+    );
+
+    if (emotionChartInstance) emotionChartInstance.destroy();
+
+    emotionChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: '情緒狀態',
+                data: scores,
+                borderColor: '#C17F5A',
+                backgroundColor: 'rgba(193,127,90,0.1)',
+                pointBackgroundColor: colors,
+                pointRadius: 6,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    min: -1, max: 1,
+                    ticks: {
+                        stepSize: 0.5,
+                        callback: v => {
+                            if (v === 1) return '😊 開心';
+                            if (v === 0) return '😐 平靜';
+                            if (v === -1) return '😢 低落';
+                            return '';
+                        }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                x: { ticks: { maxRotation: 45, font: { size: 10 } } }
+            }
+        }
+    });
+}
+
+function renderImportantMemory(events) {
+    const container = document.getElementById('dash-important-events');
+    container.innerHTML = '';
+
+    if (events.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:16px;font-size:14px;">尚無重要記憶</div>';
+        return;
+    }
+
+    events.slice().reverse().forEach(evt => {
+        const div = document.createElement('div');
+        div.style.cssText = `display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+            background: #F4ECF7; border-radius: 10px; border-left: 4px solid #8E44AD;`;
+        div.innerHTML = `
+            <div style="font-size: 20px; flex-shrink:0;">
+                ${evt.sentiment === 'positive' ? '😊' : evt.sentiment === 'negative' ? '😢' : '😐'}
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:14px;font-weight:500;color:#3D3530;">${escapeHtml(evt.event)}</div>
+                <div style="font-size:12px;color:#9B8E87;margin-top:2px;">${evt.date} ${evt.time || ''}</div>
+            </div>
+            <div style="font-size:12px;background:#8E44AD;color:white;
+                padding:2px 8px;border-radius:6px;flex-shrink:0;">
+                重要 ${(evt.importance||0).toFixed(1)}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function renderTimeline(events) {
+    const container = document.getElementById('dash-timeline');
+    container.innerHTML = '';
+
+    if (events.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:16px;font-size:14px;">今日尚無紀錄</div>';
+        return;
+    }
+
+    events.forEach(evt => {
+        const isUrgent = evt.topic_tags?.includes('安全警報') || evt.topic_tags?.includes('緊急警報');
+        const isTrend = evt.topic_tags?.includes('趨勢警報');
+        const emoji = evt.sentiment === 'positive' ? '😊' :
+                      isUrgent || isTrend ? '🚨' : '😢';
+        const bgColor = isUrgent || isTrend ? '#FDECEA' :
+                        evt.sentiment === 'positive' ? '#E8F5EC' : '#F7F3EE';
+        const borderColor = isUrgent || isTrend ? '#E74C3C' :
+                           evt.sentiment === 'positive' ? '#27AE60' : '#D6CEC7';
+
+        const div = document.createElement('div');
+        div.style.cssText = `display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+            background: ${bgColor}; border-radius: 10px; border-left: 3px solid ${borderColor};`;
+        div.innerHTML = `
+            <div style="font-size:13px;color:#9B8E87;min-width:48px;font-family:monospace;">
+                ${evt.time ? evt.time.substring(0,5) : '--:--'}
+            </div>
+            <div style="font-size:18px;">${emoji}</div>
+            <div style="flex:1;font-size:14px;color:#3D3530;">${escapeHtml(evt.event)}</div>
+            ${evt.importance >= 0.7 ? '<div style="font-size:11px;background:#8E44AD;color:white;padding:2px 6px;border-radius:4px;">重要</div>' : ''}
+        `;
+        container.appendChild(div);
+    });
+}
+
+function renderAllRecords(events) {
+    const container = document.getElementById('dash-events');
+    container.innerHTML = '';
+    events.slice().reverse().forEach(evt => renderEvent(evt, container,
+        evt.importance >= 0.7 || evt.memory_type === 'long'));
+}
+
+function toggleAllRecords() {
+    const panel = document.getElementById('dash-all-records');
+    const btn = document.getElementById('toggle-records-btn');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.textContent = '▼ 收起完整紀錄';
+    } else {
+        panel.style.display = 'none';
+        btn.textContent = '▶ 展開完整紀錄';
+    }
 }
 
 function renderEvent(evt, container, isLong) {
@@ -1008,6 +1253,99 @@ async function loadSafety(elderId) {
         });
     } catch (e) { console.error('iSafe 載入失敗', e); }
 }
+async function setLanguage(language) {
+    const elderId = document.getElementById('elder-select').value;
+    try {
+        const res = await fetch(`${API_BASE}/api/stt/language`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, language: language })
+        });
+        const data = await res.json();
+        if (data.success) {
+            const zhBtn = document.getElementById('btn-lang-zh');
+            const taiBtn = document.getElementById('btn-lang-tai');
+            const status = document.getElementById('lang-status');
+
+            if (language === 'zh') {
+                zhBtn.style.background = '#C17F5A';
+                zhBtn.style.color = 'white';
+                zhBtn.style.borderColor = '#C17F5A';
+                taiBtn.style.background = 'white';
+                taiBtn.style.color = '#3D3530';
+                taiBtn.style.borderColor = '#D6CEC7';
+                status.textContent = '目前：華語模式';
+            } else {
+                taiBtn.style.background = '#C17F5A';
+                taiBtn.style.color = 'white';
+                taiBtn.style.borderColor = '#C17F5A';
+                zhBtn.style.background = 'white';
+                zhBtn.style.color = '#3D3530';
+                zhBtn.style.borderColor = '#D6CEC7';
+                status.textContent = '目前：台語模式（Breeze ASR 26）';
+                if (language === 'tai') {
+                    status.textContent += ' — 第一次使用會下載模型（約3GB）';
+                }
+            }
+        }
+    } catch (e) {
+        alert('切換失敗！');
+    }
+}
+
+// ===== 家人提供資訊 =====
+function renderFamilyNotes(notes) {
+    const container = document.getElementById('family-notes-list');
+    container.innerHTML = '';
+    if (!notes || notes.length === 0) {
+        container.innerHTML = '<div style="color:#BDC3C7;font-size:13px;padding:4px 0;">尚無家人提供的資訊</div>';
+        return;
+    }
+    notes.forEach((note, idx) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:white;border-radius:8px;border:1px solid #D6CEC7;';
+        div.innerHTML = `
+            <div style="flex:1;font-size:14px;color:#3D3530;">${escapeHtml(note.note)}</div>
+            <div style="font-size:12px;color:#9B8E87;white-space:nowrap;">${note.date || ''}</div>
+            <button onclick="deleteFamilyNote(${idx})"
+                style="width:28px;height:28px;border-radius:50%;background:#FDECEA;
+                       border:none;color:#922B21;font-size:14px;cursor:pointer;flex-shrink:0;">×</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+async function addFamilyNote() {
+    const elderId = document.getElementById('elder-select').value;
+    const input = document.getElementById('new-family-note');
+    const note = input.value.trim();
+    if (!note) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/family-note/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, note: note })
+        });
+        const data = await res.json();
+        if (data.success) {
+            input.value = '';
+            renderFamilyNotes(data.family_notes);
+        }
+    } catch (e) { alert('新增失敗！'); }
+}
+
+async function deleteFamilyNote(idx) {
+    const elderId = document.getElementById('elder-select').value;
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/family-note/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, index: idx })
+        });
+        const data = await res.json();
+        if (data.success) renderFamilyNotes(data.family_notes);
+    } catch (e) { alert('刪除失敗！'); }
+}
 
 // ===== Agent 監控 =====
 async function loadAgentLogs() {
@@ -1148,7 +1486,8 @@ async function addPersona() {
             body: JSON.stringify({
                 elder_id: elderId,
                 persona_id: personaId,
-                name, relation, honorific, tone
+                name, relation, honorific, tone,
+                is_deceased: document.getElementById('persona-deceased').checked
             })
         });
         const data = await res.json();
@@ -1174,6 +1513,7 @@ async function addPersona() {
             loadPersonas(elderId);
 
             // 清空表單
+            document.getElementById('persona-deceased').checked = false;
             document.getElementById('persona-id').value = '';
             document.getElementById('persona-name').value = '';
             document.getElementById('persona-relation').value = '';

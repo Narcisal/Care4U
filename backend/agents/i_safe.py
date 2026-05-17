@@ -30,23 +30,70 @@ class ISafe:
             result["reason"] = (result.get("reason", "") + "（語速偵測：說話急促）").strip()
             print("語速修正：說話急促 → urgent")
 
+        # 分級響應判斷
+        escalation_level = self._determine_escalation(message, result)
+        result["escalation_level"] = escalation_level
+        if escalation_level >= 2:
+            print(f"⚠️ 分級響應：level={escalation_level}，需要通知照護人員")
+
         trend_alert = self._analyze_trend(result["emotion"])
         if trend_alert:
             result["trend_alert"] = trend_alert
             print(f"情緒趨勢警報：{trend_alert}")
 
         if result.get("should_record"):
-            self._record_event(
+            self._record_event(     
                 message=message,
                 sentiment=result["sentiment"],
                 is_urgent=result["is_urgent"],
                 reason=result.get("reason", ""),
                 importance=result.get("importance", 0.5),
                 memory_type=result.get("memory_type", "short"),
-                spoken_at=spoken_at
+                emotion_score=result.get("emotion_score", 0.0),
+                spoken_at=spoken_at,
+                escalation_level=escalation_level
             )
 
         return result
+
+    def _determine_escalation(self, message: str, emotion_result: dict) -> int:
+        """
+        分級響應判斷
+        0: normal - AI 自行處理
+        1: concern - AI 安撫 + 後台警示
+        2: urgent - AI 安撫 + 通知照護人員
+        3: emergency - 最高緊急，立刻通知
+        """
+        emotion = emotion_result.get("emotion", "normal")
+        importance = emotion_result.get("importance", 0)
+        is_urgent = emotion_result.get("is_urgent", False)
+
+        # Level 3: 最高緊急
+        emergency_keywords = [
+            "跌倒", "跌落", "昏倒", "失去意識", "不能動",
+            "胸口很痛", "胸痛", "心臟", "喘不過氣", "呼吸困難",
+            "出血", "流血", "骨折", "救命", "快叫救護車"
+        ]
+        if any(kw in message for kw in emergency_keywords):
+            return 3
+
+        # Level 2: 需要通知照護人員
+        if is_urgent and importance >= 0.7:
+            return 2
+
+        urgent_keywords = [
+            "頭很暈", "快跌倒", "站不穩", "看不清楚",
+            "很痛", "痛到", "劇烈", "好暈", "想吐"
+        ]
+        if any(kw in message for kw in urgent_keywords):
+            return 2
+
+        # Level 1: AI 安撫但後台標記
+        if emotion in ["urgent", "comfort"] or is_urgent:
+            return 1
+
+        # Level 0: 正常
+        return 0
 
     def _analyze_trend(self, current_emotion: str) -> str | None:
         self.emotion_history.append(current_emotion)
@@ -93,15 +140,16 @@ class ISafe:
         )
 
     def _record_event(self, message: str, sentiment: str,
-                      is_urgent: bool, reason: str = "",
-                      importance: float = 0.5, memory_type: str = "short",
-                      spoken_at: str = None):
+                        is_urgent: bool, reason: str = "",
+                        importance: float = 0.5, memory_type: str = "short",
+                        emotion_score: float = 0.0,
+                        spoken_at: str = None, escalation_level: int = 0):
         topic_tags = ["安全警報"] if is_urgent else ["情緒"]
 
         event = {
             "event": f"說了：{message[:50]}",
             "sentiment": sentiment,
-            "emotion_score": -0.9 if is_urgent else -0.7,
+            "emotion_score": emotion_score,
             "importance": importance,
             "memory_type": memory_type,
             "topic_tags": topic_tags,

@@ -83,7 +83,7 @@ async function sendMessage() {
 async function processAndRespond(message, speedEmotion = "normal") {
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
-    document.getElementById("record-btn").disabled = true;
+    document.getElementById("hold-talk-btn").disabled = true;
 
     const thinkingId = addThinking();
     try {
@@ -101,6 +101,9 @@ async function processAndRespond(message, speedEmotion = "normal") {
         addMessage("ai", data.message);
 
         if (data.image) {
+            if (data.image_caption) {
+                addMessage('ai', data.image_caption);
+            }
             addImageMessage(data.image);
         }
 
@@ -110,6 +113,12 @@ async function processAndRespond(message, speedEmotion = "normal") {
 
         if (data.trend_alert) {
             addTrendAlert(data.trend_alert);
+        }
+
+        if (data.escalation_level >= 3) {
+            addEscalationAlert(3, "🚨 緊急！請立刻通知照護人員！");
+        } else if (data.escalation_level >= 2) {
+            addEscalationAlert(2, "⚠️ 請通知照護人員關心長者狀況");
         }
 
         chatCount++;
@@ -133,7 +142,7 @@ async function processAndRespond(message, speedEmotion = "normal") {
     } finally {
         document.getElementById("text-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
-        document.getElementById("record-btn").disabled = false;
+        document.getElementById("hold-talk-btn").disabled = false;
     }
 }
 
@@ -410,6 +419,26 @@ async function loadWelcomePersonas(elderId) {
     } catch (e) {
         console.error('載入人格失敗', e);
     }
+}
+
+function addEscalationAlert(level, message) {
+    const container = document.getElementById("chat-container");
+    const wrapper = document.createElement("div");
+    const bgColor = level >= 3 ? "#FDECEA" : "#FEF3CD";
+    const borderColor = level >= 3 ? "#E74C3C" : "#F39C12";
+    const textColor = level >= 3 ? "#922B21" : "#7D5A00";
+    const fontSize = level >= 3 ? "20px" : "17px";
+    wrapper.style.cssText = "text-align: center; margin: 8px 0;";
+    wrapper.innerHTML = `
+        <div style="display:inline-block; background:${bgColor};
+             border: 2px solid ${borderColor}; border-radius: 12px;
+             padding: 12px 24px; font-size:${fontSize};
+             color:${textColor}; font-weight:700;">
+            ${escapeHtml(message)}
+        </div>
+    `;
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
 }
 
 function selectPersona(personaId, avatarSrc, name, relation) {

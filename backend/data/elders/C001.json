@@ -2,6 +2,7 @@
   "elder_id": "C001",
   "name": "陳秀英",
   "gender": "female",
+  "cognitive_status": "normal",
   "persona": {
     "former_job": "國小老師",
     "tone_preference": "親切溫柔",
@@ -29,12 +30,31 @@
       "voice_engine": "edge",
       "voice_path": null,
       "honorific": "奶奶",
-      "tone": "像疼愛的孫子/孫女，溫柔親切"
+      "tone": "像疼愛的孫子/孫女，溫柔親切",
+      "is_deceased": false
     }
   },
   "active_persona": "ai",
-  "recent_events": [],
+  "recent_events": [
+    {
+      "event": "說了：不錯﹔",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "表達滿意或認可。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 21:01:57",
+      "id": "03e5850f",
+      "date": "2026-05-17",
+      "time": "21:01:57"
+    }
+  ],
   "memory_summary": {},
   "elder_biography": {},
-  "biography_usage_count": 0
+  "biography_usage_count": 0,
+  "family_notes": []
 }

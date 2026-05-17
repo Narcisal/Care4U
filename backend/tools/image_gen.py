@@ -1,18 +1,31 @@
+import os
+import base64
+import time
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+
+load_dotenv()
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
 def detect_image_trigger(message: str) -> str | None:
     """
     用 LLM 判斷是否需要生成圖片
-    回傳：'dream' | 'nostalgic' | None
+    回傳：'scene' | None
     """
     prompt = f"""判斷以下長者說的話，是否描述了具體的視覺場景值得生成圖片。
 
 長者說：「{message}」
 
 判斷標準：
-- dream：描述了具體的夢境畫面（有場景、有人物、有動作）
-- nostalgic：描述了具體的懷舊場景（有地點、有畫面、有細節）
-- none：太模糊、只是提到夢或懷念、沒有具體畫面
+- scene：只要提到任何具體的視覺元素即可觸發，例如：
+  - 具體地點（老家、阿里山、稻田、廟口）
+  - 具體物件（縫紉機、三合院、鐵道、榕樹）
+  - 具體場景（夕陽、稻浪、廟會）
+  - 夢境或懷舊中有具體畫面
+- none：太模糊、只是情緒表達、沒有任何具體視覺元素
 
-只回傳以下其中一個字：dream、nostalgic、none
+只回傳以下其中一個字：scene、none
 不要有其他文字"""
 
     for attempt in range(3):
@@ -27,7 +40,7 @@ def detect_image_trigger(message: str) -> str | None:
             )
             result = response.text.strip().lower()
             print(f"圖片觸發判斷：{message[:20]} → {result}")
-            if result in ["dream", "nostalgic"]:
+            if result == "scene":
                 return result
             return None
         except Exception as e:
@@ -38,24 +51,61 @@ def detect_image_trigger(message: str) -> str | None:
             return None
     return None
 
+
+def extract_scene(message: str) -> str:
+    """
+    從長者原話萃取核心視覺場景描述，過濾口語雜訊
+    """
+    prompt = f"""從以下長者說的話中，萃取出核心的視覺場景描述。
+
+長者說：「{message}」
+
+要求：
+- 只保留有視覺意義的場景、地點、物件、氛圍
+- 去除口語贅詞（欸、啊、就是那個、跟你說喔）
+- 去除人物描述（不要提到任何人的名字或樣貌）
+- 用簡短的場景描述回答，不超過 30 字
+- 只回傳場景描述，不要其他說明"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.0,
+                max_output_tokens=50,
+            )
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"場景萃取失敗：{e}")
+        return message[:50]
+
+
 def generate_image(message: str, trigger_type: str) -> str | None:
     """
     根據長者說的話生成圖片
     回傳 base64 編碼的圖片字串，失敗回傳 None
     """
     try:
-        if trigger_type == "dream":
-            prompt = f"""
-            根據以下夢境描述，生成一張溫暖夢幻的插畫風格圖片：
-            「{message}」
-            風格：柔和水彩，溫暖色調，夢幻感，適合台灣長者欣賞
-            """
-        else:
-            prompt = f"""
-            根據以下懷舊描述，生成一張充滿台灣早期年代氛圍的圖片：
-            「{message}」
-            風格：1960-1980年代台灣風情，溫暖懷舊，柔和色調
-            """
+        # 先萃取核心場景，過濾口語雜訊
+        scene = extract_scene(message)
+        print(f"萃取場景：{scene}")
+
+        prompt = f"""生成一張適合台灣長者欣賞的溫暖懷舊風景插畫。
+
+場景描述：{scene}
+
+風格要求：
+- 台灣早期農村或城市風情，溫暖柔和色調
+- 水彩或油畫插畫風格，帶有懷舊感
+- 光線溫暖，氛圍寧靜祥和
+
+嚴格禁止：
+- 禁止出現任何人類面孔或具體人像（可以有模糊背影但不可有臉）
+- 禁止出現現代汽車、電子產品、手機、電腦
+- 禁止出現現代建築、柏油路、現代電線桿
+- 禁止出現任何文字或數字"""
 
         response = client.models.generate_content(
             model="gemini-2.5-flash-image",

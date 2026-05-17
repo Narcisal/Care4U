@@ -100,56 +100,64 @@ class MagicAI:
 
         return response
 
-    def _summarize_memories(self):
-        try:
-            events = self.memory.get_recent_events(self.elder_id, limit=10)
-            if len(events) < 5:
-                return
+def _summarize_memories(self):
+    try:
+        events = self.memory.get_recent_events(self.elder_id, limit=10)
+        if len(events) < 5:
+            return
 
-            name = self.profile.get("name", "長者")
-            honorific = self._get_honorific()
+        name = self.profile.get("name", "長者")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-            events_text = "\n".join([
-                f"- {e.get('date', '')}：{e.get('event', '')}（情緒：{e.get('sentiment', '')}）"
-                for e in events
-            ])
+        events_text = "\n".join([
+            f"- {e.get('date', '')} {e.get('time', '')}：{e.get('event', '')}（情緒分數：{e.get('emotion_score', 0):.1f}，{e.get('reason', '')}）"
+            for e in events
+        ])
 
-            prompt = f"""請把以下關於{name}{honorific}的對話紀錄，彙整成一段簡短的摘要（100字以內）：
+        prompt = f"""你是長照系統的記憶彙整模組。
+請將以下 {name} 的近期對話紀錄，整理成給照護人員參考的摘要。
 
+彙整時間：{current_time}
+
+【近期對話紀錄】
 {events_text}
 
+輸出結構（依實際內容決定是否寫入每項）：
+- 第一句：時間相對關係（今日／日前／本週）+ 整體情緒基調（必寫）
+- 若有安全事件（頭暈、跌倒、胸痛）：優先一句話說明
+- 若情緒有明顯轉折：描述轉折過程，不用平均值帶過
+- 結尾：最重要的一件事或長者說的重要內容
+
 要求：
-- 用第三人稱描述
-- 重點放在長者的情緒狀態和重要事件
-- 不要列點，用自然語句
-- 只回傳摘要文字，不要其他說明"""
+- 第三人稱，自然口語，不列點
+- 只回傳摘要文字，不要標題或其他說明"""
 
-            from google import genai
-            from google.genai import types
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.3,
-                    max_output_tokens=500,
-                )
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.3,
+                max_output_tokens=500,
             )
+        )
 
-            summary = response.text.strip()
-            print(f"記憶彙整完成：{summary[:50]}...")
+        summary = response.text.strip()
+        print(f"記憶彙整完成：{summary[:50]}...")
 
-            profile = self.memory.get_profile(self.elder_id)
-            if profile:
-                profile["memory_summary"] = {
-                    "content": summary,
-                    "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "based_on_events": len(events)
-                }
-                self.memory._save(self.elder_id, profile)
+        profile = self.memory.get_profile(self.elder_id)
+        if profile:
+            profile["memory_summary"] = {
+                "content": summary,
+                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "based_on_events": len(events)
+            }
+            self.memory._save(self.elder_id, profile)
 
-        except Exception as e:
-            print(f"記憶彙整失敗（不影響對話）：{e}")
+    except Exception as e:
+        print(f"記憶彙整失敗（不影響對話）：{e}")
 
     def clear_memory(self):
         self.conversation_history = []

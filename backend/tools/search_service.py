@@ -48,6 +48,9 @@ class SearchService:
 
             summary = response.get("answer", "") or "\n".join(content_list)
 
+            if len(summary.strip()) < 50:
+                return {"found": False, "summary": "", "sources": []}
+
             return {
                 "found": True,
                 "summary": summary[:500],
@@ -58,87 +61,64 @@ class SearchService:
             print(f"搜尋失敗：{e}")
             return {"found": False, "summary": "", "sources": []}
 
-    def generate_biography(self, raw_summary: str,
-                            name: str, profile: dict) -> str:
-        if not raw_summary:
-            return ""
+    def generate_biography(self, name: str, gender: str, job: str,
+                            hobbies, family: dict, health: dict,
+                            raw_summary: str = "") -> str:
         try:
             from google import genai
             from google.genai import types
 
             client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-            persona = profile.get("persona", {})
-            job = persona.get("former_job", "")
-            hobbies = ", ".join(persona.get("hobbies", []))
+            family_str = ", ".join([f"{k}({v})" for k, v in family.items()]) if isinstance(family, dict) else str(family)
+            health_str = f"生理敏感: {health.get('sensitivity', '無')}, 飲食: {health.get('diet', '無')}" if isinstance(health, dict) else str(health)
+            hobbies_str = ", ".join(hobbies) if isinstance(hobbies, list) else str(hobbies)
+            gender_text = "男性長者" if gender == "male" else "女性長者"
 
-            prompt = f"""你是一個長照系統，正在為 AI 陪伴助理準備關於長者的背景資料。
+            prompt = f"""你是一個長照系統的資深個案照護規劃員。請為長者 {name} 撰寫一篇結構自然的生平背景介紹文章，供後續陪伴 AI 助理掌握長者的生命脈絡。
 
-長者基本資料：
-- 姓名：{name}
-- 曾任職業：{job}
-- 興趣：{hobbies}
+    【長者基本資料 — 核心已知事實】
+    - 姓名：{name}
+    - 性別：{gender_text}
+    - 曾任職業：{job}
+    - 興趣愛好：{hobbies_str}
+    - 家人關係：{family_str}
+    - 健康狀態：{health_str}
+    （此長者目前為老年人）
 
-網路搜尋到的公開資料：
-{raw_summary}
+    【網路搜尋公開資料（可能包含同名同姓的雜訊）】
+    {raw_summary if raw_summary else "（無網路搜尋資料）"}
 
-請整理成一段自然的生平介紹文章（150字以內），格式如下：
-- 用第三人稱
-- 包含職業、成就、人生重要事件
-- 語氣像朋友介紹朋友，自然不做作
-- 只寫有根據的事實，不要捏造
-- 如果搜尋結果跟這位長者完全無關，只回傳「無相關公開資料」
+    【執行邏輯】
+    步驟一：網路資料審查
+    若有網路搜尋資料，請嚴格核對是否為這位長者（比對職業領域、年齡時代、家人關係）：
+    - 身份吻合 → 整合核心成就進生平
+    - 身份不吻合或無資料 → 完全忽略網路資料，進入步驟二
 
-只回傳文章內容，不要標題或說明。"""
+    步驟二：文章生成
+    運用確定可信的資料撰寫溫暖自然的生平：
+    - 第三人稱，語氣像老友溫暖介紹這位長輩
+    - 描述職業背景、興趣、家庭結構
+    - 資料豐富就寫詳細，純基本資料就精簡寫
+    - 寧可短，絕對不捏造未提及的細節
+    - 健康資料僅供背景理解，不寫進生平文章
+
+    只回傳生平文章本體，禁止包含標題、前言或多餘說明。"""
 
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    temperature=0.3,
-                    max_output_tokens=300,
+                    temperature=0.2,
+                    max_output_tokens=800,
                 )
             )
-            result = response.text.strip()
-            print(f"生平文章生成完成：{result[:50]}...")
-            return result
+
+            biography = response.text.strip()
+            print(f"生平文章生成完成：{name}")
+            return biography
 
         except Exception as e:
             print(f"生平文章生成失敗：{e}")
-            return ""
-
-    def filter_relevant_info(self, raw_summary: str,
-                              name: str, llm_service) -> str:
-        if not raw_summary:
-            return ""
-        try:
-            from google import genai
-            from google.genai import types
-
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-            prompt = f"""以下是關於「{name}」的網路搜尋結果：
-
-{raw_summary}
-
-請從中擷取對長照陪伴有用的資訊，例如：
-- 職業背景、人生成就
-- 重要作品、著作
-- 曾任職的機構或職位
-- 其他有助於個人化對話的事實
-
-如果找不到相關資訊，回傳「無相關公開資料」。
-只回傳整理後的資訊，不超過 150 字。"""
-
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.1,
-                    max_output_tokens=300,
-                )
-            )
-            return response.text.strip()
-
-        except Exception as e:
-            print(f"LLM 過濾失敗：{e}")
-            return raw_summary[:150]
+            hobbies_str = ", ".join(hobbies) if isinstance(hobbies, list) else str(hobbies)
+            return f"{name}是一位退休的{job}，平常喜歡{hobbies_str}。"

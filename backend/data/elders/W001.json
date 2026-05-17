@@ -2,6 +2,7 @@
   "elder_id": "W001",
   "name": "王大明",
   "gender": "male",
+  "cognitive_status": "normal",
   "persona": {
     "former_job": "電腦工程師",
     "tone_preference": "尊敬且親切",
@@ -26,7 +27,8 @@
       "voice_engine": "edge",
       "voice_path": null,
       "honorific": "爺爺",
-      "tone": "像疼愛的孫子/孫女，溫柔親切"
+      "tone": "像疼愛的孫子/孫女，溫柔親切",
+      "is_deceased": false
     },
     "daughter": {
       "name": "小玲",
@@ -34,7 +36,8 @@
       "voice_engine": "edge",
       "voice_path": null,
       "honorific": "爸爸",
-      "tone": "親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」"
+      "tone": "親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」",
+      "is_deceased": false
     }
   },
   "active_persona": "ai",
@@ -126,14 +129,197 @@
       "id": "5797d0cc",
       "date": "2026-05-17",
       "time": "16:29:47"
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.6,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者頭暈且有跌倒風險，需立即關注。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 18:40:07",
+      "id": "bd5b8a52",
+      "date": "2026-05-17",
+      "time": "18:40:07"
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.6,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "長者頭暈且有跌倒風險，需立即關注。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 18:45:27",
+      "id": "c79255fc",
+      "date": "2026-05-17",
+      "time": "18:45:27"
+    },
+    {
+      "event": "說了：我真的感覺很好。",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達感覺良好，顯示開心。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 20:23:27",
+      "id": "a786801e",
+      "date": "2026-05-17",
+      "time": "20:23:27"
+    },
+    {
+      "event": "說了：我聽到你尷尬就後悔。",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達後悔，顯示負面情緒。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 20:25:36",
+      "id": "a72ac8c6",
+      "date": "2026-05-17",
+      "time": "20:25:36"
+    },
+    {
+      "event": "說了：我今天感覺很好耶!",
+      "sentiment": "positive",
+      "emotion_score": -0.7,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達心情愉悅",
+      "source": "voice",
+      "spoken_at": "2026-05-17 20:28:57",
+      "id": "340655fa",
+      "date": "2026-05-17",
+      "time": "20:28:57"
+    },
+    {
+      "event": "說了：阿姊,你哪裡跟阿婆好，，，，，。",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者質疑關係，可能帶有不解或委屈。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 20:34:27",
+      "id": "7d068d6a",
+      "date": "2026-05-17",
+      "time": "20:34:27"
+    },
+    {
+      "event": "說了：我今天感覺不好。",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達身體或情緒不適。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 20:38:22",
+      "id": "18138816",
+      "date": "2026-05-17",
+      "time": "20:38:22"
+    },
+    {
+      "event": "說了：我是說我今天好像不好",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達身體或情緒不適，需關懷。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 20:48:03",
+      "id": "078cb938",
+      "date": "2026-05-17",
+      "time": "20:48:03"
+    },
+    {
+      "event": "說了：不太好﹔",
+      "sentiment": "negative",
+      "emotion_score": -0.9,
+      "importance": 0.2,
+      "memory_type": "short",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "表達身體或情緒不適。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 21:02:06",
+      "id": "ab12f57a",
+      "date": "2026-05-17",
+      "time": "21:02:06"
+    },
+    {
+      "event": "說了：我要生氣了你都不好好聽。",
+      "sentiment": "negative",
+      "emotion_score": -0.5,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者表達生氣與不被傾聽的感受。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 21:46:47",
+      "id": "d41fc748",
+      "date": "2026-05-17",
+      "time": "21:46:47"
+    },
+    {
+      "event": "說了：還好,我現在不開心。",
+      "sentiment": "negative",
+      "emotion_score": -0.5,
+      "importance": 0.5,
+      "memory_type": "short",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者明確表達不開心，情緒低落。",
+      "source": "voice",
+      "spoken_at": "2026-05-17 21:50:34",
+      "id": "3f3947ef",
+      "date": "2026-05-17",
+      "time": "21:50:34"
     }
   ],
   "memory_summary": {},
   "elder_biography": {
-    "content": "王大明先生是一位退休電腦工程師，長期居住於台灣，育有一女小玲，目前在台北從事護理工作。退休後喜歡聆聽鄧麗君的歌曲和下象棋，個性尊敬且親切。",
-    "updated_at": "2026-05-12 00:00:00",
+    "content": "王大明先生以前是位電腦工程師，退休後生活過得很愜意。他平時喜歡聽鄧麗君的歌，也愛找朋友下象棋。王先生有個女兒叫小玲。飲食上，他特別愛喝熱豆漿，但就是不碰苦瓜，這點倒是挺有意思的。",
+    "updated_at": "2026-05-17 23:01:53",
     "sources": [],
-    "manually_edited": true
+    "manually_edited": false
   },
-  "biography_usage_count": 0
+  "biography_usage_count": 0,
+  "family_notes": [
+    {
+      "note": "爸爸年輕時常騎重機帶媽媽出去兜風",
+      "date": "2026-05-17",
+      "added_by": "照護人員"
+    }
+  ]
 }
