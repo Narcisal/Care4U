@@ -62,7 +62,7 @@ class SearchService:
             return {"found": False, "summary": "", "sources": []}
 
     def generate_biography(self, name: str, gender: str, job: str,
-                            hobbies, family: dict, health: dict,
+                            hobbies, personas: dict, health: dict,
                             raw_summary: str = "") -> str:
         try:
             from google import genai
@@ -70,7 +70,11 @@ class SearchService:
 
             client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-            family_str = ", ".join([f"{k}({v})" for k, v in family.items()]) if isinstance(family, dict) else str(family)
+            family_str = ", ".join([
+                f"{p.get('relation', '')}：{p.get('name', '')}"
+                for pid, p in personas.items()
+                if pid != 'ai' and p.get('relation')
+            ]) if personas else "無"
             health_str = f"生理敏感: {health.get('sensitivity', '無')}, 飲食: {health.get('diet', '無')}" if isinstance(health, dict) else str(health)
             hobbies_str = ", ".join(hobbies) if isinstance(hobbies, list) else str(hobbies)
             gender_text = "男性長者" if gender == "male" else "女性長者"

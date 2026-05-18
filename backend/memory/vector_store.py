@@ -64,8 +64,8 @@ class VectorMemoryStore(MemoryManager):
             cursor.execute("""
                 INSERT INTO elder_memories
                 (elder_id, content, sentiment, importance, memory_type,
-                 topic_tags, spoken_at, date)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                 topic_tags, spoken_at, date, persona_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 elder_id,
                 event.get("event", ""),
@@ -74,7 +74,8 @@ class VectorMemoryStore(MemoryManager):
                 event.get("memory_type", "short"),
                 event.get("topic_tags", []),
                 event.get("spoken_at"),
-                event.get("date", datetime.now().strftime("%Y-%m-%d"))
+                event.get("date", datetime.now().strftime("%Y-%m-%d")),
+                event.get("persona_id", "ai")
             ))
             return True
         except Exception as e:
@@ -87,7 +88,8 @@ class VectorMemoryStore(MemoryManager):
 
     def get_important_memories(self, elder_id: str,
                                 importance_threshold: float = 0.7,
-                                limit: int = 10) -> list:
+                                limit: int = 10,
+                                persona_id: str = None) -> list:
         cursor = self._get_cursor()
         if not cursor:
             from .json_store import JsonMemoryStore
@@ -95,14 +97,25 @@ class VectorMemoryStore(MemoryManager):
                 elder_id, importance_threshold, limit
             )
         try:
-            cursor.execute("""
-                SELECT content as event, sentiment, importance,
-                       memory_type, topic_tags, date
-                FROM elder_memories
-                WHERE elder_id = %s AND importance >= %s
-                ORDER BY importance DESC, date DESC
-                LIMIT %s
-            """, (elder_id, importance_threshold, limit))
+            if persona_id and persona_id != "ai":
+                cursor.execute("""
+                    SELECT content as event, sentiment, importance,
+                           memory_type, topic_tags, date
+                    FROM elder_memories
+                    WHERE elder_id = %s AND importance >= %s
+                      AND (persona_id = %s OR persona_id IS NULL OR persona_id = 'ai')
+                    ORDER BY importance DESC, date DESC
+                    LIMIT %s
+                """, (elder_id, importance_threshold, persona_id, limit))
+            else:
+                cursor.execute("""
+                    SELECT content as event, sentiment, importance,
+                           memory_type, topic_tags, date
+                    FROM elder_memories
+                    WHERE elder_id = %s AND importance >= %s
+                    ORDER BY importance DESC, date DESC
+                    LIMIT %s
+                """, (elder_id, importance_threshold, limit))
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:
@@ -118,22 +131,36 @@ class VectorMemoryStore(MemoryManager):
 
     def search_similar_memories(self, elder_id: str,
                                   query_embedding: list,
-                                  limit: int = 5) -> list:
+                                  limit: int = 5,
+                                  persona_id: str = None) -> list:
         cursor = self._get_cursor()
         if not cursor:
             return []
         try:
             embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
-            cursor.execute("""
-                SELECT content as event, sentiment, importance,
-                       memory_type, topic_tags, date,
-                       embedding <=> %s::vector AS distance
-                FROM elder_memories
-                WHERE elder_id = %s
-                  AND embedding IS NOT NULL
-                ORDER BY distance ASC
-                LIMIT %s
-            """, (embedding_str, elder_id, limit))
+            if persona_id and persona_id != "ai":
+                cursor.execute("""
+                    SELECT content as event, sentiment, importance,
+                           memory_type, topic_tags, date,
+                           embedding <=> %s::vector AS distance
+                    FROM elder_memories
+                    WHERE elder_id = %s
+                      AND embedding IS NOT NULL
+                      AND (persona_id = %s OR persona_id IS NULL OR persona_id = 'ai')
+                    ORDER BY distance ASC
+                    LIMIT %s
+                """, (embedding_str, elder_id, persona_id, limit))
+            else:
+                cursor.execute("""
+                    SELECT content as event, sentiment, importance,
+                           memory_type, topic_tags, date,
+                           embedding <=> %s::vector AS distance
+                    FROM elder_memories
+                    WHERE elder_id = %s
+                      AND embedding IS NOT NULL
+                    ORDER BY distance ASC
+                    LIMIT %s
+                """, (embedding_str, elder_id, limit))
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:

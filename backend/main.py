@@ -65,7 +65,6 @@ class ElderProfileUpdate(BaseModel):
     hobbies: str
     sensitivity: str
     diet: str
-    family: str
     cognitive_status: str = "normal"
 
 class ElderSearchRequest(BaseModel):
@@ -156,12 +155,15 @@ async def text_to_speech(req: TTSRequest):
 def get_profile(elder_id: str):
     try:
         decision = get_decision(elder_id)
-        if not decision.profile:
+        profile = decision.profile
+        if not profile or not profile.get("name"):
             raise HTTPException(status_code=404, detail="找不到長者資料")
-        return decision.profile
+        return profile
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/history/{elder_id}")
@@ -207,18 +209,11 @@ async def save_profile(req: ElderProfileUpdate):
             "former_job": req.former_job,
             "tone_preference": req.tone_preference,
             "hobbies": [h.strip() for h in req.hobbies.split("、") if h.strip()],
-            "family": {}
         }
         profile["health_notes"] = {
             "sensitivity": [s.strip() for s in req.sensitivity.split("、") if s.strip()],
             "diet": req.diet
         }
-
-        try:
-            family = json.loads(req.family)
-        except Exception:
-            family = {}
-        profile["persona"]["family"] = family
 
         with open(data_path, "w", encoding="utf-8") as f:
             json.dump(profile, f, ensure_ascii=False, indent=2)
@@ -234,6 +229,68 @@ async def save_profile(req: ElderProfileUpdate):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+async def _generate_persona_tone(elder_id: str, persona_id: str):
+    """背景生成人格說話風格"""
+    try:
+        from backend.memory.vector_store import VectorMemoryStore
+        from google import genai
+        from google.genai import types
+        import os
+
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(elder_id)
+        if not profile:
+            return
+
+        persona = profile.get("personas", {}).get(persona_id, {})
+        if not persona:
+            return
+
+        name = persona.get("name", "")
+        relation = persona.get("relation", "")
+        language = persona.get("language", "mandarin")
+        personality = persona.get("personality", [])
+        habits = persona.get("habits", [])
+
+        language_map = {
+            "mandarin": "全華語，標準國語",
+            "taiwanese_mandarin": "台灣國語，帶點本土親切台灣腔",
+            "mixed": "國台語夾雜，日常華語但情緒詞和稱呼用台語"
+        }
+        language_text = language_map.get(language, "全華語")
+
+        prompt = f"""根據以下資料，生成一段「說話風格描述」供 AI 扮演參考：
+
+- 關係：{relation}
+- 名字：{name}
+- 語言習慣：{language_text}
+- 個性：{', '.join(personality) if personality else '未指定'}
+- 說話習慣：{', '.join(habits) if habits else '未指定'}
+
+要求：
+- 50字以內
+- 描述說話語氣、用詞習慣、互動方式
+- 融合關係和個性，自然口語
+- 只回傳描述文字，不要標題或說明"""
+
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.3,
+                max_output_tokens=200,
+            )
+        )
+
+        tone = response.text.strip()
+        profile["personas"][persona_id]["tone"] = tone
+        memory._save(elder_id, profile)
+        print(f"說話風格生成完成：{name} → {tone[:30]}...")
+
+    except Exception as e:
+        print(f"說話風格生成失敗：{e}")
 
 async def _auto_search_biography(elder_id: str, name: str):
     """建檔時自動搜尋生平資料（背景執行）"""
@@ -271,7 +328,7 @@ async def _auto_search_biography(elder_id: str, name: str):
             profile.get("gender", "male"),
             persona.get("former_job", "未知"),
             persona.get("hobbies", []),
-            persona.get("family", {}),
+            profile.get("personas", {}),
             health,
             raw_summary
         )
@@ -313,7 +370,7 @@ def search_elder_background(req: ElderSearchRequest):
             gender=profile.get("gender", "male"),
             job=persona.get("former_job", "未知"),
             hobbies=persona.get("hobbies", []),
-            family=persona.get("family", {}),
+            personas=profile.get("personas", {}),
             health=health,
             raw_summary=raw_summary
         )
@@ -401,14 +458,18 @@ def save_biography(req: BiographyUpdateRequest):
     
 class PersonaAddRequest(BaseModel):
     elder_id: str
-    persona_id: str
     name: str
     relation: str
     honorific: str
-    tone: str
+    language: str = "mandarin"
+    personality: list = []
+    habits: list = []
     voice_engine: str = "edge"
     voice_path: str = None
     is_deceased: bool = False
+    shared_memories: str = ""
+    current_status: str = ""
+    forbidden_topics: str = ""
 
 class PersonaDeleteRequest(BaseModel):
     elder_id: str
@@ -432,7 +493,7 @@ def get_personas(elder_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/profile/persona/add")
-def add_persona(req: PersonaAddRequest):
+async def add_persona(req: PersonaAddRequest):
     try:
         from backend.memory.vector_store import VectorMemoryStore
         memory = VectorMemoryStore()
@@ -443,19 +504,38 @@ def add_persona(req: PersonaAddRequest):
         if "personas" not in profile:
             profile["personas"] = {}
 
-        profile["personas"][req.persona_id] = {
+        # 自動生成 persona_id
+        existing_count = len([k for k in profile["personas"].keys() if k != "ai"])
+        persona_id = f"persona_{existing_count + 1}"
+
+        # 先存基本資料，tone 背景生成
+        profile["personas"][persona_id] = {
             "name": req.name,
             "relation": req.relation,
             "voice_engine": req.voice_engine,
             "voice_path": req.voice_path,
             "honorific": req.honorific,
-            "tone": req.tone,
-            "is_deceased": req.is_deceased
+            "language": req.language,
+            "personality": req.personality,
+            "habits": req.habits,
+            "tone": "",  # 背景生成
+            "is_deceased": req.is_deceased,
+            "shared_memories": req.shared_memories,
+            "current_status": req.current_status,
+            "forbidden_topics": req.forbidden_topics
         }
         memory._save(req.elder_id, profile)
+
+        # 背景生成 tone
+        asyncio.create_task(_generate_persona_tone(req.elder_id, persona_id))
+
         clear_agent(req.elder_id)
         decisions.pop(req.elder_id, None)
-        return {"success": True, "message": f"已新增人格：{req.name}"}
+        return {
+            "success": True,
+            "message": f"已新增：{req.name}",
+            "persona_id": persona_id
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -13,10 +13,15 @@ class ISafe:
         self.llm = LLMService()
         self.emotion_history = []
         self.alert_triggered = False
+        profile = self.memory.get_profile(elder_id)
+        self.active_persona_id = profile.get("active_persona", "ai") if profile else "ai"
 
     def analyze(self, message: str, speed_emotion: str = "normal") -> dict:
         spoken_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        profile = self.memory.get_profile(self.elder_id)
+        self.active_persona_id = profile.get("active_persona", "ai") if profile else "ai"
+        
         result = self.llm.analyze_emotion(message)
         print(f"情緒分析結果：emotion={result.get('emotion')}, importance={result.get('importance')}")
 
@@ -132,6 +137,7 @@ class ISafe:
                 "emotion_score": -1.0 if trend_type == "urgent" else -0.8,
                 "importance": 1.0,
                 "memory_type": "long",
+                "persona_id": self.active_persona_id,
                 "topic_tags": ["趨勢警報", "需要關注"],
                 "reason": message,
                 "source": "trend_analysis",
@@ -152,6 +158,7 @@ class ISafe:
             "emotion_score": emotion_score,
             "importance": importance,
             "memory_type": memory_type,
+            "persona_id": self.active_persona_id,
             "topic_tags": topic_tags,
             "reason": reason,
             "source": "voice",

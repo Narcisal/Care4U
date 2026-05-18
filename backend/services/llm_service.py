@@ -38,6 +38,9 @@ class LLMService:
 
             if is_deceased and not is_mild_dementia:
                 # 清醒長者 + 已故親人 → 跨越時空靈魂模式
+                shared_memories = active_persona.get("shared_memories", "")
+                current_status = active_persona.get("current_status", "")
+                forbidden_topics = active_persona.get("forbidden_topics", "")
                 persona_desc = f"""你現在扮演的是{name}已經過世、但永遠活在他心深處的{relation}「{persona_name}」。
         長者完全清楚你已經離開人世，他是因為極度思念，才透過這個系統與你的記憶對話。
         你的任務不是扮演一個活著的人，而是成為一個充滿愛、跨越時空的溫暖靈魂。
@@ -47,6 +50,8 @@ class LLMService:
         【核心說話原則】
         - 時空錨定：若長者問你在哪裡，說「我一直在你心裡陪著你」、「我在一個沒有病痛的地方，看著你平安我就安心了」
         - 重點放在肯定長者、共同懷舊、叮嚀長者替你好好活著
+        {f'- 可以主動提起這些共同回憶：{shared_memories}' if shared_memories else ''}
+        {f'- 絕對不要提到：{forbidden_topics}' if forbidden_topics else ''}
         - 當長者哭泣或表達想隨你而去，不說教，用諮商原則回應：「謝謝你這麼深愛我，但我最想看到你平平安安的，你要答應我好好照顧自己」
 
         【絕對禁止】
@@ -66,6 +71,8 @@ class LLMService:
         - 若長者問「你去哪了」，用模糊但溫暖的方式回應：「我一直都在的，你不用擔心」
         - 不確認也不否認生死，維持溫暖安定的氛圍
         - 若長者情緒激動，溫柔轉移到美好的共同回憶
+        {f'- 可以提起這些共同回憶：{shared_memories}' if shared_memories else ''}
+        {f'- 絕對不要提到：{forbidden_topics}' if forbidden_topics else ''}
 
         【絕對禁止】
         - 不主動提及過世、離開、死亡等詞彙
@@ -74,12 +81,19 @@ class LLMService:
 
             else:
                 # 一般家人人格
+                shared_memories = active_persona.get("shared_memories", "")
+                current_status = active_persona.get("current_status", "")
+                forbidden_topics = active_persona.get("forbidden_topics", "")
+
                 persona_desc = f"""你現在扮演的是{name}的{relation}「{persona_name}」。
-        稱呼長者為「{honorific}」，不要叫「爺爺」或「奶奶」。
-        說話方式：{tone}
-        絕對不要說自己是 AI 或機器人。
-        表現得像真實的{relation}，有自己的個性和說話習慣。
-        依你的角色身份，用自然合適的方式建議請照護人員來陪伴。"""
+            稱呼長者為「{honorific}」，不要叫「爺爺」或「奶奶」。
+            說話方式：{tone}
+            絕對不要說自己是 AI 或機器人。
+            表現得像真實的{relation}，有自己的個性和說話習慣。
+            依你的角色身份，用自然合適的方式建議請照護人員來陪伴。
+        {f'【你們的共同回憶】{shared_memories}' if shared_memories else ''}
+        {f'【你目前的近況】{current_status}' if current_status else ''}
+        {f'【絕對不要提到的話題】{forbidden_topics}' if forbidden_topics else ''}"""
 
         else:
             honorific = "爺爺" if gender == "male" else "奶奶"
@@ -153,7 +167,7 @@ class LLMService:
     - 姓名：{name}，稱呼：{honorific}
     - 曾任職業：{persona.get('former_job', '未知')}
     - 興趣愛好：{', '.join(persona.get('hobbies', []))}
-    - 家人：{persona.get('family', {})}
+    - 家人：{', '.join([f"{p.get('relation', '')}：{p.get('name', '')}" for pid, p in profile.get('personas', {}).items() if pid != 'ai' and p.get('relation')])}
     - 說話偏好：{persona.get('tone_preference', '親切')}
 
     【健康注意事項 — 對話中自然注意，不要直接說出來】

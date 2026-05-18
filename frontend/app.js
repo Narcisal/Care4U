@@ -7,8 +7,8 @@ let chatCount = 0;
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
-let currentPersonaAvatar = "/static/avatars/ai_assistant.png";
-let currentElderAvatar = "/static/avatars/elder_male.png";
+let currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
+let currentElderAvatar = "/static/avatars/elder_male_nobg.png";
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -386,11 +386,11 @@ async function loadWelcomePersonas(elderId) {
         container.innerHTML = '';
 
         const avatarMap = {
-            'ai': '/static/avatars/ai_assistant.png',
-            'daughter': '/static/avatars/daughter.png',
-            'son': '/static/avatars/son.png',
-            'granddaughter': '/static/avatars/granddaughter.png',
-            'grandson': '/static/avatars/grandson.png',
+            'ai': '/static/avatars/ai_assistant_bg.png',
+            'daughter': '/static/avatars/daughter_bg.png',
+            'son': '/static/avatars/son_bg.png',
+            'granddaughter': '/static/avatars/granddaughter_bg.png',
+            'grandson': '/static/avatars/grandson_bg.png',
         };
 
         Object.entries(personas).forEach(([id, persona]) => {
@@ -401,16 +401,15 @@ async function loadWelcomePersonas(elderId) {
 
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
-            div.className = `persona-option${isSelected ? ' selected' : ''}`;
+            div.className = `persona-cell${isSelected ? ' selected' : ''}`;
             div.onclick = () => selectPersona(id, avatarSrc, persona.name, persona.relation);
             div.innerHTML = `
-                <img class="persona-avatar" src="${avatarSrc}" alt="${persona.name}">
-                <div class="persona-name">${persona.name}</div>
-                <div class="persona-rel">${persona.relation || 'AI 陪伴助理'}</div>
-                ${isSelected ? '<div class="persona-check">✓</div>' : ''}
+                <img class="persona-cell-avatar" src="${avatarSrc}" alt="${persona.name}">
+                <div class="persona-cell-name">${persona.name}</div>
+                ${persona.relation ? `<div class="persona-cell-rel">${persona.relation}</div>` : ''}
+                ${isSelected ? '<div class="persona-cell-check">✓</div>' : ''}
             `;
             container.appendChild(div);
-
             if (isSelected) {
                 SELECTED_PERSONA = id;
                 currentPersonaAvatar = avatarSrc;
@@ -445,9 +444,9 @@ function selectPersona(personaId, avatarSrc, name, relation) {
     SELECTED_PERSONA = personaId;
     currentPersonaAvatar = avatarSrc;
 
-    document.querySelectorAll('.persona-option').forEach(btn => {
+    document.querySelectorAll('.persona-cell').forEach(btn => {
         btn.classList.remove('selected');
-        const check = btn.querySelector('.persona-check');
+        const check = btn.querySelector('.persona-cell-check');
         if (check) check.remove();
     });
 
@@ -455,7 +454,7 @@ function selectPersona(personaId, avatarSrc, name, relation) {
     if (selected) {
         selected.classList.add('selected');
         const check = document.createElement('div');
-        check.className = 'persona-check';
+        check.className = 'persona-cell-check';
         check.textContent = '✓';
         selected.appendChild(check);
     }

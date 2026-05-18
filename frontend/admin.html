@@ -37,6 +37,17 @@
         .sop-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 10px; background: #F7F3EE; margin-bottom: 8px; }
         .sop-num { width: 28px; height: 28px; border-radius: 50%; background: #C17F5A; color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
         .coming-soon { background: #F0EBE5; border-radius: 12px; padding: 32px; text-align: center; color: #9B8E87; font-size: 15px; border: 2px dashed #D6CEC7; }
+        .tag-option {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 14px; border-radius: 20px;
+            border: 2px solid #D6CEC7; background: white;
+            font-size: 15px; cursor: pointer; color: #3D3530;
+            transition: all 0.2s;
+        }
+        .tag-option:has(input:checked) {
+            border-color: #C17F5A; background: #FEF3E8; color: #C17F5A;
+        }
+        .tag-option input { display: none; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -71,7 +82,7 @@
             <span style="font-size: 20px;">🔗</span><span>Agent 監控</span>
         </div>
         <div class="nav-item" id="nav-persona" onclick="navigateTo('persona')">
-            <span style="font-size: 20px;">🎭</span><span>人格設定</span>
+            <span style="font-size: 20px;">🎭</span><span>陪伴者管理</span>
         </div>
     </div>
     <div style="position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 20px; text-align: center;">
@@ -119,12 +130,7 @@
                 <div style="grid-column: 1 / -1;"><label>興趣愛好 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋"></div>
                 <div><label>身體敏感 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-sensitivity" type="text" placeholder="怕冷、腰部舊傷"></div>
                 <div><label>飲食習慣</label><input id="field-diet" type="text" placeholder="喜歡熱豆漿，不吃苦瓜"></div>
-                <div style="grid-column: 1 / -1;">
-                    <label>家人關係</label>
-                    <div id="family-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;"></div>
-                    <button onclick="addFamilyRow()" type="button" style="width: 100%; padding: 12px; border: 2px dashed #D6CEC7; border-radius: 10px; background: none; color: #9B8E87; font-size: 16px; cursor: pointer; font-family: inherit;">＋ 新增家人</button>
-                </div>
-            </div>
+            </div><!-- 關閉 grid -->
             <div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: #D6CEC7; color: #3D3530; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">🔄 重新載入</button>
                 <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">💾 儲存資料</button>
@@ -153,7 +159,7 @@
                     </div>
                 </div>
             <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
-
+            </div>
     <!-- 家人提供資訊 -->
 <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
     <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
@@ -227,7 +233,6 @@
                 🌟 開始陪伴這位長者
             </button>
         </div>
-    </div>
     </div>
     </div>
 
@@ -566,12 +571,8 @@
 
         <!-- 新增人格 -->
         <div class="card">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">新增陪伴者人格</h2>
+            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">新增家人／陪伴者</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <div>
-                    <label>人格 ID（英文）</label>
-                    <input id="persona-id" type="text" placeholder="daughter / son / friend">
-                </div>
                 <div>
                     <label>名字</label>
                     <input id="persona-name" type="text" placeholder="小玲">
@@ -581,13 +582,80 @@
                     <input id="persona-relation" type="text" placeholder="女兒">
                 </div>
                 <div>
-                    <label>長者稱呼（長者叫他/她什麼）</label>
+                    <label>長者稱呼他/她</label>
                     <input id="persona-honorific" type="text" placeholder="爸爸 / 媽媽">
                 </div>
+                <div>
+                    <label>語言習慣</label>
+                    <select id="persona-language" style="height: 52px;">
+                        <option value="mandarin">全華語</option>
+                        <option value="taiwanese_mandarin">台灣國語（帶台灣腔）</option>
+                        <option value="mixed">國台語夾雜</option>
+                    </select>
+                </div>
+
+                <!-- 一鍵原型 -->
                 <div style="grid-column: 1 / -1;">
-                    <label>說話風格</label>
-                    <input id="persona-tone" type="text"
-                        placeholder="親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」">
+                    <label>快速套用原型 <span style="color:#BDC3C7;">（可微調）</span></label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" onclick="applyArchetype('sunshine')"
+                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid #F39C12;
+                                background: #FEF9E7; color: #7D6608; font-size: 14px;
+                                cursor: pointer; font-family: inherit;">
+                            ☀️ 小太陽
+                        </button>
+                        <button type="button" onclick="applyArchetype('cotton')"
+                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid #7B9E87;
+                                background: #EAF4EE; color: #2D6A4F; font-size: 14px;
+                                cursor: pointer; font-family: inherit;">
+                            🧤 貼心棉襖
+                        </button>
+                        <button type="button" onclick="applyArchetype('funny')"
+                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid #4A90E2;
+                                background: #EBF5FB; color: #1A5276; font-size: 14px;
+                                cursor: pointer; font-family: inherit;">
+                            😄 逗趣活寶
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 個性標籤 -->
+                <div style="grid-column: 1 / -1;">
+                    <label>個性 <span style="color:#BDC3C7;">（最多選2個）</span></label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="personality-tags">
+                        <label class="tag-option"><input type="checkbox" value="活潑開朗"> 活潑開朗</label>
+                        <label class="tag-option"><input type="checkbox" value="溫柔體貼"> 溫柔體貼</label>
+                        <label class="tag-option"><input type="checkbox" value="愛碎念"> 愛碎念</label>
+                        <label class="tag-option"><input type="checkbox" value="幽默風趣"> 幽默風趣</label>
+                        <label class="tag-option"><input type="checkbox" value="話少心細"> 話少心細</label>
+                    </div>
+                </div>
+
+                <!-- 說話習慣 -->
+                <div style="grid-column: 1 / -1;">
+                    <label>說話習慣 <span style="color:#BDC3C7;">（最多選2個）</span></label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="habit-tags">
+                        <label class="tag-option"><input type="checkbox" value="愛問吃了沒"> 愛問吃了沒</label>
+                        <label class="tag-option"><input type="checkbox" value="愛撒嬌"> 愛撒嬌</label>
+                        <label class="tag-option"><input type="checkbox" value="常分享近況"> 常分享近況</label>
+                        <label class="tag-option"><input type="checkbox" value="喜歡叫暱稱"> 喜歡叫暱稱</label>
+                    </div>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
+                    <label>共同核心記憶 <span style="color:#BDC3C7;">（選填）</span></label>
+                    <input id="persona-shared-memories" type="text"
+                        placeholder="例如：小玲大學放榜時阿公高興到放鞭炮">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label>目前近況 <span style="color:#BDC3C7;">（選填）</span></label>
+                    <input id="persona-current-status" type="text"
+                        placeholder="例如：目前在台北工作，最近剛換新工作">
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label>禁忌話題 <span style="color:#BDC3C7;">（選填）</span></label>
+                    <input id="persona-forbidden-topics" type="text"
+                        placeholder="例如：不要提到二兒子">
                 </div>
                 <div style="grid-column: 1 / -1; display: flex; gap: 24px; align-items: center;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
@@ -654,7 +722,7 @@ function navigateTo(page) {
         isafe: ['iSafe 安全監控', '感知代理人 — 安全狀態監控'],
         decision: ['決策後台', '決策代理人 — 任務排程與 SOP 流程'],
         agents: ['Agent 監控', '三隻代理人的即時互動紀錄'],
-        persona: ['人格設定', '管理長者的陪伴者人格'],
+        persona: ['陪伴者管理', '管理長者的家人與陪伴者設定'],
     };
     document.getElementById('page-title').textContent = titles[page][0];
     document.getElementById('page-subtitle').textContent = titles[page][1];
@@ -686,10 +754,7 @@ async function loadElderData(elderId) {
         document.getElementById('field-hobbies').value = (profile.persona?.hobbies || []).join('、');
         document.getElementById('field-sensitivity').value = (profile.health_notes?.sensitivity || []).join('、');
         document.getElementById('field-diet').value = profile.health_notes?.diet || '';
-        const family = profile.persona?.family || {};
-        document.getElementById('family-list').innerHTML = '';
-        Object.entries(family).forEach(([role, name]) => addFamilyRow(role, name));
-        if (Object.keys(family).length === 0) addFamilyRow();
+
 
         // 顯示生平資料
         const bioSection = document.getElementById('biography-section');
@@ -783,7 +848,6 @@ async function saveElderProfile() {
                 hobbies: document.getElementById('field-hobbies').value,
                 sensitivity: document.getElementById('field-sensitivity').value,
                 diet: document.getElementById('field-diet').value,
-                family: JSON.stringify(getFamilyData()),
             })
         });
         const data = await res.json();
@@ -1394,8 +1458,56 @@ async function loadAgentLogs() {
     } catch (e) { console.error('Agent log 載入失敗', e); }
 }
 
+// ===== 原型一鍵套用 =====
+function applyArchetype(type) {
+    // 先清空所有標籤
+    document.querySelectorAll('#personality-tags input').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#habit-tags input').forEach(cb => cb.checked = false);
+
+    const archetypes = {
+        sunshine: {
+            personality: ['活潑開朗', '愛碎念'],
+            habits: ['愛撒嬌', '常分享近況']
+        },
+        cotton: {
+            personality: ['溫柔體貼', '話少心細'],
+            habits: ['愛問吃了沒', '喜歡叫暱稱']
+        },
+        funny: {
+            personality: ['幽默風趣', '活潑開朗'],
+            habits: ['喜歡叫暱稱', '常分享近況']
+        }
+    };
+
+    const archetype = archetypes[type];
+    archetype.personality.forEach(val => {
+        document.querySelectorAll('#personality-tags input').forEach(cb => {
+            if (cb.value === val) cb.checked = true;
+        });
+    });
+    archetype.habits.forEach(val => {
+        document.querySelectorAll('#habit-tags input').forEach(cb => {
+            if (cb.value === val) cb.checked = true;
+        });
+    });
+}
+
+// ===== 最多選2個的限制 =====
+function initTagLimits() {
+    ['personality-tags', 'habit-tags'].forEach(groupId => {
+        const group = document.getElementById(groupId);
+        group.addEventListener('change', (e) => {
+            const checked = group.querySelectorAll('input:checked');
+            if (checked.length > 2) {
+                e.target.checked = false;
+            }
+        });
+    });
+}
+
 window.addEventListener('load', () => {
     loadElderData('W001');
+    initTagLimits();
 });
 // ===== 人格設定 =====
 async function loadPersonas(elderId) {
@@ -1433,6 +1545,7 @@ async function loadPersonas(elderId) {
                         稱呼：${escapeHtml(persona.honorific || '')}｜
                         引擎：${persona.voice_engine === 'breezyvoice' ? 'BreezyVoice' : 'Edge TTS'}
                         ${persona.voice_path ? '｜已上傳語音' : ''}
+                        ${persona.is_deceased ? '｜<span style="color:#E74C3C;">已故親人</span>' : ''}
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -1461,15 +1574,22 @@ async function addPersona() {
     const elderId = document.getElementById('persona-elder-select').value;
     const msgEl = document.getElementById('persona-message');
 
-    const personaId = document.getElementById('persona-id').value.trim();
     const name = document.getElementById('persona-name').value.trim();
     const relation = document.getElementById('persona-relation').value.trim();
     const honorific = document.getElementById('persona-honorific').value.trim();
-    const tone = document.getElementById('persona-tone').value.trim();
+    const language = document.getElementById('persona-language').value;
+    const sharedMemories = document.getElementById('persona-shared-memories').value.trim();
+    const currentStatus = document.getElementById('persona-current-status').value.trim();
+    const forbiddenTopics = document.getElementById('persona-forbidden-topics').value.trim();
+    const isDeceased = document.getElementById('persona-deceased').checked;
     const voiceFile = document.getElementById('persona-voice').files[0];
 
-    if (!personaId || !name || !honorific) {
-        alert('請填寫 ID、名字和稱呼！');
+    // 收集標籤
+    const personality = [...document.querySelectorAll('#personality-tags input:checked')].map(cb => cb.value);
+    const habits = [...document.querySelectorAll('#habit-tags input:checked')].map(cb => cb.value);
+
+    if (!name || !honorific || !relation) {
+        alert('請填寫名字、關係和稱呼！');
         return;
     }
 
@@ -1479,27 +1599,27 @@ async function addPersona() {
     msgEl.textContent = '新增中...';
 
     try {
-        // 先新增人格
         const res = await fetch(`${API_BASE}/api/profile/persona/add`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 elder_id: elderId,
-                persona_id: personaId,
-                name, relation, honorific, tone,
-                is_deceased: document.getElementById('persona-deceased').checked
+                name, relation, honorific, language,
+                personality, habits,
+                is_deceased: isDeceased,
+                shared_memories: sharedMemories,
+                current_status: currentStatus,
+                forbidden_topics: forbiddenTopics
             })
         });
         const data = await res.json();
 
-        // 如果有語音樣本，上傳
         if (data.success && voiceFile) {
             msgEl.textContent = '上傳語音樣本中...';
             const formData = new FormData();
             formData.append('elder_id', elderId);
-            formData.append('persona_id', personaId);
+            formData.append('persona_id', data.persona_id);
             formData.append('voice', voiceFile);
-
             await fetch(`${API_BASE}/api/profile/persona/upload-voice`, {
                 method: 'POST',
                 body: formData
@@ -1509,17 +1629,21 @@ async function addPersona() {
         if (data.success) {
             msgEl.style.background = '#E8F5EC';
             msgEl.style.color = '#2D6A4F';
-            msgEl.textContent = '✅ ' + data.message;
+            msgEl.textContent = '✅ ' + data.message + '（說話風格生成中...）';
             loadPersonas(elderId);
 
             // 清空表單
-            document.getElementById('persona-deceased').checked = false;
-            document.getElementById('persona-id').value = '';
             document.getElementById('persona-name').value = '';
             document.getElementById('persona-relation').value = '';
             document.getElementById('persona-honorific').value = '';
-            document.getElementById('persona-tone').value = '';
+            document.getElementById('persona-language').value = 'mandarin';
+            document.getElementById('persona-shared-memories').value = '';
+            document.getElementById('persona-current-status').value = '';
+            document.getElementById('persona-forbidden-topics').value = '';
+            document.getElementById('persona-deceased').checked = false;
             document.getElementById('persona-voice').value = '';
+            document.querySelectorAll('#personality-tags input').forEach(cb => cb.checked = false);
+            document.querySelectorAll('#habit-tags input').forEach(cb => cb.checked = false);
         }
     } catch (e) {
         msgEl.style.background = '#FDECEA';
