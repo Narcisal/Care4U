@@ -402,12 +402,14 @@ async function loadWelcomePersonas(elderId) {
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
             div.className = `persona-cell${isSelected ? ' selected' : ''}`;
-            div.onclick = () => selectPersona(id, avatarSrc, persona.name, persona.relation);
+            div.onclick = () => {
+                selectPersona(id, avatarSrc, persona.name, persona.relation);
+                enterChat();
+            };
             div.innerHTML = `
                 <img class="persona-cell-avatar" src="${avatarSrc}" alt="${persona.name}">
                 <div class="persona-cell-name">${persona.name}</div>
                 ${persona.relation ? `<div class="persona-cell-rel">${persona.relation}</div>` : ''}
-                ${isSelected ? '<div class="persona-cell-check">✓</div>' : ''}
             `;
             container.appendChild(div);
             if (isSelected) {
@@ -455,7 +457,6 @@ function selectPersona(personaId, avatarSrc, name, relation) {
         selected.classList.add('selected');
         const check = document.createElement('div');
         check.className = 'persona-cell-check';
-        check.textContent = '✓';
         selected.appendChild(check);
     }
 }
@@ -470,6 +471,12 @@ async function speakText(text, emotion = "normal") {
             if (portrait) portrait.classList.add("speaking");
             if (ring1) ring1.classList.add("active");
             if (ring2) ring2.classList.add("active");
+            const lbl = document.getElementById("status-label");
+            const pname = document.getElementById("persona-portrait-name");
+            if (lbl && pname) {
+                lbl.textContent = pname.textContent + "正在說話...";
+                lbl.className = "status-label speaking";
+            }
 
             const res = await fetch(`${API_BASE}/api/tts`, {
                 method: "POST",
@@ -478,19 +485,19 @@ async function speakText(text, emotion = "normal") {
             });
             const audioBlob = await res.blob();
             const audio = new Audio(URL.createObjectURL(audioBlob));
-            audio.onended = () => {
-                // 停止說話：移除光暈
+            const resetSpeaking = () => {
                 if (portrait) portrait.classList.remove("speaking");
                 if (ring1) ring1.classList.remove("active");
                 if (ring2) ring2.classList.remove("active");
-                resolve();
+                const lbl = document.getElementById("status-label");
+                const pname = document.getElementById("persona-portrait-name");
+                if (lbl && pname) {
+                    lbl.textContent = pname.textContent + "正在聆聽";
+                    lbl.className = "status-label listening";
+                }
             };
-            audio.onerror = () => {
-                if (portrait) portrait.classList.remove("speaking");
-                if (ring1) ring1.classList.remove("active");
-                if (ring2) ring2.classList.remove("active");
-                resolve();
-            };
+            audio.onended = () => { resetSpeaking(); resolve(); };
+            audio.onerror = () => { resetSpeaking(); resolve(); };
             audio.play();
         } catch (e) {
             console.error("TTS 失敗：", e);

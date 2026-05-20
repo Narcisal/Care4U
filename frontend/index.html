@@ -19,50 +19,40 @@
             --text-light:   #A89080;
             --orange:       #C17F5A;
             --orange-dark:  #A86844;
-            --orange-light: #FEF3E8;
             --orange-pale:  #FBF0E6;
-            --green:        #7B9E87;
-            --green-dark:   #5F8470;
             --navy:         #1B2E4B;
-            --navy-light:   #2D4A73;
             --brown-frame:  #8B6E52;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            --green:        #7B9E87;
         }
 
         body {
             font-family: 'Noto Serif TC', 'Microsoft JhengHei', serif;
             background: var(--cream);
             color: var(--text-dark);
+            height: 100dvh;
             display: flex;
-            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* ============================================================
+        /* ══════════════════════════════════════
            狀態 A：角色選擇主頁
-        ============================================================ */
+        ══════════════════════════════════════ */
+
         #welcome-screen {
-            width: 100%;
-            height: 100%;
+            flex: 1;
             display: flex;
             flex-direction: row;
             overflow: hidden;
         }
 
-        /* 左側 42%：引導助理 */
+        /* 左側照片區 */
         .welcome-left {
             width: 42%;
             position: relative;
             overflow: hidden;
             background: var(--cream-deep);
-            flex-shrink: 0;
         }
 
-        /* 底部半橢圓暖色地基 */
         .left-base {
             position: absolute;
             bottom: -60px;
@@ -74,25 +64,20 @@
             border-radius: 50% 50% 0 0 / 40% 40% 0 0;
         }
 
-        /* 細緻光感紋理 */
         .left-texture {
             position: absolute;
             inset: 0;
             background-image:
                 radial-gradient(circle at 30% 70%, rgba(193,127,90,0.08) 0%, transparent 60%),
                 radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 1;
         }
 
-        /* 人像貼底 */
         .agent-portrait-wrap {
             position: absolute;
             inset: 0;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            z-index: 2;
         }
 
         .agent-portrait {
@@ -100,61 +85,61 @@
             max-height: 92%;
             object-fit: contain;
             object-position: bottom center;
+            position: relative;
+            z-index: 2;
             filter: drop-shadow(0 8px 24px rgba(44,36,32,0.18));
         }
 
         /* 對話氣泡 */
         .speech-bubble {
             position: absolute;
-            top: 36px;
-            right: 28px;
-            background: var(--navy);
+            bottom: 72%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(60, 40, 25, 0.70);
             color: #F7F0E8;
-            border-radius: 22px 22px 22px 6px;
-            padding: 18px 24px;
-            min-width: 180px;
+            border-radius: 14px;
+            padding: 12px 24px;
             z-index: 10;
-            box-shadow: 0 8px 32px rgba(27,46,75,0.3);
+            white-space: nowrap;
             animation: floatBubble 3.5s ease-in-out infinite;
         }
 
         .speech-bubble::after {
             content: '';
             position: absolute;
-            bottom: -12px;
-            left: 20px;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
             width: 0; height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 14px solid var(--navy);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid rgba(60, 40, 25, 0.70);
         }
 
         @keyframes floatBubble {
-            0%, 100% { transform: translateY(0); }
-            50%       { transform: translateY(-7px); }
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%       { transform: translateX(-50%) translateY(-6px); }
         }
 
         .speech-bubble-text {
-            font-size: 22px;
-            font-weight: 900;
-            line-height: 1.5;
+            font-size: 24px;
+            font-weight: 700;
             letter-spacing: 2px;
         }
 
-        /* 右側 58%：選擇區 */
+        /* 右側選擇區 */
         .welcome-right {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            align-items: stretch;
             padding: 44px 48px;
-            gap: 0;
             background: var(--warm-white);
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;
         }
 
-        /* 右側頂部橘色細線 */
         .welcome-right::before {
             content: '';
             position: absolute;
@@ -163,35 +148,26 @@
             background: linear-gradient(90deg, var(--orange), #E8A878, var(--orange));
         }
 
-        .right-label {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-light);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-            animation: fadeUp 0.4s ease-out both;
-        }
-
-        /* 人格卡片網格 */
+        /* 卡片網格 */
         .persona-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            margin-bottom: 28px;
+            align-content: start;
+            margin-top: 8px;
         }
 
         .persona-cell {
             background: var(--cream);
             border: 2px solid var(--border);
             border-radius: 24px;
-            padding: 28px 16px 22px;
+            padding: 32px 16px 24px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0;
-            transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
+            aspect-ratio: 1;
+            transition: border-color 0.2s, background 0.2s, transform 0.18s;
             position: relative;
             overflow: hidden;
         }
@@ -199,111 +175,44 @@
         .persona-cell:hover {
             border-color: var(--orange);
             background: var(--orange-pale);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(193,127,90,0.2);
+            transform: scale(1.04);
         }
 
         .persona-cell.selected {
             border-color: var(--orange);
-            border-width: 2.5px;
             background: var(--orange-pale);
-            box-shadow: 0 8px 24px rgba(193,127,90,0.25);
-        }
-
-        /* 選取角標 */
-        .persona-cell-check {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--orange);
-            color: white;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            font-weight: 900;
-            z-index: 2;
-        }
-
-        .persona-cell.selected .persona-cell-check {
-            display: flex;
         }
 
         .persona-cell-avatar {
-            width: 90px;
-            height: 90px;
+            width: 70%;
+            aspect-ratio: 1;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid var(--border);
             background: var(--cream-deep);
-            margin-bottom: 14px;
-            transition: border-color 0.2s;
-            position: relative;
-            z-index: 1;
+            margin-bottom: 18px;
+            transition: transform 0.18s;
         }
 
-        .persona-cell.selected .persona-cell-avatar,
         .persona-cell:hover .persona-cell-avatar {
-            border-color: var(--orange);
+            transform: scale(1.05);
         }
 
         .persona-cell-name {
-            font-size: 22px;
+            font-size: 30px;
             font-weight: 700;
             color: var(--text-dark);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             letter-spacing: 1px;
-            position: relative;
-            z-index: 1;
         }
 
         .persona-cell-rel {
-            font-size: 14px;
+            font-size: 22px;
             color: var(--text-light);
             letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
         }
 
-        /* 開始按鈕 */
-        .btn-enter {
-            width: 100%;
-            padding: 22px;
-            font-size: 22px;
-            font-weight: 900;
-            font-family: inherit;
-            background: var(--orange);
-            color: white;
-            border: none;
-            border-radius: 18px;
-            cursor: pointer;
-            letter-spacing: 4px;
-            transition: background 0.2s, transform 0.15s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 6px 24px rgba(193,127,90,0.4);
-            animation: fadeUp 0.4s ease-out 0.45s both;
-        }
+        #welcome-elder-select { display: none; }
 
-        .btn-enter:hover {
-            background: var(--orange-dark);
-            transform: translateY(-2px);
-        }
-
-        .btn-enter svg {
-            width: 22px; height: 22px;
-            stroke: white; fill: none;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* 卡片淡入動畫 */
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(14px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -314,12 +223,10 @@
         .persona-cell:nth-child(3) { animation: fadeUp 0.4s ease-out 0.25s both; }
         .persona-cell:nth-child(4) { animation: fadeUp 0.4s ease-out 0.35s both; }
 
-        /* 長者選擇器隱藏 */
-        #welcome-elder-select { display: none; }
-
-        /* ============================================================
+        /* ══════════════════════════════════════
            狀態 B：智慧對話陪伴頁面
-        ============================================================ */
+        ══════════════════════════════════════ */
+
         #main-screen {
             width: 100%;
             height: 100%;
@@ -327,11 +234,11 @@
             flex-direction: column;
         }
 
-        /* 頂部 */
+        /* 頂部列 */
         .top-bar {
             flex-shrink: 0;
-            background: #EDE8E3;
-            border-bottom: 2px solid var(--border);
+            background: #EDE0D0;
+            border-bottom: 1.5px solid var(--border);
             padding: 12px 32px;
             display: flex;
             align-items: center;
@@ -365,131 +272,161 @@
             color: var(--orange);
         }
 
-        #emotion-display {
-            font-size: 15px;
-            color: var(--text-light);
-        }
-
         .btn-switch-top {
             padding: 8px 20px;
             font-size: 16px;
             font-family: inherit;
             font-weight: 700;
-            background: var(--orange-light);
-            color: var(--orange);
-            border: 2px solid var(--orange);
+            background: transparent;
+            color: var(--text-mid);
+            border: 1.5px solid var(--border);
             border-radius: 10px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s;
         }
 
-        .btn-switch-top:hover {
-            background: var(--orange);
-            color: white;
-        }
+        .btn-switch-top:hover { background: #D9C4AE; }
 
-        /* 主內容 */
-        .content-area {
-            flex: 1;
-            min-height: 0;
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            overflow: hidden;
-        }
-
-        /* 左側 */
-        .left-panel {
-            display: flex;
-            flex-direction: column;
-            border-right: 3px solid var(--border);
-            overflow: hidden;
-            background: linear-gradient(180deg, #FDF8F3 0%, #F5EDE3 100%);
-            min-height: 0;
-        }
-
-        .chat-area {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-            padding: 24px 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            scrollbar-width: thin;
-            scrollbar-color: #D6CEC7 transparent;
-        }
-
-        .chat-empty {
+        /* 主體 */
+        .main-body {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 20px;
-            color: var(--text-light);
-            opacity: 0.6;
+            gap: 28px;
+            position: relative;
+            padding: 40px 20px 60px;
+            background: linear-gradient(135deg, #FDF7F2 0%, #F5ECE2 100%);
         }
 
-        .chat-empty-icon { font-size: 64px; }
+        /* 說話光暈 */
+        .speaking-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        .chat-empty-text {
-            font-size: 24px;
-            text-align: center;
-            line-height: 1.8;
+        .speaking-ring {
+            position: absolute;
+            width: 640px; height: 640px;
+            border-radius: 50%;
+            border: 3px solid var(--orange);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #speaking-ring-2 { width: 700px; height: 700px; }
+
+        .speaking-ring.active {
+            animation: pulseRing 1.6s ease-out infinite;
+        }
+
+        #speaking-ring-2.active {
+            animation: pulseRing 1.6s ease-out 0.6s infinite;
+        }
+
+        @keyframes pulseRing {
+            0%   { transform: scale(0.88); opacity: 0.6; }
+            100% { transform: scale(1.12); opacity: 0; }
+        }
+
+        /* 人像 */
+        #persona-portrait {
+            width: 600px; height: 600px;
+            border-radius: 50%;
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+            transition: box-shadow 0.3s;
+        }
+
+        #persona-portrait.speaking {
+            box-shadow: 0 8px 48px rgba(193,127,90,0.6);
+        }
+
+        /* 姓名與稱謂 */
+        .persona-info { text-align: center; }
+
+        #persona-portrait-name {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--text-dark);
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+
+        #persona-portrait-rel {
+            font-size: 20px;
+            color: var(--text-light);
+        }
+
+        /* 狀態提示 */
+        .status-label {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-mid);
+            letter-spacing: 2px;
+            opacity: 0.85;
+        }
+
+        .status-label.listening::before {
+            content: '● ';
+            color: var(--green);
+            animation: breathe 1.8s ease-in-out infinite;
+        }
+
+        .status-label.speaking::before {
+            content: '● ';
+            color: var(--orange);
+            animation: breathe 0.9s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.2; }
         }
 
         /* 懷舊相框 */
-        .memory-frame-wrap {
-            flex-shrink: 0;
-            padding: 0 24px 16px;
-        }
-
         #image-frame {
             display: none;
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
             border: 8px solid var(--brown-frame);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 0 0 2px rgba(255,255,255,0.3);
-            animation: frameIn 0.6s ease-out;
-            background: var(--brown-frame);
-            position: relative;
-        }
-
-        #image-frame::before {
-            content: '';
-            position: absolute;
-            inset: 4px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 6px;
-            pointer-events: none;
-            z-index: 2;
+            width: 320px;
+            animation: frameIn 1.2s ease-in both;
+            z-index: 5;
         }
 
         @keyframes frameIn {
-            from { opacity: 0; transform: scale(0.95) translateY(12px); }
-            to   { opacity: 1; transform: scale(1) translateY(0); }
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         #image-frame-img {
             width: 100%;
-            max-height: 200px;
+            max-height: 180px;
             object-fit: cover;
             display: block;
         }
 
         .memory-frame-caption {
-            padding: 8px 14px;
-            font-size: 14px;
-            color: rgba(255,255,255,0.85);
-            text-align: center;
             background: var(--brown-frame);
+            color: rgba(255,255,255,0.85);
+            font-size: 14px;
+            text-align: center;
+            padding: 8px 12px;
             letter-spacing: 1px;
         }
 
         /* 錄音指示 */
         #recording-indicator {
             display: none;
-            flex-shrink: 0;
             align-items: center;
             gap: 10px;
             padding: 10px 20px;
@@ -497,7 +434,6 @@
             border-radius: 12px;
             font-size: 18px;
             color: #E74C3C;
-            margin: 0 24px 10px;
         }
 
         #recording-indicator.active { display: flex; }
@@ -506,260 +442,16 @@
             width: 12px; height: 12px;
             border-radius: 50%;
             background: #E74C3C;
-            animation: blink 1s infinite;
             flex-shrink: 0;
+            animation: blink 1s infinite;
         }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
+            50%       { opacity: 0.2; }
         }
 
-        /* 輸入區 */
-        .input-area {
-            flex-shrink: 0;
-            background: white;
-            border-top: 3px solid var(--border);
-            padding: 14px 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        #text-input {
-            flex: 1;
-            padding: 14px 18px;
-            font-size: 20px;
-            font-family: inherit;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            background: var(--cream);
-            color: var(--text-dark);
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        #text-input:focus { border-color: var(--orange); }
-        #text-input:disabled { opacity: 0.4; }
-
-        #hold-talk-btn {
-            flex-shrink: 0;
-            padding: 14px 18px;
-            font-size: 18px;
-            font-family: inherit;
-            font-weight: 700;
-            background: var(--green);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            user-select: none;
-            white-space: nowrap;
-            transition: all 0.1s;
-        }
-
-        #hold-talk-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        #hold-talk-btn.recording {
-            background: #E74C3C;
-            transform: scale(1.05);
-            box-shadow: 0 0 24px rgba(231,76,60,0.5);
-        }
-
-        #send-btn {
-            flex-shrink: 0;
-            padding: 14px 20px;
-            font-size: 18px;
-            font-family: inherit;
-            font-weight: 700;
-            background: var(--navy);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* 控制列 */
-        .control-area {
-            flex-shrink: 0;
-            background: white;
-            border-top: 2px solid var(--border);
-            padding: 10px 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        #start-btn {
-            flex: 1;
-            padding: 16px;
-            font-size: 22px;
-            font-family: inherit;
-            font-weight: 700;
-            background: var(--orange);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-            letter-spacing: 2px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 16px rgba(193,127,90,0.3);
-        }
-
-        #start-btn:hover { background: var(--orange-dark); }
-        #start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        #clear-btn {
-            flex-shrink: 0;
-            padding: 16px 24px;
-            font-size: 18px;
-            font-family: inherit;
-            font-weight: 700;
-            background: var(--border);
-            color: var(--text-mid);
-            border: none;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-
-        #clear-btn:hover { background: #C8BDB7; }
-
-        /* 右側 */
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 28px;
-            background: linear-gradient(180deg, #F5EDE3 0%, #EDE0D4 100%);
-            gap: 24px;
-            overflow: hidden;
-        }
-
-        .speaking-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .speaking-ring {
-            position: absolute;
-            width: 290px; height: 290px;
-            border-radius: 50%;
-            border: 5px solid var(--orange);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .speaking-ring.active {
-            animation: pulseRing 1.4s ease-out infinite;
-        }
-
-        #speaking-ring-2 { width: 340px; height: 340px; }
-        #speaking-ring-2.active {
-            animation: pulseRing 1.4s ease-out 0.5s infinite;
-        }
-
-        @keyframes pulseRing {
-            0% { transform: scale(0.85); opacity: 0.7; }
-            100% { transform: scale(1.15); opacity: 0; }
-        }
-
-        #persona-portrait {
-            width: 240px; height: 240px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 6px solid white;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
-            position: relative;
-            z-index: 1;
-            transition: box-shadow 0.3s;
-            flex-shrink: 0;
-        }
-
-        #persona-portrait.speaking {
-            box-shadow: 0 8px 48px rgba(193,127,90,0.6);
-        }
-
-        #persona-portrait-name {
-            font-size: 30px;
-            font-weight: 900;
-            color: var(--text-dark);
-            text-align: center;
-            letter-spacing: 2px;
-        }
-
-        #persona-portrait-rel {
-            font-size: 16px;
-            color: var(--text-light);
-            text-align: center;
-        }
-
-        #chat-count-display {
-            font-size: 15px;
-            color: var(--text-light);
-        }
-
-        #chat-count {
-            color: var(--orange);
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        /* 對話泡泡 */
-        .msg-row {
-            display: flex;
-            gap: 12px;
-            align-items: flex-end;
-            animation: msgFadeUp 0.3s ease-out;
-        }
-
-        @keyframes msgFadeUp {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .msg-row.user { flex-direction: row-reverse; }
-
-        .msg-avatar {
-            width: 46px; height: 46px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-            border: 2px solid var(--border);
-        }
-
-        .msg-bubble {
-            max-width: 70%;
-            padding: 14px 18px;
-            border-radius: 18px;
-            font-size: 20px;
-            line-height: 1.7;
-        }
-
-        .msg-bubble.ai {
-            background: white;
-            color: var(--text-dark);
-            border: 2px solid var(--border);
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .msg-bubble.user {
-            background: var(--navy);
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-
-        /* 彈窗 */
+        /* 切換人格彈窗 */
         #persona-switcher {
             display: none;
             position: fixed;
@@ -811,43 +503,39 @@
 </head>
 <body>
 
-<!-- ============================================================
-     狀態 A：角色選擇主頁
-============================================================ -->
+<!-- 狀態 A：角色選擇主頁 -->
 <div id="welcome-screen">
 
-    <!-- 左側：人像區 -->
     <div class="welcome-left">
         <div class="left-base"></div>
         <div class="left-texture"></div>
-
         <div class="agent-portrait-wrap">
             <img class="agent-portrait"
-                src="/static/avatars/ai_assistant_nobg.png"
-                alt="AI 助理">
+                 src="/static/avatars/ai_assistant_nobg.png"
+                 alt="AI 助理">
         </div>
-
         <div class="speech-bubble">
-            <div class="speech-bubble-text" id="speech-bubble-text">想和誰<br>聊天呢？</div>
+            <div class="speech-bubble-text">想和誰聊天呢？</div>
         </div>
     </div>
 
-    <!-- 右側：選擇區 -->
     <div class="welcome-right">
-        <div class="right-label">選擇今天的聊天對象</div>
-
         <div id="welcome-persona-list" class="persona-grid">
-            <div style="text-align:center;color:#BDC3C7;padding:20px;font-size:20px;grid-column:1/-1;">載入中...</div>
+            <div class="persona-cell" onclick="selectAndEnter(this, 'ai_assistant')">
+                <img class="persona-cell-avatar"
+                     src="/static/avatars/ai_assistant_nobg.png"
+                     alt="AI 助理">
+                <div class="persona-cell-name">AI 助理</div>
+                <div class="persona-cell-rel">AI 助理</div>
+            </div>
+            <div class="persona-cell" onclick="selectAndEnter(this, 'daughter')">
+                <img class="persona-cell-avatar"
+                     src="/static/avatars/daughter_nobg.png"
+                     alt="小玲">
+                <div class="persona-cell-name">小玲</div>
+                <div class="persona-cell-rel">女兒</div>
+            </div>
         </div>
-
-        <button class="btn-enter" onclick="enterChat()">
-            開始陪伴
-            <svg viewBox="0 0 24 24">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-            </svg>
-        </button>
-
         <select id="welcome-elder-select">
             <option value="W001">王大明</option>
             <option value="C001">陳秀英</option>
@@ -855,72 +543,53 @@
     </div>
 </div>
 
-<!-- ============================================================
-     狀態 B：智慧對話陪伴頁面
-============================================================ -->
+<!-- 狀態 B：智慧對話陪伴頁面 -->
 <div id="main-screen">
 
-    <!-- 頂部 -->
     <div class="top-bar">
         <div class="top-left">
             <div class="top-logo">🌸</div>
             <div class="top-title">AI Care U</div>
         </div>
         <div class="top-right">
-            <div id="emotion-display">💛 等待對話...</div>
             <div id="elder-name-display">載入中...</div>
             <button class="btn-switch-top" onclick="showPersonaSwitcher()">🔄 切換陪伴者</button>
         </div>
     </div>
 
-    <!-- 主內容 -->
-    <div class="content-area">
-
-        <!-- 左側：對話 + 懷舊相框 -->
-        <div class="left-panel">
-            <div id="chat-container" class="chat-area">
-                <div class="chat-empty">
-                    <div class="chat-empty-icon">💬</div>
-                    <div class="chat-empty-text">請點擊下方「開始對話」<br>來啟動陪伴系統</div>
-                </div>
-            </div>
-
-            <div class="memory-frame-wrap">
-                <div id="image-frame">
-                    <img id="image-frame-img" src="" alt="回憶圖片">
-                    <div class="memory-frame-caption">✨ 為您喚起的記憶</div>
-                </div>
-            </div>
-
-            <div id="recording-indicator">
-                <div class="rec-dot"></div>
-                <span id="voice-status">正在錄音...</span>
-            </div>
-
-            <div class="input-area">
-                <input id="text-input" type="text" placeholder="輸入訊息..." disabled>
-                <button id="hold-talk-btn" disabled>🎙️ 按住說話</button>
-                <button id="send-btn" disabled>送出</button>
-            </div>
-
-            <div class="control-area">
-                <button id="start-btn">🌟 開始對話</button>
-                <button id="clear-btn">清除</button>
-            </div>
+    <div class="main-body">
+        <div class="speaking-wrap">
+            <div class="speaking-ring" id="speaking-ring-1"></div>
+            <div class="speaking-ring" id="speaking-ring-2"></div>
+            <img id="persona-portrait"
+                 src="/static/avatars/ai_assistant_nobg.png"
+                 alt="陪伴者">
         </div>
 
-        <!-- 右側：對話角色 -->
-        <div class="right-panel">
-            <div class="speaking-wrap">
-                <div class="speaking-ring" id="speaking-ring-1"></div>
-                <div class="speaking-ring" id="speaking-ring-2"></div>
-                <img id="persona-portrait"
-                    src="/static/avatars/ai_assistant_nobg.png"
-                    alt="陪伴者">
-            </div>
+        <div class="persona-info">
             <div id="persona-portrait-name">AI 助理</div>
             <div id="persona-portrait-rel">您的智慧照護陪伴</div>
-            <div id="chat-count-display">對話輪數：<span id="chat-count">0</span></div>
+        </div>
+
+        <div class="status-label listening" id="status-label">AI 助理正在聆聽</div>
+
+        <div id="image-frame">
+            <img id="image-frame-img" src="" alt="回憶圖片">
+            <div class="memory-frame-caption">✨ 為您喚起的記憶</div>
+        </div>
+
+        <!-- 保持 app.js 功能相容 -->
+        <input id="text-input" type="text" style="display:none;" disabled>
+        <button id="send-btn" style="display:none;" disabled>送出</button>
+        <button id="hold-talk-btn" style="display:none;" disabled>🎙️ 按住說話</button>
+        <button id="start-btn" style="display:none;">開始對話</button>
+        <button id="clear-btn" style="display:none;">清除</button>
+        <div id="recording-indicator">
+            <div class="rec-dot"></div>
+            <span id="voice-status">正在錄音...</span>
+        </div>
+        <div id="chat-count-display" style="display:none;">
+            對話輪數：<span id="chat-count">0</span>
         </div>
     </div>
 </div>
