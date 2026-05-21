@@ -33,10 +33,17 @@ from concurrent.futures import ThreadPoolExecutor
 
 # STT worker pool（3個實例）
 STT_POOL_SIZE = 3
-stt_pool = [STTService(model_size="medium", device="cpu") for _ in range(STT_POOL_SIZE)]
+try:
+    stt_pool = [STTService(model_size="medium", device="cuda") for _ in range(STT_POOL_SIZE)]
+except Exception as e:
+    import traceback
+    print(f"STTService 初始化失敗：{e}")
+    traceback.print_exc()
+    stt_pool = [STTService(model_size="medium", device="cpu") for _ in range(STT_POOL_SIZE)]
 stt_pool_lock = asyncio.Queue()
 stt = stt_pool[0]  # 保留單一實例供語言切換用
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
+tts.set_engine("xtts", voice_path="C:/Users/user/often_use/NCKU/grade3-2/專題/0511/Care4U/backend/data/default_agent.wav")
 decisions: dict[str, Decision] = {}
 
 def get_decision(elder_id: str) -> Decision:

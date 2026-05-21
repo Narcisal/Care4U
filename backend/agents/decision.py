@@ -58,9 +58,11 @@ class Decision:
             engine = active.get("voice_engine", "edge")
             voice_path = active.get("voice_path")
 
-            if engine == "breezyvoice" and voice_path:
+            if engine == "breezyvoice":
                 self.tts.set_engine("breezyvoice", voice_path)
                 print(f"TTS 切換為 BreezyVoice，聲音樣本：{voice_path}")
+            elif engine == "edge":
+                self.tts.reset_engine()
             else:
                 self.tts.reset_engine()
 

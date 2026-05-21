@@ -1,17 +1,14 @@
 import io
 import os
 import numpy as np
-from faster_whisper import WhisperModel
+import whisper
+import imageio_ffmpeg
+os.environ["PATH"] += os.pathsep + os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
 
 class STTService:
-
-    def __init__(self, model_size: str = "medium", device: str = "cpu"):
+    def __init__(self, model_size: str = "medium", device: str = "cuda"):
         print(f"載入 Whisper 模型：{model_size} on {device}")
-        self.model = WhisperModel(
-            model_size,
-            device=device,
-            compute_type="float16" if device == "cuda" else "int8"
-        )
+        self.model = whisper.load_model(model_size, device=device)
         print("Whisper 模型載入完成！")
 
         # Breeze ASR 26 台語模型（懶載入）
@@ -114,17 +111,28 @@ class STTService:
             return self._transcribe_whisper(audio_bytes)
 
     def _transcribe_whisper(self, audio_bytes: bytes) -> str:
-        """用 Whisper 辨識華語"""
-        audio_buffer = io.BytesIO(audio_bytes)
-        segments, info = self.model.transcribe(
-            audio_buffer,
-            language="zh",
-            beam_size=5,
-            vad_filter=True,
-            vad_parameters=dict(min_silence_duration_ms=500),
-            initial_prompt="這是台灣長者的日常對話，包含親屬稱謂如老伴、孫子、女兒、爺爺、奶奶、阿公、阿嬤，以及台灣常用詞彙如豆漿、象棋、鄧麗君。"
-        )
-        return "".join([seg.text for seg in segments]).strip()
+        import uuid, subprocess, imageio_ffmpeg
+        import soundfile as sf
+        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"tmp_{uuid.uuid4().hex}")
+        webm_path = base + ".webm"
+        wav_path = base + ".wav"
+        with open(webm_path, 'wb') as f:
+            f.write(audio_bytes)
+        try:
+            ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+            subprocess.run([ffmpeg, '-y', '-i', webm_path, '-ar', '16000', '-ac', '1', wav_path],
+                        capture_output=True, check=True)
+            audio_np, _ = sf.read(wav_path, dtype='float32')
+            result = self.model.transcribe(
+                audio_np,
+                language="zh",
+                beam_size=5,
+                initial_prompt="這是台灣長者的日常對話，包含親屬稱謂如老伴、孫子、女兒、爺爺、奶奶、阿公、阿嬤，以及台灣常用詞彙如豆漿、象棋、鄧麗君。"
+            )
+            return result["text"].strip()
+        finally:
+            for p in [webm_path, wav_path]:
+                if os.path.exists(p): os.remove(p)
 
     def transcribe(self, audio_bytes: bytes) -> str:
         try:
@@ -150,25 +158,30 @@ class STTService:
                     "duration": 0.0
                 }
 
-            audio_buffer = io.BytesIO(audio_bytes)
-            segments, info = self.model.transcribe(
-                audio_buffer,
-                language="zh",
-                beam_size=5,
-                vad_filter=True,
-                vad_parameters=dict(min_silence_duration_ms=500),
-                initial_prompt="這是台灣長者的日常對話，包含親屬稱謂如老伴、孫子、女兒、爺爺、奶奶、阿公、阿嬤，以及台灣常用詞彙如豆漿、象棋、鄧麗君。",
-                word_timestamps=True
-            )
-
-            text = ""
-            total_duration = 0.0
-
-            for seg in segments:
-                text += seg.text
-                total_duration = seg.end
-
-            text = text.strip()
+            import uuid, subprocess, imageio_ffmpeg, numpy as np
+            import soundfile as sf, io as _io
+            base = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"tmp_{uuid.uuid4().hex}")
+            webm_path = base + ".webm"
+            wav_path = base + ".wav"
+            with open(webm_path, 'wb') as f:
+                f.write(audio_bytes)
+            try:
+                ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+                subprocess.run([ffmpeg, '-y', '-i', webm_path, '-ar', '16000', '-ac', '1', wav_path],
+                               capture_output=True, check=True)
+                audio_np, _ = sf.read(wav_path, dtype='float32')
+                result = self.model.transcribe(
+                    audio_np,
+                    language="zh",
+                    beam_size=5,
+                    initial_prompt="這是台灣長者的日常對話，包含親屬稱謂如老伴、孫子、女兒、爺爺、奶奶、阿公、阿嬤，以及台灣常用詞彙如豆漿、象棋、鄧麗君。",
+                    word_timestamps=True
+                )
+            finally:
+                for p in [webm_path, wav_path]:
+                    if os.path.exists(p): os.remove(p)
+            text = result["text"].strip()
+            total_duration = result["segments"][-1]["end"] if result["segments"] else 0.0
             char_count = len(text)
             speech_rate = char_count / total_duration if total_duration > 0 else 0
 
@@ -190,7 +203,9 @@ class STTService:
             }
 
         except Exception as e:
+            import traceback
             print(f"STT 錯誤：{e}")
+            traceback.print_exc()
             return {
                 "text": "",
                 "speech_rate": 0.0,
