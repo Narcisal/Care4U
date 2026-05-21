@@ -387,6 +387,23 @@
       "id": "4fd04585",
       "date": "2026-05-21",
       "time": "23:02:15"
+    },
+    {
+      "event": "說了：昨天夢到我在雲上釣，",
+      "sentiment": "positive",
+      "emotion_score": 0.2,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者分享夢境，情緒平穩，屬日常閒聊。",
+      "source": "voice",
+      "spoken_at": "2026-05-21 23:05:39",
+      "id": "8ab951f8",
+      "date": "2026-05-21",
+      "time": "23:05:39"
     }
   ],
   "memory_summary": {},
