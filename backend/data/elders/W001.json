@@ -370,6 +370,43 @@
       "id": "a7e480c1",
       "date": "2026-05-21",
       "time": "05:27:29"
+<<<<<<< HEAD
+=======
+    },
+    {
+      "event": "說了：今天的晚餐不錯吃。",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者對晚餐滿意，語氣正面，屬日常飲食評價。",
+      "source": "voice",
+      "spoken_at": "2026-05-21 23:02:15",
+      "id": "4fd04585",
+      "date": "2026-05-21",
+      "time": "23:02:15"
+    },
+    {
+      "event": "說了：昨天夢到我在雲上釣，",
+      "sentiment": "positive",
+      "emotion_score": 0.2,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "長者分享夢境，情緒平穩，屬日常閒聊。",
+      "source": "voice",
+      "spoken_at": "2026-05-21 23:05:39",
+      "id": "8ab951f8",
+      "date": "2026-05-21",
+      "time": "23:05:39"
+>>>>>>> cf18642f1d870ffb03738fbf26c88ef7630945f0
     }
   ],
   "memory_summary": {},
