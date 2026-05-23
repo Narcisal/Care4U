@@ -4,12 +4,15 @@ import psycopg2.extras
 from datetime import datetime
 from dotenv import load_dotenv
 from .memory_manager import MemoryManager
+from .json_store import JsonMemoryStore
 
 load_dotenv()
+
 
 class VectorMemoryStore(MemoryManager):
 
     def __init__(self):
+        self._json = JsonMemoryStore()   # single shared JSON back-end instance
         self.conn_params = {
             "host": os.getenv("DB_HOST", "localhost"),
             "port": int(os.getenv("DB_PORT", 5433)),
@@ -18,6 +21,10 @@ class VectorMemoryStore(MemoryManager):
             "password": os.getenv("DB_PASSWORD", "careU1234"),
         }
         self._ensure_connection()
+
+    # ------------------------------------------------------------------
+    # PostgreSQL connection management
+    # ------------------------------------------------------------------
 
     def _ensure_connection(self):
         try:
@@ -37,132 +44,153 @@ class VectorMemoryStore(MemoryManager):
             print(f"取得 cursor 失敗：{e}")
             return None
 
+    # ------------------------------------------------------------------
+    # Utility
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _to_pgvector_str(embedding: list) -> str:
+        """Format a Python float list as a pgvector literal: '[1.0,2.0,...]'"""
+        return "[" + ",".join(map(str, embedding)) + "]"
+
+    # ------------------------------------------------------------------
+    # MemoryManager interface — delegates to JSON store
+    # ------------------------------------------------------------------
+
     def get_profile(self, elder_id: str) -> dict:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().get_profile(elder_id)
+        return self._json.get_profile(elder_id)
 
     def save_conversation(self, elder_id: str, history: list) -> bool:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().save_conversation(elder_id, history)
+        return self._json.save_conversation(elder_id, history)
 
     def load_conversation(self, elder_id: str) -> list:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().load_conversation(elder_id)
+        return self._json.load_conversation(elder_id)
 
     def clear_conversation(self, elder_id: str) -> bool:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().clear_conversation(elder_id)
+        return self._json.clear_conversation(elder_id)
+
+    def get_recent_events(self, elder_id: str, limit: int = 5) -> list:
+        return self._json.get_recent_events(elder_id, limit)
+
+    def get_recent_conversation_summary(self, elder_id: str, limit: int = 6) -> list:
+        return self._json.get_recent_conversation_summary(elder_id, limit)
+
+    def update_profile(self, elder_id: str, data: dict) -> bool:
+        return self._json.update_profile(elder_id, data)
+
+    def _save(self, elder_id: str, data: dict) -> bool:
+        return self._json._save(elder_id, data)
+
+    # ------------------------------------------------------------------
+    # Dual-write: JSON + PostgreSQL
+    # ------------------------------------------------------------------
 
     def add_event(self, elder_id: str, event: dict) -> bool:
-        from .json_store import JsonMemoryStore
-        JsonMemoryStore().add_event(elder_id, event)
+        self._json.add_event(elder_id, event)
 
         cursor = self._get_cursor()
         if not cursor:
             return False
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO elder_memories
-                (elder_id, content, sentiment, importance, memory_type,
-                 topic_tags, spoken_at, date, persona_id)
+                    (elder_id, content, sentiment, importance, memory_type,
+                     topic_tags, spoken_at, date, persona_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                elder_id,
-                event.get("event", ""),
-                event.get("sentiment", "neutral"),
-                event.get("importance", 0.3),
-                event.get("memory_type", "short"),
-                event.get("topic_tags", []),
-                event.get("spoken_at"),
-                event.get("date", datetime.now().strftime("%Y-%m-%d")),
-                event.get("persona_id", "ai")
-            ))
+                """,
+                (
+                    elder_id,
+                    event.get("event", ""),
+                    event.get("sentiment", "neutral"),
+                    event.get("importance", 0.3),
+                    event.get("memory_type", "short"),
+                    event.get("topic_tags", []),
+                    event.get("spoken_at"),
+                    event.get("date", datetime.now().strftime("%Y-%m-%d")),
+                    event.get("persona_id", "ai"),
+                ),
+            )
             return True
         except Exception as e:
             print(f"寫入 PostgreSQL 失敗：{e}")
             return False
 
-    def get_recent_events(self, elder_id: str, limit: int = 5) -> list:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().get_recent_events(elder_id, limit)
+    # ------------------------------------------------------------------
+    # Vector / importance queries (PostgreSQL)
+    # ------------------------------------------------------------------
 
-    def get_important_memories(self, elder_id: str,
-                                importance_threshold: float = 0.7,
-                                limit: int = 10,
-                                persona_id: str = None) -> list:
+    def get_important_memories(
+        self,
+        elder_id: str,
+        importance_threshold: float = 0.7,
+        limit: int = 10,
+        persona_id: str = None,
+    ) -> list:
         cursor = self._get_cursor()
         if not cursor:
-            from .json_store import JsonMemoryStore
-            return JsonMemoryStore().get_important_memories(
-                elder_id, importance_threshold, limit
-            )
+            return self._json.get_important_memories(elder_id, importance_threshold, limit)
+
         try:
+            params: list = [elder_id, importance_threshold]
+            persona_clause = ""
             if persona_id and persona_id != "ai":
-                cursor.execute("""
-                    SELECT content as event, sentiment, importance,
-                           memory_type, topic_tags, date
-                    FROM elder_memories
-                    WHERE elder_id = %s AND importance >= %s
-                      AND (persona_id = %s OR persona_id IS NULL OR persona_id = 'ai')
-                    ORDER BY importance DESC, date DESC
-                    LIMIT %s
-                """, (elder_id, importance_threshold, persona_id, limit))
-            else:
-                cursor.execute("""
-                    SELECT content as event, sentiment, importance,
-                           memory_type, topic_tags, date
-                    FROM elder_memories
-                    WHERE elder_id = %s AND importance >= %s
-                    ORDER BY importance DESC, date DESC
-                    LIMIT %s
-                """, (elder_id, importance_threshold, limit))
-            rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+                persona_clause = "AND (persona_id = %s OR persona_id IS NULL OR persona_id = 'ai')"
+                params.append(persona_id)
+            params.append(limit)
+
+            cursor.execute(
+                f"""
+                SELECT content AS event, sentiment, importance,
+                       memory_type, topic_tags, date
+                FROM elder_memories
+                WHERE elder_id = %s AND importance >= %s
+                  {persona_clause}
+                ORDER BY importance DESC, date DESC
+                LIMIT %s
+                """,
+                params,
+            )
+            return [dict(row) for row in cursor.fetchall()]
         except Exception as e:
             print(f"撈取重要記憶失敗：{e}")
             return []
 
-    def get_recent_conversation_summary(self, elder_id: str,
-                                         limit: int = 6) -> list:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().get_recent_conversation_summary(
-            elder_id, limit
-        )
-
-    def search_similar_memories(self, elder_id: str,
-                                  query_embedding: list,
-                                  limit: int = 5,
-                                  persona_id: str = None) -> list:
+    def search_similar_memories(
+        self,
+        elder_id: str,
+        query_embedding: list,
+        limit: int = 5,
+        persona_id: str = None,
+    ) -> list:
         cursor = self._get_cursor()
         if not cursor:
             return []
+
         try:
-            embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
+            emb_str = self._to_pgvector_str(query_embedding)
+            params: list = [emb_str, elder_id]
+            persona_clause = ""
             if persona_id and persona_id != "ai":
-                cursor.execute("""
-                    SELECT content as event, sentiment, importance,
-                           memory_type, topic_tags, date,
-                           embedding <=> %s::vector AS distance
-                    FROM elder_memories
-                    WHERE elder_id = %s
-                      AND embedding IS NOT NULL
-                      AND (persona_id = %s OR persona_id IS NULL OR persona_id = 'ai')
-                    ORDER BY distance ASC
-                    LIMIT %s
-                """, (embedding_str, elder_id, persona_id, limit))
-            else:
-                cursor.execute("""
-                    SELECT content as event, sentiment, importance,
-                           memory_type, topic_tags, date,
-                           embedding <=> %s::vector AS distance
-                    FROM elder_memories
-                    WHERE elder_id = %s
-                      AND embedding IS NOT NULL
-                    ORDER BY distance ASC
-                    LIMIT %s
-                """, (embedding_str, elder_id, limit))
-            rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+                persona_clause = "AND (persona_id = %s OR persona_id IS NULL OR persona_id = 'ai')"
+                params.append(persona_id)
+            params.append(limit)
+
+            cursor.execute(
+                f"""
+                SELECT content AS event, sentiment, importance,
+                       memory_type, topic_tags, date,
+                       embedding <=> %s::vector AS distance
+                FROM elder_memories
+                WHERE elder_id = %s
+                  AND embedding IS NOT NULL
+                  {persona_clause}
+                ORDER BY distance ASC
+                LIMIT %s
+                """,
+                params,
+            )
+            return [dict(row) for row in cursor.fetchall()]
         except Exception as e:
             print(f"向量搜尋失敗：{e}")
             return []
@@ -172,21 +200,11 @@ class VectorMemoryStore(MemoryManager):
         if not cursor:
             return False
         try:
-            embedding_str = "[" + ",".join(map(str, embedding)) + "]"
-            cursor.execute("""
-                UPDATE elder_memories
-                SET embedding = %s::vector
-                WHERE id = %s
-            """, (embedding_str, memory_id))
+            cursor.execute(
+                "UPDATE elder_memories SET embedding = %s::vector WHERE id = %s",
+                (self._to_pgvector_str(embedding), memory_id),
+            )
             return True
         except Exception as e:
             print(f"更新向量失敗：{e}")
             return False
-
-    def update_profile(self, elder_id: str, data: dict) -> bool:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore().update_profile(elder_id, data)
-
-    def _save(self, elder_id: str, data: dict) -> bool:
-        from .json_store import JsonMemoryStore
-        return JsonMemoryStore()._save(elder_id, data)

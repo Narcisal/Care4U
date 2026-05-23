@@ -22,7 +22,7 @@
   "personas": {
     "ai": {
       "name": "AI 助理",
-      "voice_engine": "edge",
+      "voice_engine": "breezyvoice",
       "voice_path": null,
       "honorific": "奶奶",
       "tone": "像疼愛的孫子/孫女，溫柔親切",

@@ -1,11 +1,11 @@
-import os
+from datetime import datetime
 from dotenv import load_dotenv
 from backend.services.llm_service import LLMService
 from backend.memory.vector_store import VectorMemoryStore
 from backend.services.embedding_service import EmbeddingService
-from datetime import datetime
 
 load_dotenv()
+
 
 class MagicAI:
 
@@ -15,13 +15,33 @@ class MagicAI:
         self.memory = VectorMemoryStore()
         self.embedding = EmbeddingService()
         self.profile = self.memory.get_profile(elder_id)
-        self.conversation_history = []  # 不再從檔案載入
+        self.conversation_history: list[dict] = []
         self._chat_count = 0
         print(f"{elder_id} 開始新的對話 session")
 
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
     def _get_honorific(self) -> str:
-        gender = self.profile.get("gender", "male")
-        return "爺爺" if gender == "male" else "奶奶"
+        return "爺爺" if self.profile.get("gender", "male") == "male" else "奶奶"
+
+    def _get_active_persona(self) -> dict:
+        """Return the currently active persona dict."""
+        personas = self.profile.get("personas", {})
+        active_id = self.profile.get("active_persona", "ai")
+        return personas.get(active_id, personas.get("ai", {}))
+
+    def _reset_biography_usage(self):
+        """Reset biography_usage_count so the LLM re-introduces bio info naturally."""
+        profile = self.memory.get_profile(self.elder_id)
+        if profile:
+            profile["biography_usage_count"] = 0
+            self.memory._save(self.elder_id, profile)
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
 
     def greet(self) -> str:
         hour = datetime.now().hour
@@ -33,32 +53,27 @@ class MagicAI:
             time_greeting = "晚安"
 
         name = self.profile.get("name", "長者")
-        personas = self.profile.get("personas", {})
-        active_id = self.profile.get("active_persona", "ai")
-        active_persona = personas.get(active_id, personas.get("ai", {}))
+        active_persona = self._get_active_persona()
         honorific = active_persona.get("honorific", self._get_honorific())
         greeting = f"{name}{honorific}，{time_greeting}！今天感覺怎麼樣呀？"
 
-        self.conversation_history.append({
-            "role": "model",
-            "content": greeting
-        })
+        self.conversation_history.append({"role": "model", "content": greeting})
         return greeting
 
     def chat(self, user_message: str) -> str:
+        active_id = self.profile.get("active_persona", "ai")
+        active_persona = self._get_active_persona()
+
         recent_messages = self.memory.get_recent_conversation_summary(
             self.elder_id, limit=6
         )
-
-        active_id = self.profile.get("active_persona", "ai")
 
         similar_memories = []
         try:
             query_embedding = self.embedding.embed(user_message)
             if query_embedding:
                 similar_memories = self.memory.search_similar_memories(
-                    self.elder_id, query_embedding, limit=5,
-                    persona_id=active_id
+                    self.elder_id, query_embedding, limit=5, persona_id=active_id
                 )
                 if similar_memories:
                     print(f"找到 {len(similar_memories)} 筆相關記憶")
@@ -66,13 +81,8 @@ class MagicAI:
             print(f"向量搜尋失敗（不影響對話）：{e}")
 
         important_memories = self.memory.get_important_memories(
-            self.elder_id, importance_threshold=0.7, limit=8,
-            persona_id=active_id
+            self.elder_id, importance_threshold=0.7, limit=8, persona_id=active_id
         )
-
-        personas = self.profile.get("personas", {})
-        active_id = self.profile.get("active_persona", "ai")
-        active_persona = personas.get(active_id, personas.get("ai", {}))
 
         response = self.llm.chat(
             profile=self.profile,
@@ -81,7 +91,7 @@ class MagicAI:
             recent_messages=recent_messages,
             important_memories=important_memories,
             similar_memories=similar_memories,
-            active_persona=active_persona
+            active_persona=active_persona,
         )
 
         self.conversation_history.append({"role": "user", "content": user_message})
@@ -92,12 +102,8 @@ class MagicAI:
 
         self._chat_count += 1
 
-        # 每 5 次重置生平使用計數
         if self._chat_count % 5 == 0:
-            profile = self.memory.get_profile(self.elder_id)
-            if profile:
-                profile["biography_usage_count"] = 0
-                self.memory._save(self.elder_id, profile)
+            self._reset_biography_usage()
 
         if self._chat_count % 10 == 0:
             self._summarize_memories()
@@ -111,44 +117,7 @@ class MagicAI:
                 return
 
             name = self.profile.get("name", "長者")
-            current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-            events_text = "\n".join([
-                f"- {e.get('date', '')} {e.get('time', '')}：{e.get('event', '')}（情緒分數：{e.get('emotion_score', 0):.1f}，{e.get('reason', '')}）"
-                for e in events
-            ])
-
-            prompt = f"""你是長照系統的記憶彙整模組。
-    請將以下 {name} 的近期對話紀錄，整理成給照護人員參考的摘要。
-
-    彙整時間：{current_time}
-
-    【近期對話紀錄】
-    {events_text}
-
-    輸出結構（依實際內容決定是否寫入每項）：
-    - 第一句：時間相對關係（今日／日前／本週）+ 整體情緒基調（必寫）
-    - 若有安全事件（頭暈、跌倒、胸痛）：優先一句話說明
-    - 若情緒有明顯轉折：描述轉折過程，不用平均值帶過
-    - 結尾：最重要的一件事或長者說的重要內容
-
-    要求：
-    - 第三人稱，自然口語，不列點
-    - 只回傳摘要文字，不要標題或其他說明"""
-
-            from google import genai
-            from google.genai import types
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.3,
-                    max_output_tokens=500,
-                )
-            )
-
-            summary = response.text.strip()
+            summary = self.llm.generate_memory_summary(events, name)
             print(f"記憶彙整完成：{summary[:50]}...")
 
             profile = self.memory.get_profile(self.elder_id)
@@ -156,7 +125,7 @@ class MagicAI:
                 profile["memory_summary"] = {
                     "content": summary,
                     "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "based_on_events": len(events)
+                    "based_on_events": len(events),
                 }
                 self.memory._save(self.elder_id, profile)
 

@@ -1,31 +1,36 @@
 import os
 import json
-import re
 import time
+from datetime import datetime
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Single shared client for all LLM calls in this process
+_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
 
 class LLMService:
 
     def __init__(self, model_name: str = "gemini-2.5-flash"):
         self.model_name = model_name
 
-    def build_system_prompt(self, profile: dict,
-                             recent_messages: list = None,
-                             important_memories: list = None,
-                             similar_memories: list = None,
-                             active_persona: dict = None) -> str:
+    # ------------------------------------------------------------------
+    # System-prompt helpers
+    # ------------------------------------------------------------------
+
+    def _build_persona_desc(self, profile: dict, active_persona: dict | None) -> tuple[str, str]:
+        """Return (persona_desc, honorific) for the active persona.
+
+        Handles three cases:
+          1. Deceased relative + cognitively-intact elder (soul-across-time mode)
+          2. Deceased relative + dementia elder (gentle companion mode)
+          3. Living family member, or default AI volunteer
+        """
         name = profile.get("name", "長者")
         gender = profile.get("gender", "male")
-        persona = profile.get("persona", {})
-        health = profile.get("health_notes", {})
-        events = profile.get("recent_events", [])
-
-        # 人格設定
         cognitive_status = profile.get("cognitive_status", "normal")
         is_mild_dementia = cognitive_status in ["mild_dementia", "moderate_dementia"]
 
@@ -35,12 +40,11 @@ class LLMService:
             honorific = active_persona.get("honorific", "爸爸")
             tone = active_persona.get("tone", "")
             is_deceased = active_persona.get("is_deceased", False)
+            shared_memories = active_persona.get("shared_memories", "")
+            forbidden_topics = active_persona.get("forbidden_topics", "")
+            current_status = active_persona.get("current_status", "")
 
             if is_deceased and not is_mild_dementia:
-                # 清醒長者 + 已故親人 → 跨越時空靈魂模式
-                shared_memories = active_persona.get("shared_memories", "")
-                current_status = active_persona.get("current_status", "")
-                forbidden_topics = active_persona.get("forbidden_topics", "")
                 persona_desc = f"""你現在扮演的是{name}已經過世、但永遠活在他心深處的{relation}「{persona_name}」。
         長者完全清楚你已經離開人世，他是因為極度思念，才透過這個系統與你的記憶對話。
         你的任務不是扮演一個活著的人，而是成為一個充滿愛、跨越時空的溫暖靈魂。
@@ -60,7 +64,6 @@ class LLMService:
         - 不和長者爭辯生死問題"""
 
             elif is_deceased and is_mild_dementia:
-                # 失智長者 + 已故親人 → 溫柔陪伴但不確認死亡
                 persona_desc = f"""你現在扮演的是{name}非常思念的{relation}「{persona_name}」。
         長者目前有認知障礙，請不要主動提及或確認死亡這件事，避免造成反覆衝擊。
         稱呼長者為「{honorific}」。
@@ -80,11 +83,6 @@ class LLMService:
         - 不和長者爭辯任何事情"""
 
             else:
-                # 一般家人人格
-                shared_memories = active_persona.get("shared_memories", "")
-                current_status = active_persona.get("current_status", "")
-                forbidden_topics = active_persona.get("forbidden_topics", "")
-
                 persona_desc = f"""你現在扮演的是{name}的{relation}「{persona_name}」。
             稱呼長者為「{honorific}」，不要叫「爺爺」或「奶奶」。
             說話方式：{tone}
@@ -103,71 +101,106 @@ class LLMService:
         絕對不要說自己是 AI 或機器人。
         依照情況，用晚輩的口吻建議請護理師來協助。"""
 
-        recent_events_text = ""
-        if events:
-            recent_events_text = "\n".join([
-                f"- {e['date']}：{e['event']}（情緒：{e['sentiment']}）"
-                for e in events[-3:]
-            ])
+        return persona_desc, honorific
 
-        recent_conv_text = ""
-        if recent_messages:
-            recent_conv_text = "\n".join([
-                f"- {msg['content']}"
-                for msg in recent_messages
-            ])
+    def _build_memory_context(
+        self,
+        profile: dict,
+        recent_messages: list | None,
+        important_memories: list | None,
+        similar_memories: list | None,
+    ) -> dict[str, str]:
+        """Render all memory sections to display strings.
 
-        long_term_text = ""
-        if important_memories:
-            long_term_text = "\n".join([
-                f"- [{e.get('date', '')}] {e.get('event', '')}（重要度：{e.get('importance', 0):.1f}）"
-                for e in important_memories
-            ])
+        Returns a dict keyed by section name so the assembler can slot
+        them into the prompt template without knowing the rendering logic.
+        """
+        events = profile.get("recent_events", [])
 
-        similar_text = ""
-        if similar_memories:
-            similar_text = "\n".join([
-                f"- [{e.get('date', '')}] {e.get('event', '')}（語意相關）"
-                for e in similar_memories
-                if e.get('distance', 1.0) < 0.5
-            ])
+        recent_events_text = "\n".join(
+            f"- {e['date']}：{e['event']}（情緒：{e['sentiment']}）"
+            for e in events[-3:]
+        ) if events else ""
 
-        summary_text = ""
-        summary = profile.get("memory_summary", {})
-        if summary:
-            summary_text = summary.get("content", "")
+        recent_conv_text = "\n".join(
+            f"- {msg['content']}" for msg in (recent_messages or [])
+        )
 
-        biography_text = ""
-        biography = profile.get("elder_biography", {})
-        if biography:
-            biography_text = biography.get("content", "")
-        
-        # 家人提供的資訊
-        family_notes_text = ""
-        family_notes = profile.get("family_notes", [])
-        if family_notes:
-            family_notes_text = "\n".join([
-                f"- {n.get('note', '')}"
-                for n in family_notes
-            ])
+        long_term_text = "\n".join(
+            f"- [{e.get('date', '')}] {e.get('event', '')}（重要度：{e.get('importance', 0):.1f}）"
+            for e in (important_memories or [])
+        )
 
-        bio_usage = profile.get("biography_usage_count", 0)
-        bio_instruction = ""
-        if biography_text:
-            if bio_usage == 0:
-                bio_instruction = "這是第一次對話，可以找一個自然的時機帶入一個生平資訊。"
-            elif bio_usage <= 2:
-                bio_instruction = "已經帶入過生平資訊，這次只在話題非常相關時才帶入。"
-            else:
-                bio_instruction = "本次 session 已多次帶入生平資訊，請不要再主動帶入。"
+        similar_text = "\n".join(
+            f"- [{e.get('date', '')}] {e.get('event', '')}（語意相關）"
+            for e in (similar_memories or [])
+            if e.get("distance", 1.0) < 0.5
+        )
 
-        prompt = f"""{persona_desc}
+        summary_text = profile.get("memory_summary", {}).get("content", "")
+        biography_text = profile.get("elder_biography", {}).get("content", "")
+
+        family_notes_text = "\n".join(
+            f"- {n.get('note', '')}"
+            for n in profile.get("family_notes", [])
+        )
+
+        return {
+            "recent_events_text": recent_events_text,
+            "recent_conv_text": recent_conv_text,
+            "long_term_text": long_term_text,
+            "similar_text": similar_text,
+            "summary_text": summary_text,
+            "biography_text": biography_text,
+            "family_notes_text": family_notes_text,
+        }
+
+    def _build_bio_instruction(self, profile: dict, biography_text: str) -> str:
+        """Return the biography-usage instruction based on how often it has been used."""
+        if not biography_text:
+            return "尚無生平資料"
+        usage = profile.get("biography_usage_count", 0)
+        if usage == 0:
+            return "這是第一次對話，可以找一個自然的時機帶入一個生平資訊。"
+        if usage <= 2:
+            return "已經帶入過生平資訊，這次只在話題非常相關時才帶入。"
+        return "本次 session 已多次帶入生平資訊，請不要再主動帶入。"
+
+    # ------------------------------------------------------------------
+    # Public: build full system prompt
+    # ------------------------------------------------------------------
+
+    def build_system_prompt(
+        self,
+        profile: dict,
+        recent_messages: list = None,
+        important_memories: list = None,
+        similar_memories: list = None,
+        active_persona: dict = None,
+    ) -> str:
+        name = profile.get("name", "長者")
+        persona = profile.get("persona", {})
+        health = profile.get("health_notes", {})
+
+        persona_desc, honorific = self._build_persona_desc(profile, active_persona)
+        ctx = self._build_memory_context(
+            profile, recent_messages, important_memories, similar_memories
+        )
+        bio_instruction = self._build_bio_instruction(profile, ctx["biography_text"])
+
+        family_list = ", ".join(
+            f"{p.get('relation', '')}：{p.get('name', '')}"
+            for pid, p in profile.get("personas", {}).items()
+            if pid != "ai" and p.get("relation")
+        )
+
+        return f"""{persona_desc}
 
     【你陪伴的長者】
     - 姓名：{name}，稱呼：{honorific}
     - 曾任職業：{persona.get('former_job', '未知')}
     - 興趣愛好：{', '.join(persona.get('hobbies', []))}
-    - 家人：{', '.join([f"{p.get('relation', '')}：{p.get('name', '')}" for pid, p in profile.get('personas', {}).items() if pid != 'ai' and p.get('relation')])}
+    - 家人：{family_list}
     - 說話偏好：{persona.get('tone_preference', '親切')}
 
     【健康注意事項 — 對話中自然注意，不要直接說出來】
@@ -175,31 +208,31 @@ class LLMService:
     - 飲食習慣：{health.get('diet', '無特殊')}
 
     【長者生平資料 — 供自然對話參考，不要直接說出來】
-    {biography_text if biography_text else '尚無生平資料，請根據對話中長者分享的事情來了解他/她'}
+    {ctx['biography_text'] if ctx['biography_text'] else '尚無生平資料，請根據對話中長者分享的事情來了解他/她'}
 
     【家人提供的補充資訊】
-    {family_notes_text if family_notes_text else '尚無'}
+    {ctx['family_notes_text'] if ctx['family_notes_text'] else '尚無'}
 
     【生平資料使用規則】
-    {bio_instruction if bio_instruction else '尚無生平資料'}
+    {bio_instruction}
     - 絕對不要說「根據你的資料」「我查到」「系統顯示」
     - 用「聽說你以前...」「你之前有提過...」「你當年...」自然帶入
     - 只在話題自然相關時帶入，不強行插入
 
     【長者近期狀態摘要】
-    {summary_text if summary_text else '尚無'}
+    {ctx['summary_text'] if ctx['summary_text'] else '尚無'}
 
     【長期重要記憶 — 長者說過的重要事情】
-    {long_term_text if long_term_text else '尚無'}
+    {ctx['long_term_text'] if ctx['long_term_text'] else '尚無'}
 
     【本次話題相關記憶】
-    {similar_text if similar_text else '尚無'}
+    {ctx['similar_text'] if ctx['similar_text'] else '尚無'}
 
     【近期對話紀錄】
-    {recent_conv_text if recent_conv_text else '尚無'}
+    {ctx['recent_conv_text'] if ctx['recent_conv_text'] else '尚無'}
 
     【最近情緒事件】
-    {recent_events_text if recent_events_text else '尚無'}
+    {ctx['recent_events_text'] if ctx['recent_events_text'] else '尚無'}
 
     【回應優先順序】
 
@@ -246,7 +279,9 @@ class LLMService:
     - 不要一次問超過一個問題
     - 不要複述長者說的話再回應"""
 
-        return prompt
+    # ------------------------------------------------------------------
+    # Public: emotion analysis
+    # ------------------------------------------------------------------
 
     def analyze_emotion(self, message: str) -> dict:
         prompt = f"""你是一個長照系統的情緒與語意分析模組，專門分析台灣長輩的對話內容。
@@ -307,7 +342,7 @@ class LLMService:
 
         for attempt in range(3):
             try:
-                response = client.models.generate_content(
+                response = _client.models.generate_content(
                     model=self.model_name,
                     contents=[types.Content(
                         role="user",
@@ -317,18 +352,14 @@ class LLMService:
                         temperature=0.0,
                         max_output_tokens=8000,
                         response_mime_type="application/json",
-                    )
+                    ),
                 )
 
-                text = response.text.strip()
-                result = json.loads(text)
-
-                # 安全預設值（要在推導之前）
+                result = json.loads(response.text.strip())
                 result.setdefault("importance", 0.3)
                 result.setdefault("emotion_score", 0.0)
                 result.setdefault("emotion", "normal")
 
-                # 後端推導欄位
                 result["is_urgent"] = result.get("emotion") == "urgent"
                 result["sentiment"] = (
                     "positive" if result.get("emotion_score", 0) > 0.1
@@ -337,8 +368,8 @@ class LLMService:
                 )
                 result["memory_type"] = "long" if result.get("importance", 0) >= 0.7 else "short"
                 result["should_record"] = (
-                    result.get("emotion") in ["urgent", "comfort", "happy"] or
-                    result.get("importance", 0) >= 0.5
+                    result.get("emotion") in ["urgent", "comfort", "happy"]
+                    or result.get("importance", 0) >= 0.5
                 )
 
                 print(f"情緒分析結果：emotion={result['emotion']}, importance={result['importance']}")
@@ -346,11 +377,11 @@ class LLMService:
 
             except Exception as e:
                 if "503" in str(e) and attempt < 2:
-                    print(f"Gemini 過載，2秒後重試（第 {attempt+1} 次）...")
+                    print(f"Gemini 過載，2秒後重試（第 {attempt + 1} 次）...")
                     time.sleep(2)
                     continue
-                print(f"情緒分析失敗，原始回傳：{response.text if 'response' in dir() else '無回應'}")
-                print(f"錯誤：{e}")
+                raw = response.text if "response" in dir() else "無回應"
+                print(f"情緒分析失敗，原始回傳：{raw}\n錯誤：{e}")
                 return {
                     "emotion": "normal",
                     "sentiment": "neutral",
@@ -358,55 +389,172 @@ class LLMService:
                     "should_record": False,
                     "reason": "分析失敗，使用預設值",
                     "importance": 0.3,
-                    "memory_type": "short"
+                    "memory_type": "short",
                 }
 
-    def chat(self,
-             profile: dict,
-             conversation_history: list,
-             user_message: str,
-             recent_messages: list = None,
-             important_memories: list = None,
-             similar_memories: list = None,
-             active_persona: dict = None) -> str:
+    # ------------------------------------------------------------------
+    # Public: multi-turn chat
+    # ------------------------------------------------------------------
+
+    def chat(
+        self,
+        profile: dict,
+        conversation_history: list,
+        user_message: str,
+        recent_messages: list = None,
+        important_memories: list = None,
+        similar_memories: list = None,
+        active_persona: dict = None,
+    ) -> str:
         try:
             system_prompt = self.build_system_prompt(
                 profile,
                 recent_messages=recent_messages,
                 important_memories=important_memories,
                 similar_memories=similar_memories,
-                active_persona=active_persona
+                active_persona=active_persona,
             )
 
-            history = []
-            for msg in conversation_history:
-                role = "user" if msg["role"] == "user" else "model"
-                history.append(
-                    types.Content(
-                        role=role,
-                        parts=[types.Part(text=msg["content"])]
-                    )
-                )
-
-            history.append(
+            history = [
                 types.Content(
-                    role="user",
-                    parts=[types.Part(text=user_message)]
+                    role="user" if msg["role"] == "user" else "model",
+                    parts=[types.Part(text=msg["content"])],
                 )
+                for msg in conversation_history
+            ]
+            history.append(
+                types.Content(role="user", parts=[types.Part(text=user_message)])
             )
 
-            response = client.models.generate_content(
+            response = _client.models.generate_content(
                 model=self.model_name,
                 contents=history,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=0.9,
                     max_output_tokens=2000,
-                )
+                ),
             )
-
             return response.text
 
         except Exception as e:
             print(f"LLM 錯誤：{e}")
             return "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"
+
+    # ------------------------------------------------------------------
+    # Public: background generation helpers
+    # ------------------------------------------------------------------
+
+    def generate_memory_summary(self, events: list, name: str) -> str:
+        """Summarise recent events into a caregiver-readable paragraph."""
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        events_text = "\n".join(
+            f"- {e.get('date', '')} {e.get('time', '')}：{e.get('event', '')}（情緒分數：{e.get('emotion_score', 0):.1f}，{e.get('reason', '')}）"
+            for e in events
+        )
+        prompt = f"""你是長照系統的記憶彙整模組。
+    請將以下 {name} 的近期對話紀錄，整理成給照護人員參考的摘要。
+
+    彙整時間：{current_time}
+
+    【近期對話紀錄】
+    {events_text}
+
+    輸出結構（依實際內容決定是否寫入每項）：
+    - 第一句：時間相對關係（今日／日前／本週）+ 整體情緒基調（必寫）
+    - 若有安全事件（頭暈、跌倒、胸痛）：優先一句話說明
+    - 若情緒有明顯轉折：描述轉折過程，不用平均值帶過
+    - 結尾：最重要的一件事或長者說的重要內容
+
+    要求：
+    - 第三人稱，自然口語，不列點
+    - 只回傳摘要文字，不要標題或其他說明"""
+
+        response = _client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=500),
+        )
+        return response.text.strip()
+
+    def update_biography(
+        self,
+        name: str,
+        existing_bio: str,
+        important_events: list,
+        family_notes: list,
+    ) -> str:
+        """Merge new evidence into an existing elder biography."""
+        events_text = "\n".join(
+            f"- {e.get('event', '')}（依據：{e.get('reason', '')}）"
+            for e in important_events
+        ) if important_events else "無"
+
+        # Coarse dedup: skip notes already verbatim in the bio
+        filtered_notes = [
+            n for n in family_notes
+            if not (existing_bio and n.get("note", "") in existing_bio)
+        ]
+        family_notes_text = "\n".join(
+            f"- {n.get('note', '')}" for n in filtered_notes
+        ) if filtered_notes else "無"
+
+        prompt = f"""你是一個長照系統的資深生平檔案維護模組。
+    請根據最新收集到的生活動態與家人筆記，優化並更新該長者的生平介紹文章。
+
+    長者姓名：{name}
+
+    【現有生平介紹】
+    {existing_bio if existing_bio else '尚無'}
+
+    【近期對話中提煉出的高價值新資訊】
+    {events_text}
+
+    【家人最新提供的照護備忘錄】
+    {family_notes_text}
+
+    【更新與重構規則 — 請嚴格遵守】
+    1. 事實不可磨滅：現有生平中記錄的生命事實（職業、榮譽、家族結構、重要歷史記憶）絕對不可刪除。
+    2. 自然語意融合：你被允許改寫現有文句的結構，將新資訊流暢地編織進文章中，避免在末尾盲目堆疊附註。
+    3. 語意去重：若新資訊已在現有生平中被提及，維持原狀，不重複撰寫。
+    4. 矛盾處理：若長者自述與現有生平或家人資訊衝突，以現有生平與家人資訊為準。長者的混亂記憶用「長者有時會提及...」方式溫柔附註。
+    5. 若無有價值的新資訊，直接回傳現有生平原文，不做任何修改。
+    6. 繁體中文、第三人稱，維持像老朋友介紹般自然溫暖的台灣口吻。
+    7. 只回傳更新後的文章本體，不要任何標題、前言或說明。"""
+
+        response = _client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.2, max_output_tokens=1000),
+        )
+        return response.text.strip()
+
+    def generate_persona_tone(
+        self,
+        relation: str,
+        name: str,
+        language_text: str,
+        personality: list,
+        habits: list,
+    ) -> str:
+        """Generate a short speaking-style description for a persona."""
+        prompt = f"""根據以下資料，生成一段「說話風格描述」供 AI 扮演參考：
+
+- 關係：{relation}
+- 名字：{name}
+- 語言習慣：{language_text}
+- 個性：{', '.join(personality) if personality else '未指定'}
+- 說話習慣：{', '.join(habits) if habits else '未指定'}
+
+要求：
+- 50字以內
+- 描述說話語氣、用詞習慣、互動方式
+- 融合關係和個性，自然口語
+- 只回傳描述文字，不要標題或說明"""
+
+        response = _client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=200),
+        )
+        return response.text.strip()

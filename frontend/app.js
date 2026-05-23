@@ -199,7 +199,8 @@ async function sendAudioToSTT(audioBlob) {
             body: formData
         });
         const data = await res.json();
-            document.getElementById("recording-indicator").classList.remove("active");        if (data.success && data.text) {
+            document.getElementById("recording-indicator").classList.remove("active");        
+            if (data.success && data.text) {
             addMessage("user", data.text);
             await processAndRespond(data.text, data.speed_emotion || "normal");
         } else {
@@ -233,6 +234,7 @@ async function speakText(text, emotion = "normal") {
 
 function addMessage(role, text) {
     const container = document.getElementById("chat-container");
+    if (!container) return;
     const placeholder = container.querySelector(".chat-empty");
     if (placeholder) placeholder.remove();
 
@@ -263,6 +265,7 @@ function addMessage(role, text) {
 
 function addThinking() {
     const container = document.getElementById("chat-container");
+    if (!container) return "no-container";
     const id = "thinking-" + Date.now();
     const div = document.createElement("div");
     div.id = id;
@@ -283,6 +286,7 @@ function addThinking() {
 }
 
 function removeThinking(id) {
+    if (id === "no-container") return;
     const el = document.getElementById(id);
     if (el) el.remove();
 }
@@ -290,9 +294,23 @@ function removeThinking(id) {
 function addImageMessage(imageBase64) {
     const frame = document.getElementById("image-frame");
     const img = document.getElementById("image-frame-img");
-    frame.style.display = "block";
+    const wrap = document.querySelector(".speaking-wrap");
+    const info = document.querySelector(".persona-info");
+    const statusLbl = document.getElementById("status-label");
+
     img.src = imageBase64;
-    img.onclick = () => window.open(imageBase64, '_blank');
+
+    // 重設動畫
+    frame.style.display = "none";
+    frame.style.animation = "none";
+    frame.offsetHeight; // reflow
+    frame.style.animation = "";
+    frame.style.display = "block";
+
+    // 人像滑左
+    wrap.classList.add("with-image");
+    if (info) info.style.display = "none";
+    if (statusLbl) statusLbl.style.display = "none";
 }
 
 function addHealthCard(info) {
@@ -351,6 +369,12 @@ function clearChat() {
     document.getElementById("start-btn").textContent = "🌟 開始對話";
     document.getElementById("start-btn").disabled = false;
     document.getElementById("image-frame").style.display = "none";
+    const wrap = document.querySelector(".speaking-wrap");
+    if (wrap) wrap.classList.remove("with-image");
+    const info = document.querySelector(".persona-info");
+    if (info) info.style.display = "";
+    const statusLbl = document.getElementById("status-label");
+    if (statusLbl) statusLbl.style.display = "";
 }
 
 try {
@@ -522,11 +546,9 @@ async function enterChat() {
     document.getElementById('welcome-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'flex';
 
-    // 更新右側頭像
     const portrait = document.getElementById('persona-portrait');
     if (portrait) portrait.src = currentPersonaAvatar;
 
-    // 根據性別設定長者頭像
     try {
         const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
         const profile = await res.json();
@@ -537,7 +559,6 @@ async function enterChat() {
             ? '/static/avatars/elder_female.png'
             : '/static/avatars/elder_male.png';
 
-        // 更新右側人格名稱
         const personas = profile.personas || {};
         const activePersona = personas[SELECTED_PERSONA] || {};
         const nameDisplay = document.getElementById('persona-portrait-name');
@@ -547,7 +568,12 @@ async function enterChat() {
     } catch (e) {
         console.error('載入長者資料失敗', e);
     }
+
+    // 自動開始對話
+    await startSession();
+    startVAD();
 }
+
 async function showPersonaSwitcher() {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}/personas`);
@@ -634,4 +660,81 @@ if (ELDER_ID) {
     loadElderProfile();
 } else {
     loadWelcomePersonas('W001');
+}
+
+let vadActive = false;
+let vadRecording = false;
+let vadStream = null;
+let vadAnalyser = null;
+let vadRecorder = null;
+let vadChunks = [];
+let silenceTimer = null;
+
+async function startVAD() {
+    if (vadActive) return;
+    vadActive = true;
+
+    try {
+        vadStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(vadStream);
+        vadAnalyser = audioCtx.createAnalyser();
+        vadAnalyser.fftSize = 512;
+        source.connect(vadAnalyser);
+
+        const data = new Uint8Array(vadAnalyser.frequencyBinCount);
+
+        function checkVolume() {
+            if (!vadActive) return;
+            vadAnalyser.getByteFrequencyData(data);
+            const volume = data.reduce((a, b) => a + b) / data.length;
+
+            if (volume > 15 && !vadRecording) {
+                // 偵測到說話，開始錄音
+                vadChunks = [];
+                vadRecorder = new MediaRecorder(vadStream);
+                vadRecorder.ondataavailable = e => vadChunks.push(e.data);
+                vadRecorder.onstop = async () => {
+                    const blob = new Blob(vadChunks, { type: 'audio/webm' });
+                    await sendAudioToSTT(blob);
+                };
+                vadRecorder.start();
+                vadRecording = true;
+
+                const lbl = document.getElementById('status-label');
+                const pname = document.getElementById('persona-portrait-name');
+                if (lbl && pname) {
+                    lbl.textContent = pname.textContent + '正在聆聽';
+                    lbl.className = 'status-label listening';
+                }
+                document.getElementById('recording-indicator')?.classList.add('active');
+
+            } else if (volume <= 15 && vadRecording) {
+                // 音量下降，開始計時靜音
+                if (!silenceTimer) {
+                    silenceTimer = setTimeout(() => {
+                        vadRecorder?.stop();
+                        vadRecording = false;
+                        silenceTimer = null;
+                        document.getElementById('recording-indicator')?.classList.remove('active');
+                    }, 1500); // 靜音 1.5 秒後送出
+                }
+            } else if (volume > 25 && vadRecording && silenceTimer) {
+                // 靜音中又有聲音，取消靜音計時
+                clearTimeout(silenceTimer);
+                silenceTimer = null;
+            }
+
+            requestAnimationFrame(checkVolume);
+        }
+
+        checkVolume();
+    } catch (e) {
+        console.error('VAD 啟動失敗：', e);
+    }
+}
+
+function stopVAD() {
+    vadActive = false;
+    vadStream?.getTracks().forEach(t => t.stop());
 }

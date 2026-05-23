@@ -1,20 +1,55 @@
-# 虛擬環境
+# Virtual environment
 venv/
+.venv/
 
-# 環境變數（重要！金鑰不能上傳）
+# Environment variables — never commit real API keys
 .env
 
-# Python 快取
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.pytest_cache/
 
-# VS Code 設定
+# Editor and OS files
 .vscode/
-
-# 系統檔案
+.idea/
 .DS_Store
 Thumbs.db
 
-# 日誌
+# Logs
 *.log
+
+# ------------------------------------------------------------------
+# Project-specific
+# ------------------------------------------------------------------
+
+# Temporary audio files created by the STT service during transcription.
+# These are normally deleted after each request but can leak on crash.
+backend/services/tmp_*.wav
+backend/services/tmp_*.webm
+
+# Voice cloning samples uploaded via the admin panel.
+# These are binary audio files and may contain biometric data.
+backend/data/elders/*_voices/
+
+# Audio files at the project root (ad-hoc test recordings)
+*.mp3
+*.wav
+
+# One-off scripts that are not part of the application
+test.py
+test_breezy.py
+convert_audio.py
+generate_avatars.py
+
+# Internal planning documents
+future_plan.md
+
+# HuggingFace model cache if redirected into the project directory
+models/
+.cache/

@@ -298,6 +298,7 @@
             position: relative;
             padding: 40px 20px 60px;
             background: linear-gradient(135deg, #FDF7F2 0%, #F5ECE2 100%);
+            position: relative;
         }
 
         /* 說話光暈 */
@@ -392,25 +393,26 @@
         #image-frame {
             display: none;
             position: absolute;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 5%;
+            top: 50%;
+            transform: translateY(-50%);
             border: 8px solid var(--brown-frame);
             border-radius: 12px;
             overflow: hidden;
-            width: 320px;
-            animation: frameIn 1.2s ease-in both;
+            width: 42%;
+            aspect-ratio: 4/3;
+            animation: frameSlideIn 0.8s ease-out both;
             z-index: 5;
         }
 
-        @keyframes frameIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        @keyframes frameSlideIn {
+            from { opacity: 0; transform: translateY(-50%) translateX(40px); }
+            to   { opacity: 1; transform: translateY(-50%) translateX(0); }
         }
 
         #image-frame-img {
             width: 100%;
-            max-height: 180px;
+            height: 100%;
             object-fit: cover;
             display: block;
         }
@@ -499,6 +501,28 @@
             border-radius: 16px;
             cursor: pointer;
         }
+
+        /* 人像滑左狀態 */
+        .speaking-wrap.with-image {
+            position: absolute;
+            left: 5%;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.6s ease;
+        }
+
+        .speaking-wrap.with-image #persona-portrait {
+            width: 380px;
+            height: 380px;
+        }
+
+        .speaking-wrap.with-image .speaking-ring {
+            width: 420px; height: 420px;
+        }
+
+        .speaking-wrap.with-image #speaking-ring-2 {
+            width: 470px; height: 470px;
+        }
     </style>
 </head>
 <body>
@@ -521,20 +545,7 @@
 
     <div class="welcome-right">
         <div id="welcome-persona-list" class="persona-grid">
-            <div class="persona-cell" onclick="selectAndEnter(this, 'ai_assistant')">
-                <img class="persona-cell-avatar"
-                     src="/static/avatars/ai_assistant_nobg.png"
-                     alt="AI 助理">
-                <div class="persona-cell-name">AI 助理</div>
-                <div class="persona-cell-rel">AI 助理</div>
-            </div>
-            <div class="persona-cell" onclick="selectAndEnter(this, 'daughter')">
-                <img class="persona-cell-avatar"
-                     src="/static/avatars/daughter_nobg.png"
-                     alt="小玲">
-                <div class="persona-cell-name">小玲</div>
-                <div class="persona-cell-rel">女兒</div>
-            </div>
+            <div style="text-align:center;color:#BDC3C7;padding:20px;font-size:20px;grid-column:1/-1;">載入中...</div>
         </div>
         <select id="welcome-elder-select">
             <option value="W001">王大明</option>

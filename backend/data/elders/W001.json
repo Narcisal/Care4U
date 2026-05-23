@@ -21,7 +21,7 @@
   "personas": {
     "ai": {
       "name": "AI 助理",
-      "voice_engine": "edge",
+      "voice_engine": "breezyvoice",
       "voice_path": null,
       "honorific": "爺爺",
       "tone": "像疼愛的孫子/孫女，溫柔親切",
@@ -302,6 +302,74 @@
       "id": "3f3947ef",
       "date": "2026-05-17",
       "time": "21:50:34"
+    },
+    {
+      "event": "說了：今天感覺不錯!",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.4,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "表達正面情緒，日常心情分享，無特殊事件",
+      "source": "voice",
+      "spoken_at": "2026-05-21 04:18:09",
+      "id": "342bd6c2",
+      "date": "2026-05-21",
+      "time": "04:18:09"
+    },
+    {
+      "event": "說了：我就是他。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "平靜陳述，涉及身份或重要連結。",
+      "source": "voice",
+      "spoken_at": "2026-05-21 05:07:03",
+      "id": "5d188975",
+      "date": "2026-05-21",
+      "time": "05:07:03"
+    },
+    {
+      "event": "說了：我今天夢到我在雲上種花，",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.4,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "夢境愉快，分享個人內心狀態。",
+      "source": "voice",
+      "spoken_at": "2026-05-21 05:14:17",
+      "id": "850c7d16",
+      "date": "2026-05-21",
+      "time": "05:14:17"
+    },
+    {
+      "event": "說了：今天感覺不錯!",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.4,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "表達正面情緒，日常心情分享，無特殊事件",
+      "source": "voice",
+      "spoken_at": "2026-05-21 05:27:29",
+      "id": "a7e480c1",
+      "date": "2026-05-21",
+      "time": "05:27:29"
     }
   ],
   "memory_summary": {},
