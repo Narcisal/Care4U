@@ -99,4 +99,5 @@ desktop.ini
 test.py
 test_*.py
 convert_audio.py
+generate_avatars.py
 generated/

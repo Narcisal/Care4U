@@ -1,86 +1,95 @@
 # AI Care U
 
-成功大學資工系專題：面向高齡照護情境的 AI 陪伴與照護人員後台系統。
+AI Care U is a National Cheng Kung University Computer Science capstone project for AI-assisted elder companionship and caregiver support.
 
-AI Care U 以「長者聊天前台」和「照護人員後台」為核心。長者可以和不同家人陪伴者人格對話；後台則讓照護人員管理長者資料、陪伴者、家人補充資訊、iSafe 安全事件、Decision 任務與 Agent 紀錄。
+The project has two main surfaces:
 
-## 目前展示範圍
+- An elder-facing chat interface designed for simple, warm conversation.
+- A caregiver admin dashboard for profile setup, family companion personas, safety review, and demo operation.
 
-- 3 位長者 demo profile：`W001`、`C001`、`L001`
-- 每位長者 4 位陪伴者人格
-- 前台長者友善聊天介面
-- 後台長者資料建檔、家人補充資訊、生平資料、陪伴者管理
-- 後台可替陪伴者上傳照片與 `.wav` 聲音樣本
-- TTS 流程：XTTS 優先、edge-tts 後援、Windows SAPI 離線保底
-- iSafe 情緒與安全分級，可展示一般情緒、低風險提醒與高風險跌倒警報
-- Decision 任務排程 demo，可切換啟用/暫停狀態
-- Agent 監控與對話紀錄後台
-- Demo mode：沒有 Gemini API key、PostgreSQL、Tavily、XTTS 或 GPU 時仍可跑基本展示
+## Current Demo Scope
 
-目前刻意不做：精油 RAG、臉部情緒偵測、YOLO 視覺偵測、硬體巡檢與定位。
+- 3 demo elder profiles: `W001`, `C001`, and `L001`
+- 4 companion personas for each elder
+- Elder-friendly frontend chat experience
+- Caregiver-facing admin dashboard
+- Admin upload for companion persona photos
+- Admin upload for companion persona `.wav` voice samples
+- TTS priority order: XTTS first, edge-tts fallback, Windows SAPI offline last-resort fallback
+- iSafe emotion and safety monitoring
+- Decision demo schedule controls
+- Agent activity monitoring and conversation history review
+- Demo mode that can run without Gemini, PostgreSQL, Tavily, XTTS, or GPU
 
-## 專案結構
+Out of current scope:
+
+- Aromatherapy RAG
+- Face or facial emotion detection
+- YOLO visual detection
+- Hardware patrol, tracking, or positioning
+
+## Project Structure
 
 ```text
 Care4U_codex/
   backend/
-    main.py                  FastAPI 入口與 API endpoints
+    main.py                  FastAPI app and API routes
     agents/
-      decision.py            協調 MagicAI、iSafe、圖片與健康搜尋
-      magic_ai.py            對話代理與記憶整合
-      i_safe.py              情緒、安全分級、趨勢警報
+      decision.py            Orchestrates MagicAI, iSafe, image, and health tools
+      magic_ai.py            Persona-aware conversation agent
+      i_safe.py              Emotion, safety, escalation, and trend monitoring
     services/
-      llm_service.py         Gemini / demo fallback
-      stt_service.py         Whisper / Breeze ASR
-      tts_service.py         XTTS、edge-tts、Windows SAPI fallback
-      embedding_service.py   Gemini embedding / demo fallback
+      llm_service.py         Gemini integration and demo fallback
+      stt_service.py         Whisper and Breeze ASR speech recognition
+      tts_service.py         XTTS, edge-tts, and Windows SAPI fallback
+      embedding_service.py   Gemini embedding and demo fallback
     memory/
-      json_store.py          JSON profile/event 儲存
-      vector_store.py        PostgreSQL + pgvector optional 儲存
+      json_store.py          JSON profile and event storage
+      vector_store.py        Optional PostgreSQL + pgvector storage
     tools/
-      health_search.py       健康主題搜尋
-      image_gen.py           懷舊場景圖片生成
-      search_service.py      生平資料搜尋
-    data/elders/             長者 demo JSON
+      health_search.py       Health-topic search support
+      image_gen.py           Nostalgic image generation
+      search_service.py      Biography and search support
+    data/elders/             Demo elder JSON profiles
   frontend/
-    index.html               長者聊天前台
-    admin.html               照護人員後台
-    app.js                   前台互動邏輯
-    avatars/                 demo 頭像素材
-  demo_script.md             展示腳本
-  delivery_status.md         交付檢查表與待做事項
-  future_plan.md             下一階段規劃
+    index.html               Elder-facing chat UI
+    admin.html               Caregiver admin dashboard
+    app.js                   Frontend interaction logic
+    avatars/                 Curated demo avatar assets
+  demo_script.md             Demo walkthrough
+  delivery_status.md         Delivery checklist and remaining work
+  future_plan.md             Future improvement plan
 ```
 
-## Demo 長者
+## Demo Elders
 
-| Elder ID | 姓名 | 展示重點 |
+| Elder ID | Name | Demo Focus |
 |---|---|---|
-| `W001` | 王大明 | 退休工程師、鄧麗君、象棋、安全警報 demo |
-| `C001` | 陳秀英 | 退休老師、園藝、料理、家庭陪伴 |
-| `L001` | 林月琴 | 裁縫背景、輕度失智照護情境 |
+| `W001` | Wang Daming | Retired engineer, Teresa Teng, chess, safety-alert demo |
+| `C001` | Chen Xiuying | Retired teacher, gardening, cooking, family companionship |
+| `L001` | Lin Yueqin | Former tailor, mild dementia care scenario |
 
-每位長者都應維持 4 位陪伴者人格，這是教授目前要求的主要展示點。
+Each elder should keep exactly 4 companion personas for the current professor-facing requirement.
 
-## 快速啟動
+## Quick Start
 
-### 1. 建立環境
+### 1. Install Dependencies
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-如果本機 `python` / `py` 指令不可用，這台機器目前可用：
+On this Windows environment, if `python` or `py` is unavailable, use:
 
 ```powershell
 C:\Users\user\bin\py.cmd
 ```
 
-### 2. 設定 `.env`
+### 2. Configure Environment
 
-複製 `.env.example` 成 `.env`，再視情況填入 API key。
+Copy `.env.example` to `.env`.
 
-最小 demo 可使用：
+For local demo mode, the important values are:
 
 ```env
 CARE4U_DEMO_MODE=true
@@ -89,70 +98,73 @@ STT_POOL_SIZE=1
 XTTS_URL=http://localhost:8082
 ```
 
-### 3. 啟動後端
+### 3. Start the Backend
 
 ```powershell
 C:\Users\user\bin\py.cmd -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-或在一般 Python 環境：
+Or with a normal Python command:
 
 ```powershell
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-### 4. 開啟頁面
+### 4. Open the App
 
-- 前台：`http://127.0.0.1:8000/`
-- 後台：`http://127.0.0.1:8000/admin`
+- Elder UI: `http://127.0.0.1:8000/`
+- Caregiver admin: `http://127.0.0.1:8000/admin`
 
-## XTTS 語音克隆
+## XTTS Voice Cloning
 
-系統會在陪伴者有 `voice_path` 時優先呼叫 XTTS。後台可上傳陪伴者 `.wav` 聲音樣本；沒有聲音樣本或 XTTS 不可用時，會自動改用 edge-tts，再失敗則使用 Windows SAPI 離線保底。
+AI Care U uses XTTS first when the active companion persona has a `voice_path`.
 
-展示前請務必製作並上傳 `.wav`，否則只能展示 TTS fallback，無法展示聲音克隆效果。
+Voice samples are uploaded from the admin dashboard as `.wav` files. If no voice sample is available, or if XTTS is unavailable, the system falls back to edge-tts. If edge-tts also fails in the local Windows demo environment, the system uses Windows SAPI as an offline last-resort fallback so the TTS API does not fail during a presentation.
 
-預設 XTTS API：
+Default XTTS endpoint:
 
 ```env
 XTTS_URL=http://localhost:8082
 ```
 
-## 重要環境變數
+Before the final demo, prepare and upload `.wav` samples for the companion personas that need XTTS voice cloning.
 
-| 變數 | 預設/建議 | 說明 |
+## Environment Variables
+
+| Variable | Suggested Value | Purpose |
 |---|---|---|
-| `CARE4U_DEMO_MODE` | `true` | 沒有外部 API 時使用 demo fallback |
-| `GEMINI_API_KEY` | 空或真實 key | Gemini 對話、摘要、embedding |
-| `TAVILY_API_KEY` | 空或真實 key | 生平資料與健康搜尋 |
-| `DB_ENABLED` | `false` | 是否啟用 PostgreSQL / pgvector |
+| `CARE4U_DEMO_MODE` | `true` | Enables fallback behavior when external services are unavailable |
+| `GEMINI_API_KEY` | empty or real key | Gemini chat, summaries, image generation, and embeddings |
+| `TAVILY_API_KEY` | empty or real key | Biography and health-topic search |
+| `DB_ENABLED` | `false` | Enables or disables PostgreSQL / pgvector |
 | `DB_HOST` | `localhost` | PostgreSQL host |
 | `DB_PORT` | `5433` | PostgreSQL port |
 | `DB_NAME` | `aicaeru` | PostgreSQL database |
 | `DB_USER` | `postgres` | PostgreSQL user |
-| `DB_PASSWORD` | 空 | PostgreSQL password |
-| `STT_POOL_SIZE` | `1` | Whisper worker 數量，demo 建議 1 |
+| `DB_PASSWORD` | empty | PostgreSQL password |
+| `STT_POOL_SIZE` | `1` | Whisper worker count; 1 is recommended for demo |
 | `STT_MODEL_SIZE` | `medium` | Whisper model size |
-| `STT_DEVICE` | `cuda` | 可改 `cpu` |
-| `XTTS_URL` | `http://localhost:8082` | 主要 XTTS API |
-| `BREEZYVOICE_URL` | `http://localhost:8080` | legacy voice service |
-| `LUXTTS_URL` | `http://localhost:8081` | optional voice service |
+| `STT_DEVICE` | `cuda` or `cpu` | STT device |
+| `XTTS_URL` | `http://localhost:8082` | Primary XTTS API endpoint |
+| `BREEZYVOICE_URL` | `http://localhost:8080` | Legacy voice service endpoint |
+| `LUXTTS_URL` | `http://localhost:8081` | Optional voice service endpoint |
 
-## 展示前檢查
+## Demo Checklist
 
-1. 開啟後台 `http://127.0.0.1:8000/admin`
-2. 確認 3 位長者都存在
-3. 確認每位長者都有 4 位陪伴者
-4. 到陪伴者管理上傳照片與 `.wav`
-5. 前台選長者並進入聊天
-6. 測試安全句：「我頭很暈快跌倒了」
-7. 到後台查看 iSafe、對話紀錄、Agent 監控
-8. 照 `demo_script.md` 跑一次完整流程
+1. Open the caregiver admin page.
+2. Confirm all 3 elders exist.
+3. Confirm each elder has 4 companion personas.
+4. Upload companion persona photos and `.wav` samples if needed.
+5. Open the elder chat UI.
+6. Select an elder and start a chat session.
+7. Test the safety sentence: "I feel very dizzy and might fall."
+8. Review iSafe, conversation history, and Agent logs in the admin dashboard.
+9. Run through `demo_script.md` once before the final presentation.
 
-## 開發備註
+## Development Notes
 
-- FastAPI 啟動時不會立即載入 STT，第一次使用 `/api/stt` 才 lazy-load。
-- PostgreSQL 是 optional；`DB_ENABLED=false` 時會使用 JSON profile。
-- 後台上傳的語音樣本屬於個資/聲紋資料，不應提交到 Git。
-- 後台上傳的家人照片也不應提交到 Git。
-- `delivery_status.md` 是目前交付狀態與剩餘工作的主文件。
+- STT is lazy-loaded. FastAPI startup does not immediately load Whisper.
+- PostgreSQL is optional. When `DB_ENABLED=false`, profile and event data use JSON files.
+- Uploaded voice samples may contain biometric data and should not be committed.
+- Uploaded family/persona photos should not be committed.
+- `delivery_status.md` is the source of truth for current delivery status and remaining work.
