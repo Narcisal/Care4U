@@ -61,14 +61,12 @@ class Decision:
             active = personas.get(active_id, personas.get("ai", {}))
 
             self.tts = TTSService()
-            engine = active.get("voice_engine", "edge")
+            engine = active.get("voice_engine", "xtts")
             voice_path = active.get("voice_path")
 
-            if engine == "breezyvoice":
-                self.tts.set_engine("breezyvoice", voice_path)
-                print(f"TTS 切換為 BreezyVoice，聲音樣本：{voice_path}")
-            elif engine == "edge":
-                self.tts.reset_engine()
+            if voice_path:
+                self.tts.set_engine("xtts", voice_path)
+                print(f"TTS 切換為 XTTS，聲音樣本：{voice_path}")
             else:
                 self.tts.reset_engine()
 

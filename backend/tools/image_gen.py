@@ -6,13 +6,29 @@ from google.genai import types
 from dotenv import load_dotenv
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client = None
+
+
+def _get_client():
+    global client
+    if os.getenv("CARE4U_DEMO_MODE", "true").lower() == "true":
+        return None
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        return None
+    if client is None:
+        client = genai.Client(api_key=api_key)
+    return client
 
 def detect_image_trigger(message: str) -> str | None:
     """
     用 LLM 判斷是否需要生成圖片
     回傳：'scene' | None
     """
+    llm = _get_client()
+    if llm is None:
+        return None
+
     prompt = f"""判斷以下長者說的話，是否描述了具體的視覺場景值得生成圖片。
 
 長者說：「{message}」
@@ -30,7 +46,7 @@ def detect_image_trigger(message: str) -> str | None:
 
     for attempt in range(3):
         try:
-            response = client.models.generate_content(
+            response = llm.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
                 config=types.GenerateContentConfig(
@@ -56,6 +72,10 @@ def extract_scene(message: str) -> str:
     """
     從長者原話萃取核心視覺場景描述，過濾口語雜訊
     """
+    llm = _get_client()
+    if llm is None:
+        return message[:50]
+
     prompt = f"""從以下長者說的話中，萃取出核心的視覺場景描述。
 
 長者說：「{message}」
@@ -68,7 +88,7 @@ def extract_scene(message: str) -> str:
 - 只回傳場景描述，不要其他說明"""
 
     try:
-        response = client.models.generate_content(
+        response = llm.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
@@ -88,6 +108,10 @@ def generate_image(message: str, trigger_type: str) -> str | None:
     回傳 base64 編碼的圖片字串，失敗回傳 None
     """
     try:
+        llm = _get_client()
+        if llm is None:
+            return None
+
         # 先萃取核心場景，過濾口語雜訊
         scene = extract_scene(message)
         print(f"萃取場景：{scene}")
@@ -107,7 +131,7 @@ def generate_image(message: str, trigger_type: str) -> str | None:
 - 禁止出現現代建築、柏油路、現代電線桿
 - 禁止出現任何文字或數字"""
 
-        response = client.models.generate_content(
+        response = llm.models.generate_content(
             model="gemini-2.5-flash-image",
             contents=prompt,
             config=types.GenerateContentConfig(

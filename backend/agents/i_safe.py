@@ -3,6 +3,13 @@ from backend.memory.vector_store import VectorMemoryStore
 from backend.services.embedding_service import EmbeddingService
 from backend.services.llm_service import LLMService
 
+
+def _log(text: str):
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        print(text.encode("utf-8", errors="replace").decode("utf-8", errors="replace"))
+
 # ------------------------------------------------------------------
 # Escalation keyword tables — extend here, not inside the method
 # ------------------------------------------------------------------
@@ -42,27 +49,27 @@ class ISafe:
         self.active_persona_id = profile.get("active_persona", "ai") if profile else "ai"
 
         result = self.llm.analyze_emotion(message)
-        print(f"情緒分析結果：emotion={result.get('emotion')}, importance={result.get('importance')}")
+        _log(f"情緒分析結果：emotion={result.get('emotion')}, importance={result.get('importance')}")
 
         if speed_emotion == "slow" and result.get("emotion") == "normal":
             result["emotion"] = "comfort"
             result["reason"] = (result.get("reason", "") + "（語速偵測：說話緩慢）").strip()
-            print("語速修正：說話緩慢 → comfort")
+            _log("語速修正：說話緩慢 -> comfort")
 
         elif speed_emotion == "fast" and result.get("emotion") == "normal":
             result["emotion"] = "urgent"
             result["reason"] = (result.get("reason", "") + "（語速偵測：說話急促）").strip()
-            print("語速修正：說話急促 → urgent")
+            _log("語速修正：說話急促 -> urgent")
 
         escalation_level = self._determine_escalation(message, result)
         result["escalation_level"] = escalation_level
         if escalation_level >= 2:
-            print(f"⚠️ 分級響應：level={escalation_level}，需要通知照護人員")
+            _log(f"分級響應：level={escalation_level}，需要通知照護人員")
 
         trend_alert = self._analyze_trend(result["emotion"])
         if trend_alert:
             result["trend_alert"] = trend_alert
-            print(f"情緒趨勢警報：{trend_alert}")
+            _log(f"情緒趨勢警報：{trend_alert}")
 
         if result.get("should_record"):
             self._record_event(
@@ -148,7 +155,7 @@ class ISafe:
                     "source": "trend_analysis",
                     "spoken_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 })
-                return "🚨 緊急趨勢警報：連續三次偵測到緊急狀況！"
+                return "緊急趨勢警報：連續三次偵測到緊急狀況！"
 
         elif len(recent) == 3 and all(e in ["comfort", "urgent"] for e in recent):
             if not self.alert_triggered:
@@ -165,7 +172,7 @@ class ISafe:
                     "source": "trend_analysis",
                     "spoken_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 })
-                return "⚠️ 情緒趨勢警報：長者持續情緒低落"
+                return "情緒趨勢警報：長者持續情緒低落"
 
         elif current_emotion in ["happy", "normal"]:
             self.alert_triggered = False
@@ -196,9 +203,9 @@ class ISafe:
                     row = cursor.fetchone()
                     if row:
                         self.memory.update_embedding(row["id"], embedding)
-                        print(f"向量已儲存，維度：{len(embedding)}")
+                        _log(f"向量已儲存，維度：{len(embedding)}")
         except Exception as e:
-            print(f"向量生成失敗（不影響對話）：{e}")
+            _log(f"向量生成失敗（不影響對話）：{e}")
 
     def _record_event(
         self,

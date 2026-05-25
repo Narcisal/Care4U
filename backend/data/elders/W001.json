@@ -34,7 +34,54 @@
       "voice_path": null,
       "honorific": "爸爸",
       "tone": "親切帶點撒嬌，像真實女兒關心老爸，偶爾撒嬌說「爸爸你都不告訴我」",
+      "avatar_path": "daughter_bg.png",
       "is_deceased": false
+    },
+    "son": {
+      "name": "建宏",
+      "relation": "兒子",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "爸",
+      "language": "mandarin",
+      "personality": [
+        "穩重",
+        "務實",
+        "關心健康"
+      ],
+      "habits": [
+        "先問今天吃得好不好",
+        "提醒慢慢走"
+      ],
+      "tone": "像成熟的兒子，說話穩重直接，但每句都帶著關心。",
+      "avatar_path": "son_bg.png",
+      "is_deceased": false,
+      "shared_memories": "以前常陪爸爸下象棋，也記得爸爸教他修電腦。",
+      "current_status": "在台南工作，週末會來探望。",
+      "forbidden_topics": ""
+    },
+    "granddaughter": {
+      "name": "安安",
+      "relation": "孫女",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "阿公",
+      "language": "mandarin",
+      "personality": [
+        "活潑",
+        "撒嬌",
+        "會鼓勵長者"
+      ],
+      "habits": [
+        "分享學校小事",
+        "請阿公說年輕時的故事"
+      ],
+      "tone": "像親近的孫女，語氣明亮、溫柔，常用簡短問題陪阿公回憶。",
+      "avatar_path": "granddaughter_bg.png",
+      "is_deceased": false,
+      "shared_memories": "小時候常聽阿公放鄧麗君，也看阿公在公園下棋。",
+      "current_status": "大學生，偶爾回家陪阿公吃飯。",
+      "forbidden_topics": ""
     }
   },
   "active_persona": "ai",
@@ -370,8 +417,6 @@
       "id": "a7e480c1",
       "date": "2026-05-21",
       "time": "05:27:29"
-<<<<<<< HEAD
-=======
     },
     {
       "event": "說了：今天的晚餐不錯吃。",
@@ -406,7 +451,40 @@
       "id": "8ab951f8",
       "date": "2026-05-21",
       "time": "23:05:39"
->>>>>>> cf18642f1d870ffb03738fbf26c88ef7630945f0
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-05-25 21:47:44",
+      "id": "3d188bc9",
+      "date": "2026-05-25",
+      "time": "21:47:44"
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-05-26 04:35:27",
+      "id": "daac269a",
+      "date": "2026-05-26",
+      "time": "04:35:27"
     }
   ],
   "memory_summary": {},

@@ -8,8 +8,50 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Single shared client for all LLM calls in this process
-_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+_client = None
+
+
+def _get_client():
+    """Create Gemini client only when an API key is available."""
+    global _client
+    if os.getenv("CARE4U_DEMO_MODE", "true").lower() == "true":
+        return None
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        return None
+    if _client is None:
+        _client = genai.Client(api_key=api_key)
+    return _client
+
+
+def _fallback_emotion(message: str) -> dict:
+    urgent_terms = ["痛", "胸口", "喘", "跌倒", "頭暈", "暈", "救命", "不舒服", "腳軟"]
+    comfort_terms = ["孤單", "難過", "想念", "傷心", "不開心", "心慌", "焦慮", "睡不著"]
+    happy_terms = ["開心", "很好", "不錯", "謝謝", "喜歡", "好吃"]
+
+    if any(term in message for term in urgent_terms):
+        emotion, score, importance = "urgent", -0.8, 0.8
+        reason = "偵測到身體不適"
+    elif any(term in message for term in comfort_terms):
+        emotion, score, importance = "comfort", -0.6, 0.6
+        reason = "偵測到低落情緒"
+    elif any(term in message for term in happy_terms):
+        emotion, score, importance = "happy", 0.6, 0.4
+        reason = "偵測到正向情緒"
+    else:
+        emotion, score, importance = "normal", 0.0, 0.3
+        reason = "一般日常對話"
+
+    return {
+        "emotion": emotion,
+        "emotion_score": score,
+        "importance": importance,
+        "reason": reason,
+        "is_urgent": emotion == "urgent",
+        "sentiment": "positive" if score > 0.1 else "negative" if score < -0.1 else "neutral",
+        "memory_type": "long" if importance >= 0.7 else "short",
+        "should_record": emotion in ["urgent", "comfort", "happy"] or importance >= 0.5,
+    }
 
 
 class LLMService:
@@ -284,6 +326,10 @@ class LLMService:
     # ------------------------------------------------------------------
 
     def analyze_emotion(self, message: str) -> dict:
+        client = _get_client()
+        if client is None:
+            return _fallback_emotion(message)
+
         prompt = f"""你是一個長照系統的情緒與語意分析模組，專門分析台灣長輩的對話內容。
 請分析以下長者說的話，評估其情緒狀態與該訊息對長輩生平的重要程度。
 
@@ -342,7 +388,7 @@ class LLMService:
 
         for attempt in range(3):
             try:
-                response = _client.models.generate_content(
+                response = client.models.generate_content(
                     model=self.model_name,
                     contents=[types.Content(
                         role="user",
@@ -407,6 +453,17 @@ class LLMService:
         active_persona: dict = None,
     ) -> str:
         try:
+            client = _get_client()
+            if client is None:
+                name = profile.get("name", "您")
+                active_name = (active_persona or {}).get("name", "AI 助理")
+                honorific = (active_persona or {}).get("honorific") or name
+                if any(term in user_message for term in ["痛", "胸口", "喘", "跌倒", "頭暈", "暈", "救命"]):
+                    return f"{honorific}，我聽到你身體不舒服。請先坐好或躺好，不要自己走動，我會提醒照護人員來看你。"
+                if any(term in user_message for term in ["孤單", "難過", "想念", "不開心", "心慌", "焦慮"]):
+                    return f"{honorific}，我在這裡陪你。你可以慢慢說，不用急，我們一起把心裡的事講出來。"
+                return f"{honorific}，我是{active_name}。我有聽到你說「{user_message}」，我們可以慢慢聊。"
+
             system_prompt = self.build_system_prompt(
                 profile,
                 recent_messages=recent_messages,
@@ -426,7 +483,7 @@ class LLMService:
                 types.Content(role="user", parts=[types.Part(text=user_message)])
             )
 
-            response = _client.models.generate_content(
+            response = client.models.generate_content(
                 model=self.model_name,
                 contents=history,
                 config=types.GenerateContentConfig(
@@ -447,6 +504,13 @@ class LLMService:
 
     def generate_memory_summary(self, events: list, name: str) -> str:
         """Summarise recent events into a caregiver-readable paragraph."""
+        client = _get_client()
+        if client is None:
+            if not events:
+                return f"{name} 近期沒有可彙整的對話事件。"
+            latest = events[-1]
+            return f"{name} 近期主要提到「{latest.get('event', '')}」，情緒狀態為 {latest.get('sentiment', 'neutral')}，建議照護者持續觀察。"
+
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         events_text = "\n".join(
             f"- {e.get('date', '')} {e.get('time', '')}：{e.get('event', '')}（情緒分數：{e.get('emotion_score', 0):.1f}，{e.get('reason', '')}）"
@@ -470,7 +534,7 @@ class LLMService:
     - 第三人稱，自然口語，不列點
     - 只回傳摘要文字，不要標題或其他說明"""
 
-        response = _client.models.generate_content(
+        response = client.models.generate_content(
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=500),
@@ -485,6 +549,10 @@ class LLMService:
         family_notes: list,
     ) -> str:
         """Merge new evidence into an existing elder biography."""
+        client = _get_client()
+        if client is None:
+            return existing_bio
+
         events_text = "\n".join(
             f"- {e.get('event', '')}（依據：{e.get('reason', '')}）"
             for e in important_events
@@ -522,7 +590,7 @@ class LLMService:
     6. 繁體中文、第三人稱，維持像老朋友介紹般自然溫暖的台灣口吻。
     7. 只回傳更新後的文章本體，不要任何標題、前言或說明。"""
 
-        response = _client.models.generate_content(
+        response = client.models.generate_content(
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.2, max_output_tokens=1000),
@@ -538,6 +606,12 @@ class LLMService:
         habits: list,
     ) -> str:
         """Generate a short speaking-style description for a persona."""
+        client = _get_client()
+        if client is None:
+            traits = "、".join(personality[:2]) if personality else "溫和"
+            habit = habits[0] if habits else "自然陪伴"
+            return f"像{name}這位{relation}，語氣{traits}，會{habit}。"
+
         prompt = f"""根據以下資料，生成一段「說話風格描述」供 AI 扮演參考：
 
 - 關係：{relation}
@@ -552,7 +626,7 @@ class LLMService:
 - 融合關係和個性，自然口語
 - 只回傳描述文字，不要標題或說明"""
 
-        response = _client.models.generate_content(
+        response = client.models.generate_content(
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=200),

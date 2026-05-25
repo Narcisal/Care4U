@@ -17,6 +17,28 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function safeAvatarSrc(path, fallback = "/static/avatars/ai_assistant.png") {
+    if (!path) return fallback;
+    const value = String(path).trim().replaceAll("\\", "/");
+    if (/^personas\/[A-Za-z0-9_-]+\.(png|jpg|jpeg|webp)$/i.test(value)) {
+        return `/static/avatars/${value}`;
+    }
+    const filename = value.split("/").pop();
+    if (/^[A-Za-z0-9_-]+(?:_bg|_nobg)?\.png$/.test(filename)) {
+        return `/static/avatars/${filename}`;
+    }
+    return fallback;
+}
+
+function safeHttpUrl(url) {
+    try {
+        const parsed = new URL(String(url));
+        return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : null;
+    } catch {
+        return null;
+    }
+}
+
 function enableButtons() {
     document.getElementById("text-input").removeAttribute("disabled");
     document.getElementById("send-btn").removeAttribute("disabled");
@@ -65,7 +87,7 @@ async function startSession() {
         await speakText(data.message, "normal");
 
     } catch (e) {
-        btn.textContent = "❌ 啟動失敗，請重試";
+        btn.textContent = "啟動失敗，請重試";
         btn.disabled = false;
         addMessage("system", "系統啟動失敗。");
     }
@@ -218,7 +240,7 @@ async function speakText(text, emotion = "normal") {
             const res = await fetch(`${API_BASE}/api/tts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: text, emotion: emotion })
+                body: JSON.stringify({ text: text, emotion: emotion, elder_id: ELDER_ID })
             });
             const audioBlob = await res.blob();
             const audio = new Audio(URL.createObjectURL(audioBlob));
@@ -241,19 +263,27 @@ function addMessage(role, text) {
     const row = document.createElement("div");
 
     if (role === "ai") {
-        const avatarSrc = currentPersonaAvatar || "/static/avatars/ai_assistant.png";
+        const avatarSrc = safeAvatarSrc(currentPersonaAvatar, "/static/avatars/ai_assistant.png");
         row.className = "msg-row";
-        row.innerHTML = `
-            <img class="msg-avatar" src="${avatarSrc}" alt="AI">
-            <div class="msg-bubble ai">${escapeHtml(text)}</div>
-        `;
+        const avatar = document.createElement("img");
+        avatar.className = "msg-avatar";
+        avatar.src = avatarSrc;
+        avatar.alt = "AI";
+        const bubble = document.createElement("div");
+        bubble.className = "msg-bubble ai";
+        bubble.textContent = text || "";
+        row.append(avatar, bubble);
     } else if (role === "user") {
-        const elderAvatar = currentElderAvatar || "/static/avatars/elder_male.png";
+        const elderAvatar = safeAvatarSrc(currentElderAvatar, "/static/avatars/elder_male.png");
         row.className = "msg-row user";
-        row.innerHTML = `
-            <img class="msg-avatar" src="${elderAvatar}" alt="長者">
-            <div class="msg-bubble user">${escapeHtml(text)}</div>
-        `;
+        const avatar = document.createElement("img");
+        avatar.className = "msg-avatar";
+        avatar.src = elderAvatar;
+        avatar.alt = "長者";
+        const bubble = document.createElement("div");
+        bubble.className = "msg-bubble user";
+        bubble.textContent = text || "";
+        row.append(avatar, bubble);
     } else {
         row.style.cssText = "text-align:center;color:#BDC3C7;font-size:16px;padding:8px;";
         row.textContent = text;
@@ -317,24 +347,33 @@ function addHealthCard(info) {
     const container = document.getElementById("chat-container");
     const wrapper = document.createElement("div");
     wrapper.className = "flex items-start gap-2";
-    wrapper.innerHTML = `
-        <div class="text-2xl">🌸</div>
-        <div class="chat-bubble-ai px-4 py-4 rounded-2xl rounded-tl-none shadow-sm" style="max-width: 360px;">
-            <div style="font-size: 13px; color: #7B9E87; margin-bottom: 6px; font-weight: 500;">
-                💊 健康衛教資訊
-            </div>
-            <div style="font-size: 15px; font-weight: 500; color: #3D3530; margin-bottom: 6px;">
-                ${escapeHtml(info.title)}
-            </div>
-            <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 10px; line-height: 1.6;">
-                ${escapeHtml(info.summary)}
-            </div>
-            <a href="${escapeHtml(info.url)}" target="_blank"
-               style="font-size: 13px; color: #4A90E2; text-decoration: none;">
-                📖 查看完整資訊 →
-            </a>
-        </div>
-    `;
+    const icon = document.createElement("div");
+    icon.className = "text-2xl";
+    icon.textContent = "🌸";
+    const card = document.createElement("div");
+    card.className = "chat-bubble-ai px-4 py-4 rounded-2xl rounded-tl-none shadow-sm";
+    card.style.maxWidth = "360px";
+    const label = document.createElement("div");
+    label.style.cssText = "font-size:13px;color:#7B9E87;margin-bottom:6px;font-weight:500;";
+    label.textContent = "💊 健康衛教資訊";
+    const title = document.createElement("div");
+    title.style.cssText = "font-size:15px;font-weight:500;color:#3D3530;margin-bottom:6px;";
+    title.textContent = info.title || "";
+    const summary = document.createElement("div");
+    summary.style.cssText = "font-size:13px;color:#7F8C8D;margin-bottom:10px;line-height:1.6;";
+    summary.textContent = info.summary || "";
+    card.append(label, title, summary);
+    const safeUrl = safeHttpUrl(info.url);
+    if (safeUrl) {
+        const link = document.createElement("a");
+        link.href = safeUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.style.cssText = "font-size:13px;color:#4A90E2;text-decoration:none;";
+        link.textContent = "📖 查看完整資訊 →";
+        card.appendChild(link);
+    }
+    wrapper.append(icon, card);
     container.appendChild(wrapper);
     container.scrollTop = container.scrollHeight;
 }
@@ -343,11 +382,10 @@ function addTrendAlert(alertMsg) {
     const container = document.getElementById("chat-container");
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "text-align: center; margin: 8px 0;";
-    wrapper.innerHTML = `
-        <div style="display: inline-block; background: #FDECEA; border: 1px solid #E74C3C; border-radius: 10px; padding: 8px 16px; font-size: 14px; color: #922B21;">
-            ${escapeHtml(alertMsg)}
-        </div>
-    `;
+    const alert = document.createElement("div");
+    alert.style.cssText = "display:inline-block;background:#FDECEA;border:1px solid #E74C3C;border-radius:10px;padding:8px 16px;font-size:14px;color:#922B21;";
+    alert.textContent = alertMsg || "";
+    wrapper.appendChild(alert);
     container.appendChild(wrapper);
     container.scrollTop = container.scrollHeight;
 }
@@ -366,7 +404,7 @@ function clearChat() {
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
     document.getElementById("hold-talk-btn").disabled = true;
-    document.getElementById("start-btn").textContent = "🌟 開始對話";
+    document.getElementById("start-btn").textContent = "開始對話";
     document.getElementById("start-btn").disabled = false;
     document.getElementById("image-frame").style.display = "none";
     const wrap = document.querySelector(".speaking-wrap");
@@ -419,9 +457,7 @@ async function loadWelcomePersonas(elderId) {
 
         Object.entries(personas).forEach(([id, persona]) => {
             const isSelected = id === activeId;
-            const avatarSrc = persona.avatar_path
-                ? `/static/avatars/${persona.avatar_path}`
-                : (avatarMap[id] || '/static/avatars/ai_assistant.png');
+            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant.png');
 
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
@@ -430,11 +466,20 @@ async function loadWelcomePersonas(elderId) {
                 selectPersona(id, avatarSrc, persona.name, persona.relation);
                 enterChat();
             };
-            div.innerHTML = `
-                <img class="persona-cell-avatar" src="${avatarSrc}" alt="${persona.name}">
-                <div class="persona-cell-name">${persona.name}</div>
-                ${persona.relation ? `<div class="persona-cell-rel">${persona.relation}</div>` : ''}
-            `;
+            const avatar = document.createElement('img');
+            avatar.className = 'persona-cell-avatar';
+            avatar.src = avatarSrc;
+            avatar.alt = persona.name || '陪伴者';
+            const name = document.createElement('div');
+            name.className = 'persona-cell-name';
+            name.textContent = persona.name || 'AI 助理';
+            div.append(avatar, name);
+            if (persona.relation) {
+                const relation = document.createElement('div');
+                relation.className = 'persona-cell-rel';
+                relation.textContent = persona.relation;
+                div.appendChild(relation);
+            }
             container.appendChild(div);
             if (isSelected) {
                 SELECTED_PERSONA = id;
@@ -454,14 +499,10 @@ function addEscalationAlert(level, message) {
     const textColor = level >= 3 ? "#922B21" : "#7D5A00";
     const fontSize = level >= 3 ? "20px" : "17px";
     wrapper.style.cssText = "text-align: center; margin: 8px 0;";
-    wrapper.innerHTML = `
-        <div style="display:inline-block; background:${bgColor};
-             border: 2px solid ${borderColor}; border-radius: 12px;
-             padding: 12px 24px; font-size:${fontSize};
-             color:${textColor}; font-weight:700;">
-            ${escapeHtml(message)}
-        </div>
-    `;
+    const alert = document.createElement("div");
+    alert.style.cssText = `display:inline-block;background:${bgColor};border:2px solid ${borderColor};border-radius:12px;padding:12px 24px;font-size:${fontSize};color:${textColor};font-weight:700;`;
+    alert.textContent = message || "";
+    wrapper.appendChild(alert);
     container.appendChild(wrapper);
     container.scrollTop = container.scrollHeight;
 }
@@ -505,7 +546,7 @@ async function speakText(text, emotion = "normal") {
             const res = await fetch(`${API_BASE}/api/tts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text, emotion })
+                body: JSON.stringify({ text, emotion, elder_id: ELDER_ID })
             });
             const audioBlob = await res.blob();
             const audio = new Audio(URL.createObjectURL(audioBlob));
@@ -594,9 +635,7 @@ async function showPersonaSwitcher() {
 
         Object.entries(personas).forEach(([id, persona]) => {
             const isActive = id === activeId;
-            const avatarSrc = persona.avatar_path
-                ? `/static/avatars/${persona.avatar_path}`
-                : (avatarMap[id] || '/static/avatars/ai_assistant.png');
+            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant.png');
 
             const div = document.createElement('div');
             div.style.cssText = `
@@ -606,14 +645,25 @@ async function showPersonaSwitcher() {
                 background: ${isActive ? '#FEF3E8' : 'white'};
                 transition: all 0.2s;
             `;
-            div.innerHTML = `
-                <img src="${avatarSrc}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
-                <div>
-                    <div style="font-size:20px;font-weight:700;color:var(--text-dark);">${persona.name}</div>
-                    <div style="font-size:14px;color:var(--text-light);">${persona.relation || 'AI 陪伴助理'}</div>
-                </div>
-                ${isActive ? '<div style="margin-left:auto;color:var(--orange);font-size:20px;">✓ 使用中</div>' : ''}
-            `;
+            const avatar = document.createElement('img');
+            avatar.src = avatarSrc;
+            avatar.alt = persona.name || '陪伴者';
+            avatar.style.cssText = "width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);";
+            const textWrap = document.createElement('div');
+            const name = document.createElement('div');
+            name.style.cssText = "font-size:20px;font-weight:700;color:var(--text-dark);";
+            name.textContent = persona.name || 'AI 助理';
+            const relation = document.createElement('div');
+            relation.style.cssText = "font-size:14px;color:var(--text-light);";
+            relation.textContent = persona.relation || 'AI 陪伴助理';
+            textWrap.append(name, relation);
+            div.append(avatar, textWrap);
+            if (isActive) {
+                const active = document.createElement('div');
+                active.style.cssText = "margin-left:auto;color:var(--orange);font-size:20px;";
+                active.textContent = "✓ 使用中";
+                div.appendChild(active);
+            }
             if (!isActive) {
                 div.onclick = () => switchPersonaInChat(id, avatarSrc, persona.name, persona.relation);
             }
@@ -660,6 +710,9 @@ if (ELDER_ID) {
     loadElderProfile();
 } else {
     loadWelcomePersonas('W001');
+    document.getElementById('welcome-elder-select')?.addEventListener('change', (event) => {
+        loadWelcomePersonas(event.target.value);
+    });
 }
 
 let vadActive = false;

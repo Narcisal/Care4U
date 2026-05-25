@@ -1,55 +1,102 @@
-# Virtual environment
-venv/
-.venv/
+# ------------------------------------------------------------------
+# Secrets and local environment
+# ------------------------------------------------------------------
 
-# Environment variables — never commit real API keys
 .env
+.env.*
+!.env.example
 
-# Python cache
+# ------------------------------------------------------------------
+# Python
+# ------------------------------------------------------------------
+
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 *.pyd
+*.pyo
 *.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 dist/
 build/
-.pytest_cache/
 
+# Virtual environments
+venv/
+.venv/
+env/
+.envrc
+
+# ------------------------------------------------------------------
+# Logs and runtime temp files
+# ------------------------------------------------------------------
+
+*.log
+tmp_logs/
+logs/
+
+# Temporary audio files created by STT/TTS services.
+backend/services/tmp_*.wav
+backend/services/tmp_*.webm
+backend/services/tmp_*.mp3
+*.tmp
+
+# ------------------------------------------------------------------
+# Uploaded personal / biometric data
+# ------------------------------------------------------------------
+
+# Voice samples uploaded from the admin panel.
+backend/data/elders/*_voices/
+backend/data/voices/
+
+# Family/persona photos uploaded from the admin panel.
+frontend/avatars/personas/
+
+# Ad-hoc local recordings. Keep curated demo assets elsewhere if they
+# are intentionally part of the project.
+*.wav
+*.mp3
+*.m4a
+*.webm
+
+# ------------------------------------------------------------------
+# Model and cache directories
+# ------------------------------------------------------------------
+
+models/
+.cache/
+cache/
+hf_cache/
+whisper_cache/
+
+# ------------------------------------------------------------------
+# Node / frontend tooling, if added later
+# ------------------------------------------------------------------
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------------
 # Editor and OS files
+# ------------------------------------------------------------------
+
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
+desktop.ini
 
 # ------------------------------------------------------------------
-# Project-specific
+# Local one-off scripts and generated experiments
 # ------------------------------------------------------------------
 
-# Temporary audio files created by the STT service during transcription.
-# These are normally deleted after each request but can leak on crash.
-backend/services/tmp_*.wav
-backend/services/tmp_*.webm
-
-# Voice cloning samples uploaded via the admin panel.
-# These are binary audio files and may contain biometric data.
-backend/data/elders/*_voices/
-
-# Audio files at the project root (ad-hoc test recordings)
-*.mp3
-*.wav
-
-# One-off scripts that are not part of the application
 test.py
-test_breezy.py
+test_*.py
 convert_audio.py
-generate_avatars.py
-
-# Internal planning documents
-future_plan.md
-
-# HuggingFace model cache if redirected into the project directory
-models/
-.cache/
+generated/

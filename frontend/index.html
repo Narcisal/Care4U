@@ -20,9 +20,14 @@
             --orange:       #C17F5A;
             --orange-dark:  #A86844;
             --orange-pale:  #FBF0E6;
+            --blue:         #4A90A4;
+            --blue-pale:    #E7F3F6;
+            --red:          #C94C4C;
+            --red-pale:     #FCEAEA;
             --navy:         #1B2E4B;
             --brown-frame:  #8B6E52;
             --green:        #7B9E87;
+            --green-pale:   #E8F5EC;
         }
 
         body {
@@ -211,7 +216,28 @@
             letter-spacing: 0.5px;
         }
 
-        #welcome-elder-select { display: none; }
+        .elder-picker {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            color: var(--text-mid);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        #welcome-elder-select {
+            width: 180px;
+            height: 44px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--cream);
+            color: var(--text-dark);
+            font: inherit;
+            font-size: 18px;
+            padding: 0 12px;
+        }
+
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(14px); }
@@ -301,6 +327,7 @@
             position: relative;
         }
 
+
         /* 說話光暈 */
         .speaking-wrap {
             position: relative;
@@ -365,7 +392,7 @@
 
         /* 狀態提示 */
         .status-label {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: 700;
             color: var(--text-mid);
             letter-spacing: 2px;
@@ -523,6 +550,21 @@
         .speaking-wrap.with-image #speaking-ring-2 {
             width: 470px; height: 470px;
         }
+
+        @media (max-width: 900px) {
+            body { overflow: auto; height: auto; min-height: 100dvh; }
+            #welcome-screen { flex-direction: column; min-height: 100dvh; }
+            .welcome-left { width: 100%; height: 34dvh; min-height: 260px; }
+            .welcome-right { padding: 28px 22px; }
+            .persona-grid { gap: 12px; }
+            .persona-cell { border-radius: 18px; padding: 22px 12px 18px; }
+            .persona-cell-name { font-size: 24px; }
+            .persona-cell-rel { font-size: 18px; }
+            #persona-portrait { width: min(72vw, 430px); height: min(72vw, 430px); }
+            .speaking-ring { width: min(78vw, 480px); height: min(78vw, 480px); }
+            #speaking-ring-2 { width: min(84vw, 530px); height: min(84vw, 530px); }
+            .main-body { justify-content: flex-start; padding-top: 24px; overflow-y: auto; }
+        }
     </style>
 </head>
 <body>
@@ -544,13 +586,17 @@
     </div>
 
     <div class="welcome-right">
+        <label class="elder-picker" for="welcome-elder-select">
+            <span>長者</span>
+            <select id="welcome-elder-select">
+                <option value="W001">王大明</option>
+                <option value="C001">陳秀英</option>
+                <option value="L001">林月琴</option>
+            </select>
+        </label>
         <div id="welcome-persona-list" class="persona-grid">
             <div style="text-align:center;color:#BDC3C7;padding:20px;font-size:20px;grid-column:1/-1;">載入中...</div>
         </div>
-        <select id="welcome-elder-select">
-            <option value="W001">王大明</option>
-            <option value="C001">陳秀英</option>
-        </select>
     </div>
 </div>
 
@@ -564,7 +610,7 @@
         </div>
         <div class="top-right">
             <div id="elder-name-display">載入中...</div>
-            <button class="btn-switch-top" onclick="showPersonaSwitcher()">🔄 切換陪伴者</button>
+            <button class="btn-switch-top" onclick="showPersonaSwitcher()">切換陪伴者</button>
         </div>
     </div>
 
@@ -614,6 +660,6 @@
     </div>
 </div>
 
-<script src="/static/app.js?v=13"></script>
+<script src="/static/app.js?v=15"></script>
 </body>
 </html>

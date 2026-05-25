@@ -13,12 +13,14 @@ class VectorMemoryStore(MemoryManager):
 
     def __init__(self):
         self._json = JsonMemoryStore()   # single shared JSON back-end instance
+        self.db_enabled = os.getenv("DB_ENABLED", "false").lower() == "true"
         self.conn_params = {
             "host": os.getenv("DB_HOST", "localhost"),
             "port": int(os.getenv("DB_PORT", 5433)),
             "dbname": os.getenv("DB_NAME", "aicaeru"),
             "user": os.getenv("DB_USER", "postgres"),
-            "password": os.getenv("DB_PASSWORD", "careU1234"),
+            "password": os.getenv("DB_PASSWORD", ""),
+            "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "1")),
         }
         self._ensure_connection()
 
@@ -27,6 +29,9 @@ class VectorMemoryStore(MemoryManager):
     # ------------------------------------------------------------------
 
     def _ensure_connection(self):
+        if not self.db_enabled:
+            self.conn = None
+            return
         try:
             self.conn = psycopg2.connect(**self.conn_params)
             self.conn.autocommit = True
@@ -36,6 +41,8 @@ class VectorMemoryStore(MemoryManager):
             self.conn = None
 
     def _get_cursor(self):
+        if not self.db_enabled:
+            return None
         try:
             if self.conn is None or self.conn.closed:
                 self._ensure_connection()

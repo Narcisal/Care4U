@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import shutil
 import traceback
 from datetime import datetime
@@ -13,7 +14,6 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.agents.decision import Decision, clear_agent
-from backend.services.stt_service import STTService
 from backend.services.tts_service import TTSService
 from backend.memory.vector_store import VectorMemoryStore
 from backend.services.embedding_service import EmbeddingService
@@ -35,24 +35,50 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 # STT worker pool
 # ------------------------------------------------------------------
 
-STT_POOL_SIZE = 3
-try:
-    stt_pool = [STTService(model_size="medium", device="cuda") for _ in range(STT_POOL_SIZE)]
-except Exception as e:
-    traceback.print_exc()
-    print(f"STTService CUDA 初始化失敗，退回 CPU：{e}")
-    stt_pool = [STTService(model_size="medium", device="cpu") for _ in range(STT_POOL_SIZE)]
-
+STT_POOL_SIZE = int(os.getenv("STT_POOL_SIZE", "1"))
+STT_MODEL_SIZE = os.getenv("STT_MODEL_SIZE", "medium")
+STT_DEVICE = os.getenv("STT_DEVICE", "cuda")
+stt_pool: list[object] = []
 stt_pool_lock: asyncio.Queue = asyncio.Queue()
+stt_init_lock = asyncio.Lock()
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
 decisions: dict[str, Decision] = {}
 
 
 @app.on_event("startup")
 async def startup_event():
-    for s in stt_pool:
-        await stt_pool_lock.put(s)
-    print(f"STT worker pool 初始化完成，共 {STT_POOL_SIZE} 個實例")
+    print(f"STT worker pool 延遲初始化：size={STT_POOL_SIZE}, model={STT_MODEL_SIZE}, device={STT_DEVICE}")
+
+
+async def ensure_stt_pool():
+    if stt_pool:
+        return
+
+    async with stt_init_lock:
+        if stt_pool:
+            return
+
+        try:
+            from backend.services.stt_service import STTService
+
+            workers = [
+                STTService(model_size=STT_MODEL_SIZE, device=STT_DEVICE)
+                for _ in range(STT_POOL_SIZE)
+            ]
+        except Exception as e:
+            traceback.print_exc()
+            print(f"STTService {STT_DEVICE} 初始化失敗，退回 CPU：{e}")
+            from backend.services.stt_service import STTService
+
+            workers = [
+                STTService(model_size=STT_MODEL_SIZE, device="cpu")
+                for _ in range(STT_POOL_SIZE)
+            ]
+
+        stt_pool.extend(workers)
+        for worker in stt_pool:
+            await stt_pool_lock.put(worker)
+        print(f"STT worker pool 初始化完成，共 {len(stt_pool)} 個實例")
 
 
 # ------------------------------------------------------------------
@@ -70,6 +96,7 @@ class GreetRequest(BaseModel):
 class TTSRequest(BaseModel):
     text: str
     emotion: str = "normal"
+    elder_id: Optional[str] = None
 
 class ElderProfileUpdate(BaseModel):
     elder_id: str
@@ -99,7 +126,7 @@ class PersonaAddRequest(BaseModel):
     language: str = "mandarin"
     personality: list = []
     habits: list = []
-    voice_engine: str = "edge"
+    voice_engine: str = "xtts"
     voice_path: str = None
     is_deceased: bool = False
     shared_memories: str = ""
@@ -289,6 +316,7 @@ async def chat(req: ChatRequest):
 @app.post("/api/stt")
 async def speech_to_text(audio: UploadFile = File(...)):
     try:
+        await ensure_stt_pool()
         audio_bytes = await audio.read()
         stt_instance = await stt_pool_lock.get()
         try:
@@ -315,19 +343,37 @@ async def speech_to_text(audio: UploadFile = File(...)):
 @app.post("/api/tts")
 async def text_to_speech(req: TTSRequest):
     try:
+        service = tts
+        if req.elder_id:
+            memory = VectorMemoryStore()
+            profile = memory.get_profile(req.elder_id)
+            personas = profile.get("personas", {}) if profile else {}
+            active_id = profile.get("active_persona", "ai") if profile else "ai"
+            active = personas.get(active_id, personas.get("ai", {}))
+            voice_path = active.get("voice_path")
+            engine = active.get("voice_engine", "xtts")
+
+            service = TTSService(voice="zh-TW-HsiaoChenNeural")
+            if voice_path:
+                service.set_engine("xtts", voice_path)
+            else:
+                service.reset_engine()
+
         loop = asyncio.get_event_loop()
-        audio_bytes = await loop.run_in_executor(None, tts.synthesize, req.text, req.emotion)
+        audio_bytes = await loop.run_in_executor(None, service.synthesize, req.text, req.emotion)
         if not audio_bytes:
             raise HTTPException(status_code=500, detail="TTS 失敗")
-        return Response(content=audio_bytes, media_type="audio/mpeg")
+        media_type = "audio/wav" if audio_bytes.startswith(b"RIFF") else "audio/mpeg"
+        return Response(content=audio_bytes, media_type=media_type)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/stt/language")
-def set_stt_language(req: LanguageRequest):
+async def set_stt_language(req: LanguageRequest):
     try:
         print(f"收到語言切換請求：{req.language}")
+        await ensure_stt_pool()
         for s in stt_pool:
             s.set_language(req.language)
         return {"success": True, "language": req.language}
@@ -645,12 +691,51 @@ async def upload_voice(
         profile = memory.get_profile(elder_id)
         if profile and "personas" in profile and persona_id in profile["personas"]:
             profile["personas"][persona_id]["voice_path"] = str(voice_path)
-            profile["personas"][persona_id]["voice_engine"] = "breezyvoice"
+            profile["personas"][persona_id]["voice_engine"] = "xtts"
             memory._save(elder_id, profile)
 
         _reset_elder_state(elder_id)
         return {"success": True, "message": "語音樣本已上傳", "path": str(voice_path)}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/profile/persona/upload-avatar")
+async def upload_avatar(
+    elder_id: str = Form(...),
+    persona_id: str = Form(...),
+    avatar: UploadFile = File(...),
+):
+    try:
+        suffix = Path(avatar.filename or "").suffix.lower()
+        if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+            raise HTTPException(status_code=400, detail="只支援 png、jpg、jpeg、webp")
+
+        avatars_dir = Path("frontend/avatars/personas")
+        avatars_dir.mkdir(parents=True, exist_ok=True)
+        avatar_filename = f"{elder_id}_{persona_id}{suffix}"
+        avatar_path = avatars_dir / avatar_filename
+        with open(avatar_path, "wb") as f:
+            shutil.copyfileobj(avatar.file, f)
+
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(elder_id)
+        if not profile or "personas" not in profile or persona_id not in profile["personas"]:
+            raise HTTPException(status_code=404, detail="找不到此人格")
+
+        profile["personas"][persona_id]["avatar_path"] = f"personas/{avatar_filename}"
+        memory._save(elder_id, profile)
+
+        _reset_elder_state(elder_id)
+        return {
+            "success": True,
+            "message": "陪伴者照片已上傳",
+            "avatar_path": f"personas/{avatar_filename}",
+        }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

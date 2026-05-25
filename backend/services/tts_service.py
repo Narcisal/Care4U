@@ -1,8 +1,12 @@
 import asyncio
+import base64
 import edge_tts
 import io
+import json
 import os
 import requests
+import subprocess
+import tempfile
 
 BREEZYVOICE_URL = os.getenv("BREEZYVOICE_URL", "http://localhost:8080")
 LUXTTS_URL = os.getenv("LUXTTS_URL", "http://localhost:8081")
@@ -22,7 +26,7 @@ class TTSService:
 
     def __init__(self, voice: str = "zh-TW-HsiaoChenNeural"):
         self.voice = voice
-        self.engine = "edge"        # safe default; set_engine() switches to a cloning engine
+        self.engine = "xtts"
         self.voice_path = None
 
     def set_engine(self, engine: str, voice_path: str = None):
@@ -36,6 +40,10 @@ class TTSService:
         self.engine = "edge"
         self.voice_path = None
         print("TTS 引擎重置為：edge")
+
+    def use_edge_fallback(self):
+        self.engine = "edge"
+        self.voice_path = None
 
     # ------------------------------------------------------------------
     # Voice-cloning back-ends
@@ -88,6 +96,9 @@ class TTSService:
 
     def _xtts_synthesize(self, text: str) -> bytes:
         """Generate speech via XTTS v2 voice-cloning server."""
+        if not self.voice_path:
+            print("XTTS 未設定聲音樣本，降級到 edge-tts")
+            return b""
         try:
             payload = {
                 "text": text,
@@ -132,6 +143,56 @@ class TTSService:
 
         return audio_buffer.getvalue()
 
+    def _windows_sapi_synthesize(self, text: str) -> bytes:
+        """Last-resort offline fallback for Windows demo environments."""
+        if os.name != "nt":
+            return b""
+
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                tmp_path = tmp.name
+
+            payload = json.dumps({"text": text, "path": tmp_path}, ensure_ascii=False)
+            script = f"""
+$payload = @'
+{payload}
+'@ | ConvertFrom-Json
+Add-Type -AssemblyName System.Speech
+$speaker = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$speaker.SetOutputToWaveFile($payload.path)
+$speaker.Speak($payload.text)
+$speaker.Dispose()
+"""
+            encoded = base64.b64encode(script.encode("utf-16le")).decode("ascii")
+            completed = subprocess.run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-EncodedCommand",
+                    encoded,
+                ],
+                capture_output=True,
+                timeout=30,
+            )
+            if completed.returncode != 0:
+                print(f"Windows SAPI 失敗：{completed.stderr.decode(errors='ignore')}")
+                return b""
+
+            with open(tmp_path, "rb") as f:
+                return f.read()
+        except Exception as e:
+            print(f"Windows SAPI 錯誤：{e}")
+            return b""
+        finally:
+            if tmp_path:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -154,12 +215,22 @@ class TTSService:
                     return result
                 print("LuxTTS 失敗，降級到 edge-tts")
 
+            result = b""
             loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            result = loop.run_until_complete(self._edge_synthesize(text, emotion))
-            loop.close()
-            return result
+            try:
+                asyncio.set_event_loop(loop)
+                result = loop.run_until_complete(self._edge_synthesize(text, emotion))
+            except Exception as e:
+                print(f"edge-tts 錯誤：{e}")
+            finally:
+                loop.close()
+
+            if result:
+                return result
+
+            print("edge-tts 失敗，改用 Windows SAPI 離線備援")
+            return self._windows_sapi_synthesize(text)
 
         except Exception as e:
             print(f"TTS 錯誤：{e}")
-            return b""
+            return self._windows_sapi_synthesize(text)
