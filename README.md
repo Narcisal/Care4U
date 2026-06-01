@@ -252,6 +252,23 @@ Before the final demo, prepare and upload `.wav` samples for the companion perso
 | `LUXTTS_URL` | `http://localhost:8081` | Optional voice service endpoint |
 | `ADMIN_USERNAME` | `admin` | Optional caregiver dashboard username |
 | `ADMIN_PASSWORD` | empty | Enables Basic Auth for `/admin` when set |
+| `ADMIN_ROLE` | `admin` | Role for the simple `ADMIN_USERNAME` / `ADMIN_PASSWORD` pair |
+| `ADMIN_USERS` | empty | Optional JSON map for multiple admin users and roles |
+
+Role-based admin access supports three roles:
+
+- `viewer`: can read profiles/personas.
+- `caregiver`: can read and update care data.
+- `admin`: can manage sessions and perform caregiver actions.
+
+Example `ADMIN_USERS`:
+
+```json
+{
+  "caregiver1": {"password": "change-me", "role": "caregiver"},
+  "supervisor": {"password": "change-me-too", "role": "admin"}
+}
+```
 
 ## Safety, Privacy, and Ethics
 
@@ -288,6 +305,15 @@ GET /api/stt/status
 It reports whether Whisper, Torch, Transformers, ffmpeg, and the local Breeze ASR 26 cache are available. The admin dashboard language switch calls `/api/stt/language` and verifies that the Taiwanese STT route can be selected without breaking the main demo flow. Live transcription quality should still be checked with a real Taiwanese audio sample before making it a primary presentation feature.
 
 The latest verification record is documented in `stt_verification.md`.
+
+## Evaluation Utilities
+
+The next-stage evaluation endpoints are available behind admin access:
+
+- `GET /api/admin/sessions`: inspect active elder/persona sessions.
+- `POST /api/admin/sessions/clear`: clear a specific session or all sessions.
+- `POST /api/admin/rag/evaluate`: evaluate memory retrieval hit rate with prepared query/expected-term pairs.
+- `POST /api/admin/stt/evaluate-transcripts`: evaluate prepared STT transcripts with character error rate.
 
 ## Development Notes
 

@@ -58,6 +58,8 @@ class Decision:
         self.elder_id = elder_id
         self.session_id = session_id or "default"
         self.persona_id = persona_id
+        self.created_at = datetime.now()
+        self.last_seen = self.created_at
         self.magic = _get_magic(elder_id, self.session_id, persona_id)
         self.isafe = _get_isafe(elder_id, self.session_id, persona_id)
         self._setup_persona()
@@ -96,6 +98,7 @@ class Decision:
     # ------------------------------------------------------------------
 
     def greet(self) -> dict:
+        self.last_seen = datetime.now()
         try:
             greeting = self.magic.greet()
             return {
@@ -114,6 +117,7 @@ class Decision:
             }
 
     def chat(self, user_message: str, speed_emotion: str = "normal") -> dict:
+        self.last_seen = datetime.now()
         self.chat_count += 1
 
         safety = self._run_isafe(user_message, speed_emotion)

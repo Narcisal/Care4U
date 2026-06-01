@@ -36,6 +36,7 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 admin_security = HTTPBasic(auto_error=False)
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+ADMIN_USERS = os.getenv("ADMIN_USERS", "")
 
 # ------------------------------------------------------------------
 # STT worker pool
@@ -164,35 +165,79 @@ class FamilyNoteDeleteRequest(BaseModel):
     elder_id: str
     index: int
 
+class SessionClearRequest(BaseModel):
+    elder_id: Optional[str] = None
+    session_id: Optional[str] = None
+
+class RAGEvaluationRequest(BaseModel):
+    elder_id: str
+    queries: list[dict]
+
+class STTEvaluationRequest(BaseModel):
+    samples: list[dict]
+
 
 # ------------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------------
 
-def require_admin(credentials: HTTPBasicCredentials = Depends(admin_security)):
+def _load_admin_users() -> dict:
+    """Load role users from ADMIN_USERS JSON or the simple ADMIN_* pair."""
+    if ADMIN_USERS:
+        try:
+            data = json.loads(ADMIN_USERS)
+            if isinstance(data, dict):
+                return data
+        except Exception as e:
+            print(f"ADMIN_USERS 解析失敗：{e}")
+    if ADMIN_PASSWORD:
+        return {
+            ADMIN_USERNAME: {
+                "password": ADMIN_PASSWORD,
+                "role": os.getenv("ADMIN_ROLE", "admin"),
+            }
+        }
+    return {}
+
+
+def _authenticate_admin(credentials: HTTPBasicCredentials | None) -> dict | None:
+    users = _load_admin_users()
+    if not users:
+        return {"username": "demo", "role": "admin"}
+    if not credentials:
+        return None
+    user = users.get(credentials.username)
+    if not user:
+        return None
+    expected_password = user.get("password", "")
+    if not secrets.compare_digest(credentials.password, expected_password):
+        return None
+    return {"username": credentials.username, "role": user.get("role", "viewer")}
+
+
+def require_admin_role(*allowed_roles: str):
     """Optional Basic Auth for the caregiver dashboard.
 
-    Local demo mode remains frictionless when ADMIN_PASSWORD is empty. Set
-    ADMIN_PASSWORD in .env to enable browser-level protection for /admin.
+    Local demo mode remains frictionless when no admin password/users are set.
+    Set ADMIN_PASSWORD for one admin, or ADMIN_USERS JSON for role-based access.
     """
-    if not ADMIN_PASSWORD:
-        return True
-    if not credentials:
-        raise HTTPException(
-            status_code=401,
-            detail="Admin login required",
-            headers={"WWW-Authenticate": "Basic"},
-        )
+    def dependency(credentials: HTTPBasicCredentials = Depends(admin_security)):
+        user = _authenticate_admin(credentials)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Admin login required",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+        if allowed_roles and user["role"] not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Insufficient admin role")
+        return user
+    return dependency
 
-    username_ok = secrets.compare_digest(credentials.username, ADMIN_USERNAME)
-    password_ok = secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
-    if not (username_ok and password_ok):
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid admin credentials",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return True
+
+require_admin = require_admin_role("admin", "caregiver", "viewer")
+require_caregiver = require_admin_role("admin", "caregiver")
+require_system_admin = require_admin_role("admin")
 
 def _session_key(elder_id: str, session_id: str = "default", persona_id: str = None) -> str:
     return f"{elder_id}:{session_id or 'default'}:{persona_id or 'profile'}"
@@ -212,6 +257,21 @@ def _reset_elder_state(elder_id: str, session_id: str = None):
     for key in list(decisions):
         if key.startswith(prefix):
             decisions.pop(key, None)
+
+
+def _session_rows() -> list[dict]:
+    rows = []
+    for key, decision in decisions.items():
+        rows.append({
+            "key": key,
+            "elder_id": decision.elder_id,
+            "session_id": decision.session_id,
+            "persona_id": decision.persona_id or "profile",
+            "chat_count": decision.chat_count,
+            "last_seen": decision.last_seen.isoformat(timespec="seconds"),
+        })
+    rows.sort(key=lambda row: row["last_seen"], reverse=True)
+    return rows
 
 
 # ------------------------------------------------------------------
@@ -312,7 +372,7 @@ def read_root():
 
 
 @app.get("/admin")
-def admin_page(_: bool = Depends(require_admin)):
+def admin_page(_: dict = Depends(require_admin)):
     return FileResponse("frontend/admin.html")
 
 
@@ -380,6 +440,45 @@ async def speech_to_text(audio: UploadFile = File(...)):
             "speech_rate": result["speech_rate"],
             "duration": result["duration"],
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/admin/me")
+def admin_me(user: dict = Depends(require_admin)):
+    return user
+
+
+@app.get("/api/admin/sessions")
+def list_sessions(_: dict = Depends(require_caregiver)):
+    return {"sessions": _session_rows(), "count": len(decisions)}
+
+
+@app.post("/api/admin/sessions/clear")
+def clear_sessions(req: SessionClearRequest, _: dict = Depends(require_system_admin)):
+    if req.elder_id:
+        _reset_elder_state(req.elder_id, req.session_id)
+    else:
+        for key in list(decisions):
+            decision = decisions.pop(key)
+            clear_agent(decision.elder_id, session_id=decision.session_id)
+    return {"success": True, "sessions": _session_rows()}
+
+
+@app.post("/api/admin/rag/evaluate")
+def evaluate_rag(req: RAGEvaluationRequest, _: dict = Depends(require_caregiver)):
+    try:
+        from backend.tools.rag_evaluation import evaluate_rag_queries
+        return evaluate_rag_queries(req.elder_id, req.queries)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/stt/evaluate-transcripts")
+def evaluate_stt_transcripts(req: STTEvaluationRequest, _: dict = Depends(require_caregiver)):
+    try:
+        from backend.tools.stt_corpus_eval import evaluate_transcripts
+        return evaluate_transcripts(req.samples)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -471,7 +570,7 @@ async def set_stt_language(req: LanguageRequest):
 # ------------------------------------------------------------------
 
 @app.get("/api/profile/{elder_id}")
-def get_profile(elder_id: str):
+def get_profile(elder_id: str, _: dict = Depends(require_admin)):
     try:
         decision = get_decision(elder_id)
         profile = decision.profile
@@ -486,7 +585,7 @@ def get_profile(elder_id: str):
 
 
 @app.get("/api/history/{elder_id}")
-def get_history(elder_id: str):
+def get_history(elder_id: str, _: dict = Depends(require_caregiver)):
     key = next((k for k in decisions if k.startswith(f"{elder_id}:")), None)
     if not key:
         return {"history": []}
@@ -494,7 +593,7 @@ def get_history(elder_id: str):
 
 
 @app.get("/api/safety/{elder_id}")
-def get_safety(elder_id: str):
+def get_safety(elder_id: str, _: dict = Depends(require_caregiver)):
     try:
         return get_decision(elder_id).get_safety_status()
     except Exception as e:
@@ -502,13 +601,13 @@ def get_safety(elder_id: str):
 
 
 @app.get("/api/agent-logs")
-def get_agent_logs():
+def get_agent_logs(_: dict = Depends(require_caregiver)):
     from backend.agents.decision import get_logs
     return {"logs": get_logs()}
 
 
 @app.post("/api/profile/save")
-async def save_profile(req: ElderProfileUpdate):
+async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregiver)):
     try:
         data_path = Path("backend/data/elders") / f"{req.elder_id}.json"
 
@@ -550,7 +649,7 @@ async def save_profile(req: ElderProfileUpdate):
 
 
 @app.post("/api/profile/search-background")
-def search_elder_background(req: ElderSearchRequest):
+def search_elder_background(req: ElderSearchRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
@@ -628,7 +727,7 @@ def search_elder_background(req: ElderSearchRequest):
 
 
 @app.post("/api/profile/save-biography")
-def save_biography(req: BiographyUpdateRequest):
+def save_biography(req: BiographyUpdateRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
@@ -656,7 +755,7 @@ def save_biography(req: BiographyUpdateRequest):
 # ------------------------------------------------------------------
 
 @app.get("/api/profile/{elder_id}/personas")
-def get_personas(elder_id: str):
+def get_personas(elder_id: str, _: dict = Depends(require_admin)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(elder_id)
@@ -669,7 +768,7 @@ def get_personas(elder_id: str):
 
 
 @app.post("/api/profile/persona/add")
-async def add_persona(req: PersonaAddRequest):
+async def add_persona(req: PersonaAddRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
@@ -709,7 +808,7 @@ async def add_persona(req: PersonaAddRequest):
 
 
 @app.post("/api/profile/persona/delete")
-def delete_persona(req: PersonaDeleteRequest):
+def delete_persona(req: PersonaDeleteRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
@@ -735,7 +834,7 @@ def delete_persona(req: PersonaDeleteRequest):
 
 
 @app.post("/api/profile/persona/switch")
-def switch_persona(req: PersonaSwitchRequest):
+def switch_persona(req: PersonaSwitchRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
@@ -763,6 +862,7 @@ async def upload_voice(
     elder_id: str = Form(...),
     persona_id: str = Form(...),
     voice: UploadFile = File(...),
+    _: dict = Depends(require_caregiver),
 ):
     try:
         voices_dir = Path(f"backend/data/elders/{elder_id}_voices")
@@ -791,6 +891,7 @@ async def upload_avatar(
     elder_id: str = Form(...),
     persona_id: str = Form(...),
     avatar: UploadFile = File(...),
+    _: dict = Depends(require_caregiver),
 ):
     try:
         suffix = Path(avatar.filename or "").suffix.lower()
@@ -830,7 +931,7 @@ async def upload_avatar(
 # ------------------------------------------------------------------
 
 @app.post("/api/profile/family-note/add")
-def add_family_note(req: FamilyNoteRequest):
+def add_family_note(req: FamilyNoteRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
@@ -850,7 +951,7 @@ def add_family_note(req: FamilyNoteRequest):
 
 
 @app.post("/api/profile/family-note/delete")
-def delete_family_note(req: FamilyNoteDeleteRequest):
+def delete_family_note(req: FamilyNoteDeleteRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)

@@ -14,6 +14,7 @@
 - 前台聊天已加入 session/persona 隔離，同一台後端可支援不同視窗選不同長者或陪伴者。
 - 後台支援可選式 Basic Auth；設定 `ADMIN_PASSWORD` 後 `/admin` 會要求登入。
 - 台語 STT 已補上 `/api/stt/status` 診斷與 Breeze ASR 切換流程驗證；`/api/stt/language` 已驗證可切到 `tai` 並載入 Breeze ASR 26。正式辨識準確度仍需真人錄音樣本確認。
+- 下一階段功能已具備工程骨架：角色式後台權限、session 管理 API、RAG hit-rate 評估 API、台語 STT transcript CER 評估 API。
 - Demo mode 可在沒有 Gemini API key、資料庫或外部服務時跑基本展示。
 - iSafe 已有固定測試案例，可展示 Level 0、Level 1、Level 3。
 - Decision 任務排程已做成可切換啟用/暫停的 demo 管理狀態。
@@ -61,6 +62,8 @@ http://127.0.0.1:8000/admin
 | 高 | 展示劇本排練 | 依 `demo_script.md` 跑一次完整流程 |
 | 高 | 補齊 XTTS 語音樣本 | 展示前需準備 `.wav`，目前沒有陪伴者 voice sample |
 | 低 | 台語語音辨識準確度測試 | API 診斷與 Breeze 載入已驗證；之後需用真人台語錄音測辨識品質 |
+| 低 | 後台權限 UI 化 | 後端角色權限已完成，若要展示多人登入可再補 UI 說明或帳號配置 |
+| 低 | RAG / STT 評估資料集 | 評估 API 已完成，之後可補正式測資與圖表 |
 
 ## 目前不做
 
