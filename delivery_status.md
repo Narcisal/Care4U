@@ -9,6 +9,11 @@
 - 後台可替陪伴者上傳照片與 `.wav` 語音樣本；有語音樣本時優先使用 XTTS。
 - TTS 流程目前為 XTTS 優先、edge-tts 後援，並加上 Windows SAPI 離線保底，避免展示時播放 API 直接失敗。
 - 後台操作提示已改成一致的 toast 與頁面狀態文字，減少不適合照護現場的彈窗與工程錯誤符號。
+- Demo mode 已補上 JSON 歷史記憶 RAG fallback，沒有 PostgreSQL/pgvector 時仍可找回相關舊記憶。
+- 重要記憶已加入保留與加權規則，安全事件、家人資訊、人生回憶會更穩定進入長期記憶。
+- 前台聊天已加入 session/persona 隔離，同一台後端可支援不同視窗選不同長者或陪伴者。
+- 後台支援可選式 Basic Auth；設定 `ADMIN_PASSWORD` 後 `/admin` 會要求登入。
+- 台語 STT 已補上 `/api/stt/status` 診斷與 Breeze ASR 切換流程驗證；`/api/stt/language` 已驗證可切到 `tai` 並載入 Breeze ASR 26。正式辨識準確度仍需真人錄音樣本確認。
 - Demo mode 可在沒有 Gemini API key、資料庫或外部服務時跑基本展示。
 - iSafe 已有固定測試案例，可展示 Level 0、Level 1、Level 3。
 - Decision 任務排程已做成可切換啟用/暫停的 demo 管理狀態。
@@ -55,9 +60,7 @@ http://127.0.0.1:8000/admin
 |--------|------|------|
 | 高 | 展示劇本排練 | 依 `demo_script.md` 跑一次完整流程 |
 | 高 | 補齊 XTTS 語音樣本 | 展示前需準備 `.wav`，目前沒有陪伴者 voice sample |
-| 中 | 記憶重要性機制 | 可進一步讓重要記憶更明確地影響回答 |
-| 中 | 歷史記憶 RAG | 適合做為下一階段亮點 |
-| 低 | 台語語音辨識 | 可列入未來在地化方向 |
+| 低 | 台語語音辨識準確度測試 | API 診斷與 Breeze 載入已驗證；之後需用真人台語錄音測辨識品質 |
 
 ## 目前不做
 

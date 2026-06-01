@@ -9,8 +9,9 @@ load_dotenv()
 
 class MagicAI:
 
-    def __init__(self, elder_id: str):
+    def __init__(self, elder_id: str, persona_id: str = None):
         self.elder_id = elder_id
+        self.persona_id = persona_id
         self.llm = LLMService()
         self.memory = VectorMemoryStore()
         self.embedding = EmbeddingService()
@@ -29,7 +30,7 @@ class MagicAI:
     def _get_active_persona(self) -> dict:
         """Return the currently active persona dict."""
         personas = self.profile.get("personas", {})
-        active_id = self.profile.get("active_persona", "ai")
+        active_id = self.persona_id or self.profile.get("active_persona", "ai")
         return personas.get(active_id, personas.get("ai", {}))
 
     def _reset_biography_usage(self):
@@ -61,7 +62,7 @@ class MagicAI:
         return greeting
 
     def chat(self, user_message: str) -> str:
-        active_id = self.profile.get("active_persona", "ai")
+        active_id = self.persona_id or self.profile.get("active_persona", "ai")
         active_persona = self._get_active_persona()
 
         recent_messages = self.memory.get_recent_conversation_summary(
@@ -73,10 +74,22 @@ class MagicAI:
             query_embedding = self.embedding.embed(user_message)
             if query_embedding:
                 similar_memories = self.memory.search_similar_memories(
-                    self.elder_id, query_embedding, limit=5, persona_id=active_id
+                    self.elder_id,
+                    query_embedding,
+                    limit=5,
+                    persona_id=active_id,
+                    query_text=user_message,
                 )
                 if similar_memories:
                     print(f"找到 {len(similar_memories)} 筆相關記憶")
+            else:
+                similar_memories = self.memory.search_similar_memories(
+                    self.elder_id,
+                    [],
+                    limit=5,
+                    persona_id=active_id,
+                    query_text=user_message,
+                )
         except Exception as e:
             print(f"向量搜尋失敗（不影響對話）：{e}")
 

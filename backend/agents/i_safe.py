@@ -28,15 +28,16 @@ _URGENT_KEYWORDS = [
 
 class ISafe:
 
-    def __init__(self, elder_id: str):
+    def __init__(self, elder_id: str, persona_id: str = None):
         self.elder_id = elder_id
+        self.persona_id = persona_id
         self.memory = VectorMemoryStore()
         self.embedding = EmbeddingService()
         self.llm = LLMService()
         self.emotion_history: list[str] = []
         self.alert_triggered = False
         profile = self.memory.get_profile(elder_id)
-        self.active_persona_id = profile.get("active_persona", "ai") if profile else "ai"
+        self.active_persona_id = persona_id or (profile.get("active_persona", "ai") if profile else "ai")
 
     # ------------------------------------------------------------------
     # Public API
@@ -46,10 +47,11 @@ class ISafe:
         spoken_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         profile = self.memory.get_profile(self.elder_id)
-        self.active_persona_id = profile.get("active_persona", "ai") if profile else "ai"
+        self.active_persona_id = self.persona_id or (profile.get("active_persona", "ai") if profile else "ai")
 
         result = self.llm.analyze_emotion(message)
         _log(f"情緒分析結果：emotion={result.get('emotion')}, importance={result.get('importance')}")
+        result = self._apply_importance_rules(message, result)
 
         if speed_emotion == "slow" and result.get("emotion") == "normal":
             result["emotion"] = "comfort"
@@ -83,6 +85,34 @@ class ISafe:
                 spoken_at=spoken_at,
             )
 
+        return result
+
+    def _apply_importance_rules(self, message: str, result: dict) -> dict:
+        """Stabilize memory importance beyond the raw LLM score."""
+        importance = float(result.get("importance", 0.3) or 0.3)
+        tags = set(result.get("topic_tags", []) or [])
+
+        if result.get("is_urgent") or any(kw in message for kw in _EMERGENCY_KEYWORDS + _URGENT_KEYWORDS):
+            importance = max(importance, 0.8)
+            tags.add("安全警報")
+
+        family_terms = ["爸爸", "媽媽", "女兒", "兒子", "孫", "阿公", "阿嬤", "太太", "先生", "老婆", "老伴"]
+        memory_terms = ["以前", "年輕", "老家", "工作", "老師", "工程師", "裁縫", "結婚", "生日", "喜歡", "討厭"]
+        if any(term in message for term in family_terms + memory_terms):
+            importance = max(importance, 0.7)
+
+        if result.get("emotion") in ["comfort", "urgent"]:
+            importance = max(importance, 0.5)
+
+        result["importance"] = min(round(importance, 2), 1.0)
+        result["memory_type"] = "long" if result["importance"] >= 0.7 else "short"
+        result["should_record"] = (
+            result.get("should_record", False)
+            or result["importance"] >= 0.5
+            or result.get("emotion") in ["urgent", "comfort", "happy"]
+        )
+        if tags:
+            result["topic_tags"] = list(tags)
         return result
 
     def get_safety_status(self) -> dict:

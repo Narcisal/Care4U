@@ -7,9 +7,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+import secrets
+
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -30,6 +33,9 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
+admin_security = HTTPBasic(auto_error=False)
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
 # ------------------------------------------------------------------
 # STT worker pool
@@ -89,14 +95,19 @@ class ChatRequest(BaseModel):
     elder_id: str
     message: str
     speed_emotion: str = "normal"
+    session_id: str = "default"
+    persona_id: Optional[str] = None
 
 class GreetRequest(BaseModel):
     elder_id: str
+    session_id: str = "default"
+    persona_id: Optional[str] = None
 
 class TTSRequest(BaseModel):
     text: str
     emotion: str = "normal"
     elder_id: Optional[str] = None
+    persona_id: Optional[str] = None
 
 class ElderProfileUpdate(BaseModel):
     elder_id: str
@@ -158,16 +169,49 @@ class FamilyNoteDeleteRequest(BaseModel):
 # Helpers
 # ------------------------------------------------------------------
 
-def get_decision(elder_id: str) -> Decision:
-    if elder_id not in decisions:
-        decisions[elder_id] = Decision(elder_id)
-    return decisions[elder_id]
+def require_admin(credentials: HTTPBasicCredentials = Depends(admin_security)):
+    """Optional Basic Auth for the caregiver dashboard.
+
+    Local demo mode remains frictionless when ADMIN_PASSWORD is empty. Set
+    ADMIN_PASSWORD in .env to enable browser-level protection for /admin.
+    """
+    if not ADMIN_PASSWORD:
+        return True
+    if not credentials:
+        raise HTTPException(
+            status_code=401,
+            detail="Admin login required",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
+    username_ok = secrets.compare_digest(credentials.username, ADMIN_USERNAME)
+    password_ok = secrets.compare_digest(credentials.password, ADMIN_PASSWORD)
+    if not (username_ok and password_ok):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid admin credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return True
+
+def _session_key(elder_id: str, session_id: str = "default", persona_id: str = None) -> str:
+    return f"{elder_id}:{session_id or 'default'}:{persona_id or 'profile'}"
 
 
-def _reset_elder_state(elder_id: str):
+def get_decision(elder_id: str, session_id: str = "default", persona_id: str = None) -> Decision:
+    key = _session_key(elder_id, session_id, persona_id)
+    if key not in decisions:
+        decisions[key] = Decision(elder_id, session_id=session_id, persona_id=persona_id)
+    return decisions[key]
+
+
+def _reset_elder_state(elder_id: str, session_id: str = None):
     """Clear cached agents so the next request picks up fresh profile data."""
-    clear_agent(elder_id)
-    decisions.pop(elder_id, None)
+    clear_agent(elder_id, session_id=session_id)
+    prefix = f"{elder_id}:{session_id or ''}"
+    for key in list(decisions):
+        if key.startswith(prefix):
+            decisions.pop(key, None)
 
 
 # ------------------------------------------------------------------
@@ -268,7 +312,7 @@ def read_root():
 
 
 @app.get("/admin")
-def admin_page():
+def admin_page(_: bool = Depends(require_admin)):
     return FileResponse("frontend/admin.html")
 
 
@@ -279,7 +323,7 @@ def admin_page():
 @app.post("/api/switch-elder")
 def switch_elder(req: GreetRequest):
     try:
-        _reset_elder_state(req.elder_id)
+        _reset_elder_state(req.elder_id, req.session_id)
         return {"success": True}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -292,7 +336,7 @@ def switch_elder(req: GreetRequest):
 @app.post("/api/greet")
 def greet(req: GreetRequest):
     try:
-        return get_decision(req.elder_id).greet()
+        return get_decision(req.elder_id, req.session_id, req.persona_id).greet()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -300,7 +344,7 @@ def greet(req: GreetRequest):
 @app.post("/api/chat")
 async def chat(req: ChatRequest):
     try:
-        decision = get_decision(req.elder_id)
+        decision = get_decision(req.elder_id, req.session_id, req.persona_id)
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, decision.chat, req.message, req.speed_emotion
@@ -340,6 +384,31 @@ async def speech_to_text(audio: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/stt/status")
+def get_stt_status():
+    try:
+        from backend.services.stt_service import get_stt_environment_status
+
+        status = get_stt_environment_status()
+        status["pool_initialized"] = bool(stt_pool)
+        status["pool_size"] = len(stt_pool)
+        status["workers"] = [
+            worker.status() if hasattr(worker, "status") else {"available": True}
+            for worker in stt_pool
+        ]
+        status["taiwanese_stt_verified"] = (
+            status["transformers_available"] and status["torch_available"] and status["breeze_cache_exists"]
+        )
+        status["verification_note"] = (
+            "Breeze ASR dependency/cache path verified; live microphone accuracy still depends on a real recording sample."
+            if status["taiwanese_stt_verified"]
+            else "Taiwanese STT dependencies or Breeze ASR cache are incomplete."
+        )
+        return status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/tts")
 async def text_to_speech(req: TTSRequest):
     try:
@@ -348,7 +417,7 @@ async def text_to_speech(req: TTSRequest):
             memory = VectorMemoryStore()
             profile = memory.get_profile(req.elder_id)
             personas = profile.get("personas", {}) if profile else {}
-            active_id = profile.get("active_persona", "ai") if profile else "ai"
+            active_id = req.persona_id or (profile.get("active_persona", "ai") if profile else "ai")
             active = personas.get(active_id, personas.get("ai", {}))
             voice_path = active.get("voice_path")
             engine = active.get("voice_engine", "xtts")
@@ -376,7 +445,22 @@ async def set_stt_language(req: LanguageRequest):
         await ensure_stt_pool()
         for s in stt_pool:
             s.set_language(req.language)
-        return {"success": True, "language": req.language}
+        worker_status = [
+            s.status() if hasattr(s, "status") else {"language_mode": req.language}
+            for s in stt_pool
+        ]
+        breeze_loaded = any(s.get("breeze_loaded") for s in worker_status)
+        return {
+            "success": True,
+            "language": req.language,
+            "breeze_loaded": breeze_loaded,
+            "workers": worker_status,
+            "verification_note": (
+                "Taiwanese STT route verified with Breeze ASR loaded."
+                if req.language == "tai" and breeze_loaded
+                else "Language switch route verified; Breeze ASR will fall back if model/runtime is unavailable."
+            ),
+        }
     except Exception as e:
         print(f"語言切換失敗：{e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -403,9 +487,10 @@ def get_profile(elder_id: str):
 
 @app.get("/api/history/{elder_id}")
 def get_history(elder_id: str):
-    if elder_id not in decisions:
+    key = next((k for k in decisions if k.startswith(f"{elder_id}:")), None)
+    if not key:
         return {"history": []}
-    return {"history": decisions[elder_id].get_history()}
+    return {"history": decisions[key].get_history()}
 
 
 @app.get("/api/safety/{elder_id}")

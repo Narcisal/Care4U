@@ -23,30 +23,43 @@ _magic_agents: dict[str, MagicAI] = {}
 _isafe_agents: dict[str, ISafe] = {}
 
 
-def _get_magic(elder_id: str) -> MagicAI:
-    if elder_id not in _magic_agents:
-        _magic_agents[elder_id] = MagicAI(elder_id)
-    return _magic_agents[elder_id]
+def _agent_key(elder_id: str, session_id: str = "default", persona_id: str = None) -> str:
+    return f"{elder_id}:{session_id or 'default'}:{persona_id or 'profile'}"
 
 
-def _get_isafe(elder_id: str) -> ISafe:
-    if elder_id not in _isafe_agents:
-        _isafe_agents[elder_id] = ISafe(elder_id)
-    return _isafe_agents[elder_id]
+def _get_magic(elder_id: str, session_id: str = "default", persona_id: str = None) -> MagicAI:
+    key = _agent_key(elder_id, session_id, persona_id)
+    if key not in _magic_agents:
+        _magic_agents[key] = MagicAI(elder_id, persona_id=persona_id)
+    return _magic_agents[key]
 
 
-def clear_agent(elder_id: str):
-    _magic_agents.pop(elder_id, None)
-    _isafe_agents.pop(elder_id, None)
+def _get_isafe(elder_id: str, session_id: str = "default", persona_id: str = None) -> ISafe:
+    key = _agent_key(elder_id, session_id, persona_id)
+    if key not in _isafe_agents:
+        _isafe_agents[key] = ISafe(elder_id, persona_id=persona_id)
+    return _isafe_agents[key]
+
+
+def clear_agent(elder_id: str, session_id: str = None):
+    prefix = f"{elder_id}:{session_id or ''}"
+    for key in list(_magic_agents):
+        if key.startswith(prefix):
+            _magic_agents.pop(key, None)
+    for key in list(_isafe_agents):
+        if key.startswith(prefix):
+            _isafe_agents.pop(key, None)
 
 
 class Decision:
 
-    def __init__(self, elder_id: str):
+    def __init__(self, elder_id: str, session_id: str = "default", persona_id: str = None):
         self.chat_count = 0
         self.elder_id = elder_id
-        self.magic = _get_magic(elder_id)
-        self.isafe = _get_isafe(elder_id)
+        self.session_id = session_id or "default"
+        self.persona_id = persona_id
+        self.magic = _get_magic(elder_id, self.session_id, persona_id)
+        self.isafe = _get_isafe(elder_id, self.session_id, persona_id)
         self._setup_persona()
 
     def _setup_persona(self):
@@ -57,7 +70,7 @@ class Decision:
             memory = VectorMemoryStore()
             profile = memory.get_profile(self.elder_id)
             personas = profile.get("personas", {})
-            active_id = profile.get("active_persona", "ai")
+            active_id = self.persona_id or profile.get("active_persona", "ai")
             active = personas.get(active_id, personas.get("ai", {}))
 
             self.tts = TTSService()

@@ -1,14 +1,15 @@
 import io
+import importlib.util
 import os
 import subprocess
 import tempfile
 import traceback
 import uuid
+import wave
+from pathlib import Path
 
 import imageio_ffmpeg
 import numpy as np
-import soundfile as sf
-import whisper
 
 os.environ["PATH"] += os.pathsep + os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
 
@@ -18,15 +19,42 @@ _WHISPER_PROMPT = (
 )
 
 
+def get_stt_environment_status() -> dict:
+    """Return dependency/cache readiness without loading heavy STT models."""
+    hf_cache = Path.home() / ".cache" / "huggingface" / "hub"
+    breeze_cache = hf_cache / "models--MediaTek-Research--Breeze-ASR-26"
+    return {
+        "whisper_available": importlib.util.find_spec("whisper") is not None,
+        "torch_available": importlib.util.find_spec("torch") is not None,
+        "torchaudio_available": importlib.util.find_spec("torchaudio") is not None,
+        "transformers_available": importlib.util.find_spec("transformers") is not None,
+        "soundfile_available": importlib.util.find_spec("soundfile") is not None,
+        "breeze_cache_exists": breeze_cache.exists(),
+        "breeze_cache_path": str(breeze_cache),
+        "ffmpeg_path": imageio_ffmpeg.get_ffmpeg_exe(),
+    }
+
+
 class STTService:
     def __init__(self, model_size: str = "medium", device: str = "cuda"):
-        print(f"載入 Whisper 模型：{model_size} on {device}")
-        self.model = whisper.load_model(model_size, device=device)
-        print("Whisper 模型載入完成！")
-
+        self.model = None
+        self.whisper_error = None
         self.breeze_model = None
         self.breeze_processor = None
+        self.breeze_error = None
         self.language_mode = "zh"   # "zh" | "tai"
+        self._load_whisper(model_size, device)
+
+    def _load_whisper(self, model_size: str, device: str):
+        try:
+            import whisper
+            print(f"載入 Whisper 模型：{model_size} on {device}")
+            self.model = whisper.load_model(model_size, device=device)
+            print("Whisper 模型載入完成！")
+        except Exception as e:
+            self.model = None
+            self.whisper_error = str(e)
+            print(f"Whisper 載入失敗：{e}")
 
     # ------------------------------------------------------------------
     # Language switching
@@ -52,14 +80,39 @@ class STTService:
             self.breeze_model.eval()
             print(f"Breeze ASR 26 載入完成！model={self.breeze_model is not None}")
         except Exception as e:
+            self.breeze_error = str(e)
             print(f"Breeze ASR 26 載入失敗：{e}")
             traceback.print_exc()
             self.breeze_model = None
-            self.language_mode = "zh"
 
     # ------------------------------------------------------------------
     # Shared audio conversion helper
     # ------------------------------------------------------------------
+
+    def _read_wav_float32(self, wav_path: str) -> tuple[np.ndarray, int]:
+        """Read mono/stereo wav as float32 without requiring soundfile."""
+        try:
+            import soundfile as sf
+            audio_np, sample_rate = sf.read(wav_path, dtype="float32")
+            return audio_np, sample_rate
+        except Exception:
+            with wave.open(wav_path, "rb") as wav_file:
+                channels = wav_file.getnchannels()
+                sample_rate = wav_file.getframerate()
+                sample_width = wav_file.getsampwidth()
+                frames = wav_file.readframes(wav_file.getnframes())
+
+            if sample_width == 2:
+                audio = np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+            elif sample_width == 4:
+                audio = np.frombuffer(frames, dtype=np.int32).astype(np.float32) / 2147483648.0
+            else:
+                audio = np.frombuffer(frames, dtype=np.uint8).astype(np.float32)
+                audio = (audio - 128.0) / 128.0
+
+            if channels > 1:
+                audio = audio.reshape(-1, channels).mean(axis=1)
+            return audio, sample_rate
 
     def _convert_to_numpy(self, audio_bytes: bytes) -> np.ndarray:
         """Convert raw webm audio bytes → 16 kHz mono float32 numpy array.
@@ -82,7 +135,7 @@ class STTService:
                 capture_output=True,
                 check=True,
             )
-            audio_np, _ = sf.read(wav_path, dtype="float32")
+            audio_np, _ = self._read_wav_float32(wav_path)
             return audio_np
         finally:
             for p in (webm_path, wav_path):
@@ -94,6 +147,9 @@ class STTService:
     # ------------------------------------------------------------------
 
     def _transcribe_whisper(self, audio_bytes: bytes) -> str:
+        if not self.model:
+            print(f"Whisper 尚未可用：{self.whisper_error or '未載入'}")
+            return ""
         audio_np = self._convert_to_numpy(audio_bytes)
         result = self.model.transcribe(
             audio_np,
@@ -105,6 +161,9 @@ class STTService:
 
     def _transcribe_whisper_with_timestamps(self, audio_bytes: bytes) -> dict:
         """Return full Whisper result dict (includes word_timestamps segments)."""
+        if not self.model:
+            print(f"Whisper 尚未可用：{self.whisper_error or '未載入'}")
+            return {"text": "", "segments": []}
         audio_np = self._convert_to_numpy(audio_bytes)
         return self.model.transcribe(
             audio_np,
@@ -118,7 +177,6 @@ class STTService:
         """Transcribe Taiwanese using Breeze ASR 26; falls back to Whisper on error."""
         try:
             import torch
-            import torchaudio
 
             ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
 
@@ -133,19 +191,14 @@ class STTService:
                     capture_output=True,
                     check=True,
                 )
-                waveform, sample_rate = torchaudio.load(tmp_out_path)
+                waveform, sample_rate = self._read_wav_float32(tmp_out_path)
             finally:
                 os.unlink(tmp_in_path)
                 if os.path.exists(tmp_out_path):
                     os.unlink(tmp_out_path)
 
-            if waveform.shape[0] > 1:
-                waveform = waveform.mean(dim=0)
-            waveform = waveform.squeeze().numpy()
-
-            if sample_rate != 16000:
-                resampler = torchaudio.transforms.Resample(sample_rate, 16000)
-                waveform = resampler(torch.tensor(waveform)).numpy()
+            if getattr(waveform, "ndim", 1) > 1:
+                waveform = waveform.mean(axis=1)
 
             inputs = self.breeze_processor(
                 waveform,
@@ -165,6 +218,17 @@ class STTService:
             print(f"Breeze ASR 26 辨識失敗：{e}")
             traceback.print_exc()
             return self._transcribe_whisper(audio_bytes)
+
+    def status(self) -> dict:
+        env = get_stt_environment_status()
+        env.update({
+            "language_mode": self.language_mode,
+            "whisper_loaded": self.model is not None,
+            "whisper_error": self.whisper_error,
+            "breeze_loaded": self.breeze_model is not None,
+            "breeze_error": self.breeze_error,
+        })
+        return env
 
     # ------------------------------------------------------------------
     # Public API

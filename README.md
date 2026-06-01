@@ -250,6 +250,8 @@ Before the final demo, prepare and upload `.wav` samples for the companion perso
 | `XTTS_URL` | `http://localhost:8082` | Primary XTTS API endpoint |
 | `BREEZYVOICE_URL` | `http://localhost:8080` | Legacy voice service endpoint |
 | `LUXTTS_URL` | `http://localhost:8081` | Optional voice service endpoint |
+| `ADMIN_USERNAME` | `admin` | Optional caregiver dashboard username |
+| `ADMIN_PASSWORD` | empty | Enables Basic Auth for `/admin` when set |
 
 ## Safety, Privacy, and Ethics
 
@@ -260,7 +262,7 @@ Important boundaries:
 - High-risk safety messages should be escalated to caregivers.
 - Uploaded voice samples may contain biometric data and should remain local.
 - Uploaded family/persona photos should remain local.
-- The admin dashboard is intended for local demo use and does not currently include authentication.
+- The admin dashboard supports optional Basic Auth. Set `ADMIN_PASSWORD` to enable it.
 - Deceased or sensitive family personas should be used with caution, especially for elders with cognitive impairment.
 
 ## Demo Checklist
@@ -275,6 +277,18 @@ Important boundaries:
 8. Review iSafe, conversation history, and Agent logs in the admin dashboard.
 9. Run through `demo_script.md` once before the final presentation.
 
+## Taiwanese STT Verification
+
+The backend exposes a lightweight diagnostic endpoint:
+
+```text
+GET /api/stt/status
+```
+
+It reports whether Whisper, Torch, Transformers, ffmpeg, and the local Breeze ASR 26 cache are available. The admin dashboard language switch calls `/api/stt/language` and verifies that the Taiwanese STT route can be selected without breaking the main demo flow. Live transcription quality should still be checked with a real Taiwanese audio sample before making it a primary presentation feature.
+
+The latest verification record is documented in `stt_verification.md`.
+
 ## Development Notes
 
 - STT is lazy-loaded. FastAPI startup does not immediately load Whisper.
@@ -284,9 +298,9 @@ Important boundaries:
 
 ## Future Work
 
-- Improve long-term memory retrieval and importance scoring.
+- Evaluate long-term memory retrieval quality with real caregiver/elder scenarios.
 - Add richer caregiver analytics for emotion trends and safety history.
-- Add authentication and role-based access control for the admin dashboard.
+- Add full role-based access control for the admin dashboard.
 - Improve multi-elder session isolation for real deployment.
 - Expand Taiwanese language support.
 - Add deployment packaging such as Docker Compose.

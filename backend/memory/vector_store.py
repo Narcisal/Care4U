@@ -169,10 +169,23 @@ class VectorMemoryStore(MemoryManager):
         query_embedding: list,
         limit: int = 5,
         persona_id: str = None,
+        query_text: str = "",
     ) -> list:
         cursor = self._get_cursor()
         if not cursor:
-            return []
+            return self._json.search_similar_memories(
+                elder_id,
+                query_text,
+                limit=limit,
+                persona_id=persona_id,
+            )
+        if not query_embedding:
+            return self._json.search_similar_memories(
+                elder_id,
+                query_text,
+                limit=limit,
+                persona_id=persona_id,
+            )
 
         try:
             emb_str = self._to_pgvector_str(query_embedding)

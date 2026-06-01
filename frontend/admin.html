@@ -1627,7 +1627,9 @@ async function setLanguage(language) {
                 zhBtn.style.borderColor = '#D6CEC7';
                 status.textContent = '目前：台語模式（Breeze ASR 26）';
                 if (language === 'tai') {
-                    status.textContent += ' — 第一次使用會下載模型（約3GB）';
+                    status.textContent += data.breeze_loaded
+                        ? ' — 台語 STT 流程已驗證'
+                        : ' — 切換流程已驗證，模型不可用時會後援';
                 }
             }
         }

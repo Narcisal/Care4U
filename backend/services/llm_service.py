@@ -174,9 +174,9 @@ class LLMService:
         )
 
         similar_text = "\n".join(
-            f"- [{e.get('date', '')}] {e.get('event', '')}（語意相關）"
+            f"- [{e.get('date', '')}] {e.get('event', '')}（相關度：{e.get('rag_score', 1 - e.get('distance', 1.0)):.1f}）"
             for e in (similar_memories or [])
-            if e.get("distance", 1.0) < 0.5
+            if e.get("rag_score", 0) > 0 or e.get("distance", 1.0) < 0.9
         )
 
         summary_text = profile.get("memory_summary", {}).get("content", "")

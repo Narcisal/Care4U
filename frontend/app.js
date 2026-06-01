@@ -2,6 +2,15 @@ const urlParams = new URLSearchParams(window.location.search);
 let ELDER_ID = urlParams.get("elder") || null;
 let SELECTED_PERSONA = "ai";
 const API_BASE = "http://127.0.0.1:8000";
+const SESSION_ID = (() => {
+    const key = "care4u_session_id";
+    let value = sessionStorage.getItem(key);
+    if (!value) {
+        value = (globalThis.crypto?.randomUUID?.() || `session-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+        sessionStorage.setItem(key, value);
+    }
+    return value;
+})();
 
 let chatCount = 0;
 let mediaRecorder = null;
@@ -75,7 +84,11 @@ async function startSession() {
         const res = await fetch(`${API_BASE}/api/greet`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ elder_id: ELDER_ID })
+            body: JSON.stringify({
+                elder_id: ELDER_ID,
+                session_id: SESSION_ID,
+                persona_id: SELECTED_PERSONA
+            })
         });
         const data = await res.json();
 
@@ -115,7 +128,9 @@ async function processAndRespond(message, speedEmotion = "normal") {
             body: JSON.stringify({
                 elder_id: ELDER_ID,
                 message: message,
-                speed_emotion: speedEmotion
+                speed_emotion: speedEmotion,
+                session_id: SESSION_ID,
+                persona_id: SELECTED_PERSONA
             })
         });
         const data = await res.json();
@@ -240,7 +255,12 @@ async function speakText(text, emotion = "normal") {
             const res = await fetch(`${API_BASE}/api/tts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: text, emotion: emotion, elder_id: ELDER_ID })
+                body: JSON.stringify({
+                    text: text,
+                    emotion: emotion,
+                    elder_id: ELDER_ID,
+                    persona_id: SELECTED_PERSONA
+                })
             });
             const audioBlob = await res.blob();
             const audio = new Audio(URL.createObjectURL(audioBlob));
@@ -442,7 +462,7 @@ async function loadWelcomePersonas(elderId) {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
         const data = await res.json();
         const personas = data.personas || {};
-        const activeId = data.active_persona || 'ai';
+        const activeId = SELECTED_PERSONA || data.active_persona || 'ai';
 
         const container = document.getElementById('welcome-persona-list');
         container.innerHTML = '';
@@ -546,7 +566,12 @@ async function speakText(text, emotion = "normal") {
             const res = await fetch(`${API_BASE}/api/tts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text, emotion, elder_id: ELDER_ID })
+                body: JSON.stringify({
+                    text,
+                    emotion,
+                    elder_id: ELDER_ID,
+                    persona_id: SELECTED_PERSONA
+                })
             });
             const audioBlob = await res.blob();
             const audio = new Audio(URL.createObjectURL(audioBlob));
@@ -573,16 +598,6 @@ async function speakText(text, emotion = "normal") {
 
 async function enterChat() {
     ELDER_ID = document.getElementById('welcome-elder-select').value;
-
-    try {
-        await fetch(`${API_BASE}/api/profile/persona/switch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: ELDER_ID, persona_id: SELECTED_PERSONA })
-        });
-    } catch (e) {
-        console.error('切換人格失敗', e);
-    }
 
     document.getElementById('welcome-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'flex';
@@ -620,7 +635,7 @@ async function showPersonaSwitcher() {
         const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}/personas`);
         const data = await res.json();
         const personas = data.personas || {};
-        const activeId = data.active_persona || 'ai';
+        const activeId = SELECTED_PERSONA || data.active_persona || 'ai';
 
         const avatarMap = {
             'ai': '/static/avatars/ai_assistant.png',
@@ -678,12 +693,7 @@ async function showPersonaSwitcher() {
 
 async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
     try {
-        await fetch(`${API_BASE}/api/profile/persona/switch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: ELDER_ID, persona_id: personaId })
-        });
-
+        SELECTED_PERSONA = personaId;
         // 更新右側頭像
         currentPersonaAvatar = avatarSrc;
         document.getElementById('persona-portrait').src = avatarSrc;
