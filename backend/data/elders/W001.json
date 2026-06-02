@@ -485,14 +485,258 @@
       "id": "daac269a",
       "date": "2026-05-26",
       "time": "04:35:27"
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:16",
+      "id": "27ac4265",
+      "date": "2026-06-03",
+      "time": "03:39:16"
+    },
+    {
+      "event": "說了：我胸口很痛，喘不過氣",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:16",
+      "id": "db9d9b8f",
+      "date": "2026-06-03",
+      "time": "03:39:16"
+    },
+    {
+      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "長者持續情緒低落，建議照護人員關心。",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-03 03:39:16",
+      "id": "3257a040",
+      "date": "2026-06-03",
+      "time": "03:39:16"
+    },
+    {
+      "event": "說了：我今天很孤單，有點不開心",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.6,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到低落情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:16",
+      "id": "b77e005d",
+      "date": "2026-06-03",
+      "time": "03:39:16"
+    },
+    {
+      "event": "說了：今天晚餐很好吃，我很開心",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.4,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到正向情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:16",
+      "id": "e8c5b940",
+      "date": "2026-06-03",
+      "time": "03:39:16"
+    },
+    {
+      "event": "說了：我想念以前的家和老朋友",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到低落情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:16",
+      "id": "71136b04",
+      "date": "2026-06-03",
+      "time": "03:39:16"
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:22",
+      "id": "3a55a924",
+      "date": "2026-06-03",
+      "time": "03:39:22"
+    },
+    {
+      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "長者持續情緒低落，建議照護人員關心。",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-03 03:39:22",
+      "id": "3182b145",
+      "date": "2026-06-03",
+      "time": "03:39:22"
+    },
+    {
+      "event": "說了：我胸口很痛，喘不過氣",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:22",
+      "id": "34d18c55",
+      "date": "2026-06-03",
+      "time": "03:39:22"
+    },
+    {
+      "event": "說了：我今天很孤單，有點不開心",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.6,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到低落情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:22",
+      "id": "8113e91f",
+      "date": "2026-06-03",
+      "time": "03:39:22"
+    },
+    {
+      "event": "說了：今天晚餐很好吃，我很開心",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.4,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到正向情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:22",
+      "id": "ddc0bd65",
+      "date": "2026-06-03",
+      "time": "03:39:22"
+    },
+    {
+      "event": "說了：我想念以前的家和老朋友",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到低落情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:22",
+      "id": "9889302d",
+      "date": "2026-06-03",
+      "time": "03:39:22"
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:36",
+      "id": "49408ccc",
+      "date": "2026-06-03",
+      "time": "03:39:36"
+    },
+    {
+      "event": "說了：今天晚餐很好吃，我很開心",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.4,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "偵測到正向情緒",
+      "source": "voice",
+      "spoken_at": "2026-06-03 03:39:43",
+      "id": "b26faccb",
+      "date": "2026-06-03",
+      "time": "03:39:43"
     }
   ],
-  "memory_summary": {},
+  "memory_summary": {
+    "content": "王大明 近期主要提到「說了：我想念以前的家和老朋友」，情緒狀態為 negative，建議照護者持續觀察。",
+    "updated_at": "2026-06-03 03:39:22",
+    "based_on_events": 10
+  },
   "elder_biography": {
-    "content": "王大明先生以前是位電腦工程師，退休後生活過得很愜意。他平時喜歡聽鄧麗君的歌，也愛找朋友下象棋。王先生有個女兒叫小玲。飲食上，他特別愛喝熱豆漿，但就是不碰苦瓜，這點倒是挺有意思的。",
-    "updated_at": "2026-05-17 23:01:53",
+    "content": "王大明是一位重視生活情感與家庭連結的長者，過去曾在電腦工程師累積人生經驗。這位長者平時熟悉並喜歡聽鄧麗君、下象棋，家人包含女兒小玲、兒子建宏、孫女安安。這些背景可作為陪伴對話時的自然話題，讓回應更貼近長者的生命經驗與日常習慣。",
+    "updated_at": "2026-06-03 03:37:45",
     "sources": [],
-    "manually_edited": false
+    "manually_edited": true
   },
   "biography_usage_count": 0,
   "family_notes": [

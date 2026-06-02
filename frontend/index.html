@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AI Care U - 智慧照護陪伴</title>
+    <title>陪你說說話</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
@@ -45,7 +45,7 @@
 
         #welcome-screen {
             flex: 1;
-            display: flex;
+            display: none;
             flex-direction: row;
             overflow: hidden;
         }
@@ -83,6 +83,17 @@
             display: flex;
             align-items: flex-end;
             justify-content: center;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            padding: 0;
+            width: 100%;
+        }
+
+        .agent-portrait-wrap:focus-visible {
+            outline: 5px solid rgba(193,127,90,0.65);
+            outline-offset: -10px;
         }
 
         .agent-portrait {
@@ -93,6 +104,13 @@
             position: relative;
             z-index: 2;
             filter: drop-shadow(0 8px 24px rgba(44,36,32,0.18));
+            transition: transform 0.18s, filter 0.18s;
+        }
+
+        .agent-portrait-wrap:hover .agent-portrait,
+        .agent-portrait-wrap:focus-visible .agent-portrait {
+            transform: scale(1.025);
+            filter: drop-shadow(0 14px 36px rgba(193,127,90,0.34));
         }
 
         /* 對話氣泡 */
@@ -101,13 +119,16 @@
             bottom: 72%;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(60, 40, 25, 0.70);
+            background: rgba(48, 38, 31, 0.78);
             color: #F7F0E8;
             border-radius: 14px;
-            padding: 12px 24px;
+            padding: 14px 24px;
             z-index: 10;
-            white-space: nowrap;
+            min-width: 380px;
+            max-width: 88vw;
+            text-align: center;
             animation: floatBubble 3.5s ease-in-out infinite;
+            pointer-events: none;
         }
 
         .speech-bubble::after {
@@ -128,9 +149,10 @@
         }
 
         .speech-bubble-text {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 700;
-            letter-spacing: 2px;
+            line-height: 1.45;
+            letter-spacing: 0;
         }
 
         /* 右側選擇區 */
@@ -139,7 +161,7 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            padding: 44px 48px;
+            padding: 48px 52px;
             background: var(--warm-white);
             position: relative;
             overflow-y: auto;
@@ -157,7 +179,7 @@
         .persona-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            gap: 18px;
             align-content: start;
             margin-top: 8px;
         }
@@ -165,8 +187,8 @@
         .persona-cell {
             background: var(--cream);
             border: 2px solid var(--border);
-            border-radius: 24px;
-            padding: 32px 16px 24px;
+            border-radius: 18px;
+            padding: 32px 18px 24px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -180,7 +202,7 @@
         .persona-cell:hover {
             border-color: var(--orange);
             background: var(--orange-pale);
-            transform: scale(1.04);
+            transform: scale(1.02);
         }
 
         .persona-cell.selected {
@@ -203,7 +225,7 @@
         }
 
         .persona-cell-name {
-            font-size: 30px;
+            font-size: 32px;
             font-weight: 700;
             color: var(--text-dark);
             margin-bottom: 6px;
@@ -211,9 +233,9 @@
         }
 
         .persona-cell-rel {
-            font-size: 22px;
-            color: var(--text-light);
-            letter-spacing: 0.5px;
+            font-size: 24px;
+            color: var(--text-mid);
+            letter-spacing: 0;
         }
 
         .elder-picker {
@@ -222,22 +244,9 @@
             gap: 12px;
             margin-bottom: 18px;
             color: var(--text-mid);
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 700;
         }
-
-        #welcome-elder-select {
-            width: 180px;
-            height: 44px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--cream);
-            color: var(--text-dark);
-            font: inherit;
-            font-size: 18px;
-            padding: 0 12px;
-        }
-
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(14px); }
@@ -265,7 +274,7 @@
             flex-shrink: 0;
             background: #EDE0D0;
             border-bottom: 1.5px solid var(--border);
-            padding: 12px 32px;
+            padding: 16px 36px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -277,12 +286,12 @@
             gap: 12px;
         }
 
-        .top-logo { font-size: 26px; }
+        .top-logo { font-size: 30px; }
 
         .top-title {
-            font-size: 20px;
+            font-size: 28px;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 0;
             color: var(--text-dark);
         }
 
@@ -293,25 +302,31 @@
         }
 
         #elder-name-display {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--orange);
         }
 
         .btn-switch-top {
-            padding: 8px 20px;
-            font-size: 16px;
+            min-height: 56px;
+            padding: 10px 24px;
+            font-size: 22px;
             font-family: inherit;
             font-weight: 700;
-            background: transparent;
-            color: var(--text-mid);
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
+            background: var(--warm-white);
+            color: var(--text-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, border-color 0.2s;
         }
 
-        .btn-switch-top:hover { background: #D9C4AE; }
+        .btn-switch-top:hover,
+        .btn-switch-top:focus-visible {
+            background: var(--orange-pale);
+            border-color: var(--orange);
+            outline: none;
+        }
 
         /* 主體 */
         .main-body {
@@ -320,9 +335,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 28px;
+            gap: 30px;
             position: relative;
-            padding: 40px 20px 60px;
+            padding: 38px 24px 58px;
             background: linear-gradient(135deg, #FDF7F2 0%, #F5ECE2 100%);
             position: relative;
         }
@@ -386,17 +401,72 @@
         }
 
         #persona-portrait-rel {
-            font-size: 20px;
-            color: var(--text-light);
+            font-size: 26px;
+            color: var(--text-mid);
         }
 
         /* 狀態提示 */
         .status-label {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
             color: var(--text-mid);
-            letter-spacing: 2px;
+            letter-spacing: 0;
             opacity: 0.85;
+        }
+
+        .msg-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin: 12px 0;
+            max-width: min(820px, 92vw);
+        }
+
+        .msg-row.user {
+            flex-direction: row-reverse;
+            align-self: flex-end;
+        }
+
+        .msg-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .msg-bubble {
+            border-radius: 18px;
+            padding: 18px 22px;
+            font-size: 24px;
+            line-height: 1.55;
+            max-width: 680px;
+            box-shadow: 0 1px 4px rgba(44,36,32,0.08);
+        }
+
+        .msg-bubble.ai {
+            background: var(--warm-white);
+            color: var(--text-dark);
+            border-top-left-radius: 6px;
+        }
+
+        .msg-bubble.user {
+            background: var(--green-pale);
+            color: var(--text-dark);
+            border-top-right-radius: 6px;
+        }
+
+        .chat-empty {
+            text-align: center;
+            color: var(--text-mid);
+            font-size: 26px;
+            line-height: 1.6;
+            padding: 28px;
+        }
+
+        .chat-empty-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
         }
 
         .status-label.listening::before {
@@ -461,7 +531,7 @@
             padding: 10px 20px;
             background: #FDECEA;
             border-radius: 12px;
-            font-size: 18px;
+            font-size: 22px;
             color: #E74C3C;
         }
 
@@ -493,7 +563,7 @@
 
         .switcher-box {
             background: var(--warm-white);
-            border-radius: 28px;
+            border-radius: 18px;
             padding: 36px;
             width: 90%;
             max-width: 520px;
@@ -501,12 +571,12 @@
         }
 
         .switcher-title {
-            font-size: 26px;
+            font-size: 30px;
             font-weight: 900;
             text-align: center;
             margin-bottom: 24px;
             color: var(--text-dark);
-            letter-spacing: 2px;
+            letter-spacing: 0;
         }
 
         #switcher-persona-list {
@@ -518,8 +588,9 @@
 
         .btn-cancel {
             width: 100%;
+            min-height: 64px;
             padding: 16px;
-            font-size: 20px;
+            font-size: 24px;
             font-family: inherit;
             font-weight: 700;
             background: var(--border);
@@ -527,6 +598,40 @@
             border: none;
             border-radius: 16px;
             cursor: pointer;
+        }
+
+        .switcher-persona-option {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-height: 86px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            background: white;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .switcher-persona-option.active {
+            border-color: var(--orange);
+            background: var(--orange-pale);
+        }
+
+        .switcher-persona-option:hover,
+        .switcher-persona-option:focus-visible {
+            border-color: var(--orange);
+            background: var(--orange-pale);
+            outline: none;
+        }
+
+        .switcher-persona-option img {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
         }
 
         /* 人像滑左狀態 */
@@ -556,6 +661,8 @@
             #welcome-screen { flex-direction: column; min-height: 100dvh; }
             .welcome-left { width: 100%; height: 34dvh; min-height: 260px; }
             .welcome-right { padding: 28px 22px; }
+            .speech-bubble { min-width: min(380px, 86vw); bottom: 70%; }
+            .speech-bubble-text { font-size: 21px; }
             .persona-grid { gap: 12px; }
             .persona-cell { border-radius: 18px; padding: 22px 12px 18px; }
             .persona-cell-name { font-size: 24px; }
@@ -569,48 +676,40 @@
 </head>
 <body>
 
-<!-- 狀態 A：角色選擇主頁 -->
+<!-- 狀態 A：照護人員示範用選擇頁，長者端不顯示 -->
 <div id="welcome-screen">
 
     <div class="welcome-left">
         <div class="left-base"></div>
         <div class="left-texture"></div>
-        <div class="agent-portrait-wrap">
+        <button class="agent-portrait-wrap" type="button" onclick="startGuideChat()" aria-label="開始聊天">
             <img class="agent-portrait"
+                 id="welcome-active-portrait"
                  src="/static/avatars/ai_assistant_nobg.png"
-                 alt="AI 助理">
-        </div>
+                 alt="陪伴者">
+        </button>
         <div class="speech-bubble">
-            <div class="speech-bubble-text">想和誰聊天呢？</div>
+            <div class="speech-bubble-text" id="welcome-active-bubble">家人和我都在這裡陪你喔<br>想和我，還是哪位家人說說話？</div>
         </div>
     </div>
 
     <div class="welcome-right">
-        <label class="elder-picker" for="welcome-elder-select">
-            <span>長者</span>
-            <select id="welcome-elder-select">
-                <option value="W001">王大明</option>
-                <option value="C001">陳秀英</option>
-                <option value="L001">林月琴</option>
-            </select>
-        </label>
         <div id="welcome-persona-list" class="persona-grid">
             <div style="text-align:center;color:#BDC3C7;padding:20px;font-size:20px;grid-column:1/-1;">載入中...</div>
         </div>
     </div>
 </div>
 
-<!-- 狀態 B：智慧對話陪伴頁面 -->
+<!-- 狀態 B：陪伴對話頁面 -->
 <div id="main-screen">
 
     <div class="top-bar">
         <div class="top-left">
             <div class="top-logo">🌸</div>
-            <div class="top-title">AI Care U</div>
+            <div class="top-title">陪你說說話</div>
         </div>
         <div class="top-right">
-            <div id="elder-name-display">載入中...</div>
-            <button class="btn-switch-top" onclick="showPersonaSwitcher()">切換陪伴者</button>
+            <button class="btn-switch-top" onclick="showPersonaSwitcher()">換人陪我</button>
         </div>
     </div>
 
@@ -624,11 +723,11 @@
         </div>
 
         <div class="persona-info">
-            <div id="persona-portrait-name">AI 助理</div>
-            <div id="persona-portrait-rel">您的智慧照護陪伴</div>
+            <div id="persona-portrait-name">陪伴者</div>
+            <div id="persona-portrait-rel">陪你說說話</div>
         </div>
 
-        <div class="status-label listening" id="status-label">AI 助理正在聆聽</div>
+        <div class="status-label listening" id="status-label">可以慢慢說，我在聽</div>
 
         <div id="image-frame">
             <img id="image-frame-img" src="" alt="回憶圖片">
@@ -638,8 +737,8 @@
         <!-- 保持 app.js 功能相容 -->
         <input id="text-input" type="text" style="display:none;" disabled>
         <button id="send-btn" style="display:none;" disabled>送出</button>
-        <button id="hold-talk-btn" style="display:none;" disabled>🎙️ 按住說話</button>
-        <button id="start-btn" style="display:none;">開始對話</button>
+        <button id="hold-talk-btn" style="display:none;" disabled>開始說話</button>
+        <button id="start-btn" style="display:none;">開始聊天</button>
         <button id="clear-btn" style="display:none;">清除</button>
         <div id="recording-indicator">
             <div class="rec-dot"></div>
@@ -651,15 +750,14 @@
     </div>
 </div>
 
-<!-- 切換人格彈窗 -->
 <div id="persona-switcher">
     <div class="switcher-box">
-        <div class="switcher-title">選擇陪伴者</div>
+        <div class="switcher-title">想換誰陪你說話？</div>
         <div id="switcher-persona-list"></div>
-        <button class="btn-cancel" onclick="closeSwitcher()">取消</button>
+        <button class="btn-cancel" onclick="closeSwitcher()">先不用</button>
     </div>
 </div>
 
-<script src="/static/app.js?v=15"></script>
+<script src="/static/app.js?v=25"></script>
 </body>
 </html>

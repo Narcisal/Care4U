@@ -6,12 +6,15 @@ from backend.agents.i_safe import ISafe
 _agent_logs: collections.deque = collections.deque(maxlen=100)
 
 
-def _log(agent: str, action: str, detail: str):
+def _log(agent: str, action: str, detail: str, elder_id: str = None, session_id: str = None, persona_id: str = None):
     _agent_logs.appendleft({
         "time": datetime.now().strftime("%H:%M:%S"),
         "agent": agent,
         "action": action,
         "detail": detail,
+        "elder_id": elder_id,
+        "session_id": session_id,
+        "persona_id": persona_id,
     })
 
 
@@ -93,6 +96,16 @@ class Decision:
             self.tts = TTSService()
             self.active_persona = {"name": "AI 助理", "honorific": "爺爺"}
 
+    def _log(self, agent: str, action: str, detail: str):
+        _log(
+            agent,
+            action,
+            detail,
+            elder_id=self.elder_id,
+            session_id=self.session_id,
+            persona_id=self.persona_id or "ai",
+        )
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -108,7 +121,7 @@ class Decision:
                 "persona_name": self.active_persona.get("name", "AI 助理"),
             }
         except Exception as e:
-            _log("MagicAI", "錯誤", f"問候失敗：{str(e)[:50]}")
+            self._log("MagicAI", "錯誤", f"問候失敗：{str(e)[:50]}")
             return {
                 "message": "你好！今天感覺怎麼樣呀？",
                 "emotion": "normal",
@@ -126,16 +139,16 @@ class Decision:
 
         escalation_level = safety.get("escalation_level", 0)
         if escalation_level >= 2:
-            _log("Decision", "分級響應", f"level={escalation_level}，需要通知照護人員")
+            self._log("Decision", "分級響應", f"level={escalation_level}，需要通知照護人員")
 
         health_info = None if escalation_level >= 2 else self._run_health_search(user_message)
 
-        _log("Decision", "完成", f"emotion={safety['emotion']} → TTS 語調調整")
+        self._log("Decision", "完成", f"emotion={safety['emotion']} → TTS 語調調整")
 
         if self.chat_count % 10 == 0:
             try:
                 self._update_biography()
-                _log("Decision", "生平更新", f"第 {self.chat_count} 次對話，更新生平文章")
+                self._log("Decision", "生平更新", f"第 {self.chat_count} 次對話，更新生平文章")
             except Exception as e:
                 print(f"生平更新失敗：{e}")
 
@@ -183,14 +196,14 @@ class Decision:
     # ------------------------------------------------------------------
 
     def _run_isafe(self, message: str, speed_emotion: str = "normal") -> dict:
-        _log("iSafe", "分析中", f"收到訊息：{message[:20]}...")
+        self._log("iSafe", "分析中", f"收到訊息：{message[:20]}...")
         try:
             safety = self.isafe.analyze(message, speed_emotion)
-            _log("iSafe", "分析完成",
-                 f"emotion={safety['emotion']}, urgent={safety['is_urgent']}")
+            self._log("iSafe", "分析完成",
+                      f"emotion={safety['emotion']}, urgent={safety['is_urgent']}")
             return safety
         except Exception as e:
-            _log("iSafe", "降級", f"分析失敗，使用預設值：{str(e)[:50]}")
+            self._log("iSafe", "降級", f"分析失敗，使用預設值：{str(e)[:50]}")
             print(f"iSafe 失敗，降級處理：{e}")
             return {
                 "emotion": "normal",
@@ -201,13 +214,13 @@ class Decision:
             }
 
     def _run_magic(self, message: str) -> str:
-        _log("Decision", "協調中", "呼叫 MagicAI 生成回應")
+        self._log("Decision", "協調中", "呼叫 MagicAI 生成回應")
         try:
             response = self.magic.chat(message)
-            _log("MagicAI", "回應完成", "已儲存對話記憶")
+            self._log("MagicAI", "回應完成", "已儲存對話記憶")
             return response
         except Exception as e:
-            _log("MagicAI", "降級", f"回應失敗：{str(e)[:50]}")
+            self._log("MagicAI", "降級", f"回應失敗：{str(e)[:50]}")
             print(f"MagicAI 失敗，降級處理：{e}")
             return "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"
 
@@ -219,7 +232,7 @@ class Decision:
             if not trigger:
                 return None, None
 
-            _log("Decision", "圖片生成", "偵測到場景，生成圖片中...")
+            self._log("Decision", "圖片生成", "偵測到場景，生成圖片中...")
             image_data = generate_image(message, trigger)
             if not image_data:
                 return None, None
@@ -237,7 +250,7 @@ class Decision:
             else:
                 caption = f"{honorific}，我剛幫你畫了一幅畫，你看看像不像你說的那個地方？"
 
-            _log("Decision", "圖片完成", "圖片生成成功")
+            self._log("Decision", "圖片完成", "圖片生成成功")
             return image_data, caption
         except Exception as e:
             import traceback
@@ -252,13 +265,13 @@ class Decision:
             topic = health_service.detect_health_topic(message)
             if not topic:
                 return None
-            _log("Decision", "健康搜尋", f"偵測到健康話題：{topic}")
+            self._log("Decision", "健康搜尋", f"偵測到健康話題：{topic}")
             info = health_service.search_health_info(message, topic)
             if info:
-                _log("Decision", "健康搜尋完成", f"找到：{info['title']}")
+                self._log("Decision", "健康搜尋完成", f"找到：{info['title']}")
             return info
         except Exception as e:
-            _log("Decision", "健康略過", f"健康搜尋失敗：{str(e)[:50]}")
+            self._log("Decision", "健康略過", f"健康搜尋失敗：{str(e)[:50]}")
             print(f"健康搜尋失敗（不影響對話）：{e}")
             return None
 

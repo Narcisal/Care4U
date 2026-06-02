@@ -126,9 +126,18 @@ class ElderSearchRequest(BaseModel):
     name: str
     keywords: list
 
+class BackgroundCandidateRequest(BaseModel):
+    elder_id: str
+    extra_keywords: list = []
+
+class BiographyDraftRequest(BaseModel):
+    elder_id: str
+    selected_sources: list = []
+
 class BiographyUpdateRequest(BaseModel):
     elder_id: str
     biography: str
+    sources: list = []
 
 class PersonaAddRequest(BaseModel):
     elder_id: str
@@ -640,7 +649,6 @@ async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregi
             json.dump(profile, f, ensure_ascii=False, indent=2)
 
         _reset_elder_state(req.elder_id)
-        asyncio.create_task(_auto_search_biography(req.elder_id, req.name))
 
         return {"success": True, "message": f"{req.name} 的資料已儲存"}
 
@@ -737,7 +745,7 @@ def save_biography(req: BiographyUpdateRequest, _: dict = Depends(require_caregi
         profile["elder_biography"] = {
             "content": req.biography,
             "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "sources": profile.get("elder_biography", {}).get("sources", []),
+            "sources": req.sources or profile.get("elder_biography", {}).get("sources", []),
             "manually_edited": True,
         }
         profile["biography_usage_count"] = 0
@@ -882,6 +890,70 @@ async def upload_voice(
         _reset_elder_state(elder_id)
         return {"success": True, "message": "語音樣本已上傳", "path": str(voice_path)}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/profile/background-candidates")
+def background_candidates(req: BackgroundCandidateRequest, _: dict = Depends(require_caregiver)):
+    try:
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            return {"success": False, "message": "找不到長者資料"}
+
+        search = SearchService()
+        result = search.search_background_candidates(profile, req.extra_keywords)
+        return {
+            "success": True,
+            "queries": result.get("queries", []),
+            "candidates": result.get("candidates", []),
+            "message": result.get("message", ""),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/profile/biography-draft")
+def biography_draft(req: BiographyDraftRequest, _: dict = Depends(require_caregiver)):
+    try:
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(req.elder_id)
+        if not profile:
+            return {"success": False, "message": "找不到長者資料"}
+
+        persona = profile.get("persona", {})
+        health = profile.get("health_notes", {})
+        sources = req.selected_sources or []
+        raw_summary = "\n".join(
+            f"- {s.get('title', '')}: {s.get('summary', '')}"
+            for s in sources
+            if s.get("summary") or s.get("title")
+        )
+
+        search = SearchService()
+        biography = search.generate_biography(
+            name=profile.get("name", ""),
+            gender=profile.get("gender", "male"),
+            job=persona.get("former_job", "未知"),
+            hobbies=persona.get("hobbies", []),
+            personas=profile.get("personas", {}),
+            health=health,
+            raw_summary=raw_summary,
+        )
+
+        if not biography or len(biography) < 20:
+            return {"success": False, "message": "生平草稿生成失敗"}
+
+        return {
+            "success": True,
+            "message": "已產生生平草稿，請確認後再儲存。",
+            "biography": biography,
+            "sources": [
+                {"title": s.get("title", ""), "url": s.get("url", "")}
+                for s in sources
+            ],
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

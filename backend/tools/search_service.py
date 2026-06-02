@@ -61,6 +61,98 @@ class SearchService:
             print(f"搜尋失敗：{e}")
             return {"found": False, "summary": "", "sources": []}
 
+    def build_search_queries(self, profile: dict, extra_keywords: list | None = None) -> list[str]:
+        name = (profile.get("name") or "").strip()
+        persona = profile.get("persona", {}) or {}
+        family_notes = profile.get("family_notes", []) or []
+        if not name:
+            return []
+
+        seeds = []
+        job = (persona.get("former_job") or "").strip()
+        if job:
+            seeds.append(job)
+        for hobby in persona.get("hobbies", []) or []:
+            if hobby:
+                seeds.append(str(hobby).strip())
+        for note in family_notes[-5:]:
+            text = (note.get("note") or "").strip()
+            for token in text.replace("，", " ").replace("、", " ").split():
+                if 2 <= len(token) <= 20 and token not in seeds:
+                    seeds.append(token)
+        for keyword in extra_keywords or []:
+            keyword = str(keyword).strip()
+            if keyword and keyword not in seeds:
+                seeds.append(keyword)
+
+        queries = [name]
+        for seed in seeds[:6]:
+            queries.append(f"{name} {seed}")
+        return list(dict.fromkeys(queries))
+
+    def search_background_candidates(self, profile: dict, extra_keywords: list | None = None) -> dict:
+        queries = self.build_search_queries(profile, extra_keywords)
+        if not self.client:
+            return {
+                "queries": queries,
+                "candidates": [],
+                "message": "TAVILY_API_KEY 未設定或 tavily 套件未安裝，已產生搜尋線索但未能查詢公開資料。",
+            }
+
+        seen_urls = set()
+        candidates = []
+        for query in queries:
+            try:
+                response = self.client.search(
+                    query=query,
+                    search_depth="basic",
+                    max_results=3,
+                    include_answer=True,
+                )
+            except Exception as e:
+                print(f"候選來源搜尋失敗：{query} / {e}")
+                continue
+
+            for result in response.get("results", []):
+                url = result.get("url", "")
+                if not url or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                content = (result.get("content") or "").strip()
+                candidates.append({
+                    "id": f"source_{len(candidates) + 1}",
+                    "query": query,
+                    "title": result.get("title", "未命名來源"),
+                    "url": url,
+                    "summary": content[:350],
+                    "confidence": self._rough_match_label(profile, query, content),
+                })
+                if len(candidates) >= 8:
+                    break
+            if len(candidates) >= 8:
+                break
+
+        return {
+            "queries": queries,
+            "candidates": candidates,
+            "message": "已找到候選公開資料。" if candidates else "沒有找到可用的候選公開資料。",
+        }
+
+    def _rough_match_label(self, profile: dict, query: str, content: str) -> str:
+        text = f"{query} {content}"
+        score = 0
+        name = profile.get("name", "")
+        job = (profile.get("persona", {}) or {}).get("former_job", "")
+        if name and name in text:
+            score += 1
+        if job and job in text:
+            score += 1
+        if score >= 2:
+            return "可能相符"
+        if score == 1:
+            return "需要確認"
+        return "不確定"
+
     def generate_biography(self, name: str, gender: str, job: str,
                             hobbies, personas: dict, health: dict,
                             raw_summary: str = "") -> str:
@@ -119,10 +211,32 @@ class SearchService:
             )
 
             biography = response.text.strip()
+            if self._is_weak_biography(biography):
+                biography = self._fallback_biography(name, job, hobbies, personas)
             print(f"生平文章生成完成：{name}")
             return biography
 
         except Exception as e:
             print(f"生平文章生成失敗：{e}")
-            hobbies_str = ", ".join(hobbies) if isinstance(hobbies, list) else str(hobbies)
-            return f"{name}是一位退休的{job}，平常喜歡{hobbies_str}。"
+            return self._fallback_biography(name, job, hobbies, personas)
+
+    def _is_weak_biography(self, biography: str) -> bool:
+        if not biography or len(biography.strip()) < 80:
+            return True
+        return biography.strip().endswith(("，", "、", "；", "：", ":", ",", ";"))
+
+    def _fallback_biography(self, name: str, job: str, hobbies, personas: dict) -> str:
+        hobbies_list = hobbies if isinstance(hobbies, list) else [str(hobbies)] if hobbies else []
+        hobbies_str = "、".join([h for h in hobbies_list if h]) or "日常生活中的熟悉事物"
+        family = [
+            f"{p.get('relation', '')}{p.get('name', '')}".strip()
+            for pid, p in (personas or {}).items()
+            if pid != "ai" and p.get("relation") and p.get("name")
+        ]
+        family_str = "，家人包含" + "、".join(family) if family else ""
+        job_text = job if job and job != "未知" else "自己的工作崗位"
+        return (
+            f"{name}是一位重視生活情感與家庭連結的長者，過去曾在{job_text}累積人生經驗。"
+            f"這位長者平時熟悉並喜歡{hobbies_str}{family_str}。"
+            "這些背景可作為陪伴對話時的自然話題，讓回應更貼近長者的生命經驗與日常習慣。"
+        )

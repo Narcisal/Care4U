@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Care U - 照護人員後台</title>
+    <title>照護人員工作台</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -97,7 +97,7 @@
         <div style="display: flex; align-items: center; gap: 10px;">
             <div style="font-size: 22px; font-weight: 700; color: var(--care);">CU</div>
             <div>
-                <div style="font-size: 17px; font-weight: 500;">AI Care U</div>
+                <div style="font-size: 17px; font-weight: 500;">照護工作台</div>
                 <div style="font-size: 12px; color: #7F8C8D;">照護人員後台</div>
             </div>
         </div>
@@ -107,20 +107,17 @@
         <div class="nav-item active" id="nav-profile" onclick="navigateTo('profile')">
             <span>👤</span><span>長者資料建檔</span>
         </div>
+        <div class="nav-item" id="nav-persona" onclick="navigateTo('persona')">
+            <span>🎭</span><span>陪伴者管理</span>
+        </div>
         <div class="nav-item" id="nav-dashboard" onclick="navigateTo('dashboard')">
             <span>📋</span><span>對話紀錄後台</span>
         </div>
         <div class="nav-item" id="nav-isafe" onclick="navigateTo('isafe')">
-            <span>🛡️</span><span>iSafe 安全監控</span>
-        </div>
-        <div class="nav-item" id="nav-decision" onclick="navigateTo('decision')">
-            <span>🧭</span><span>決策後台</span>
+            <span>🛡️</span><span>安全觀察</span>
         </div>
         <div class="nav-item" id="nav-agents" onclick="navigateTo('agents')">
-            <span>🔗</span><span>Agent 監控</span>
-        </div>
-        <div class="nav-item" id="nav-persona" onclick="navigateTo('persona')">
-            <span>🎭</span><span>陪伴者管理</span>
+            <span>🔗</span><span>系統處理紀錄</span>
         </div>
     </div>
     <div style="position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 20px; text-align: center;">
@@ -218,21 +215,27 @@
         </button>
     </div>
 </div>
-    <!-- 網路搜尋補充背景資料 -->
+    <!-- 公開資料輔助建檔 -->
     <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
         <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
-            網路搜尋補充背景資料
-            <span style="font-size: 12px;">（搜尋長者的公開資料，如著作、職業成就）</span>
+            公開資料輔助建檔
+            <span style="font-size: 12px;">（系統自動產生搜尋線索，照護人員確認來源後才生成生平草稿）</span>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <input id="search-keywords" type="text" placeholder="輸入關鍵字，如：著作名稱、任職機構"
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input id="search-keywords" type="text" placeholder="補充線索，可留空，如：任職機構、著作、社團"
                 style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
-            <button onclick="searchElderBackground()"
+            <button onclick="findBackgroundCandidates()"
                 style="padding: 10px 20px; border-radius: 10px; border: none; background: #4A90E2; color: white; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap;">
-                搜尋
+                自動尋找公開資料
             </button>
         </div>
         <div id="search-result" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px;"></div>
+        <div id="search-query-list" style="display:none;margin-top:10px;font-size:13px;color:#7F8C8D;line-height:1.8;"></div>
+        <div id="candidate-source-list" style="display:none;margin-top:12px;flex-direction:column;gap:10px;"></div>
+        <button id="draft-biography-btn" onclick="generateBiographyDraft()"
+            style="display:none;margin-top:12px;padding:10px 20px;border-radius:10px;border:none;background:#7B9E87;color:white;font-size:15px;cursor:pointer;font-family:inherit;">
+            根據確認來源產生生平草稿
+        </button>
 
         <!-- 生平資料顯示與編輯 -->
         <div id="biography-section" style="margin-top: 16px; display: none;">
@@ -263,15 +266,6 @@
             </button>
         </div>
 
-        <!-- 開始陪伴按鈕 -->
-        <div style="margin-top: 12px;">
-            <button onclick="startCareSession()"
-                style="width: 100%; padding: 14px; font-size: 17px;
-                    background: #7B9E87; color: white; border: none;
-                    border-radius: 16px; cursor: pointer; font-family: inherit;">
-                開始陪伴這位長者
-            </button>
-        </div>
     </div>
     </div>
 
@@ -288,8 +282,8 @@
         <div class="card" style="margin-bottom: 16px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
                 <div>
-                    <h2 style="font-size: 20px; font-weight: 500;">專題展示總覽</h2>
-                    <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">三位長者與陪伴者人格配置</div>
+                    <h2 style="font-size: 20px; font-weight: 500;">長者照護概況</h2>
+                    <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">快速掌握長者狀態與陪伴者配置</div>
                 </div>
                 <button onclick="loadDemoOverview()"
                     style="padding: 8px 14px; border-radius: 8px; border: 1px solid #D6CEC7;
@@ -385,37 +379,9 @@
             </div>
         </div>
 
-        <!-- TTS 語調測試 -->
-        <div class="card" style="margin-bottom: 16px;">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">TTS 語調測試</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <button onclick="testTTS('normal', '爺爺，你好！今天感覺怎麼樣呀？')"
-                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
-                        background: #F7F3EE; color: #3D3530; font-size: 16px;
-                        cursor: pointer; font-family: inherit;">一般語調</button>
-                <button onclick="testTTS('happy', '爺爺！太棒了！你今天氣色真的很好欸！')"
-                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
-                        background: #EAFAF1; color: #2D6A4F; font-size: 16px;
-                        cursor: pointer; font-family: inherit;">開心語調</button>
-                <button onclick="testTTS('comfort', '爺爺，沒關係的，我在這裡陪你，你說說看。')"
-                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
-                        background: #EBF5FB; color: #1A5276; font-size: 16px;
-                        cursor: pointer; font-family: inherit;">🤗 安慰語調</button>
-                <button onclick="testTTS('urgent', '爺爺你還好嗎？我馬上去叫護士過來！')"
-                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
-                        background: #FDECEA; color: #922B21; font-size: 16px;
-                        cursor: pointer; font-family: inherit;">緊急語調</button>
-                <button onclick="testTTS('remind', '爺爺，8點了，記得吃藥喔，要配溫水。')"
-                    style="padding: 14px; border-radius: 12px; border: 1px solid #D6CEC7;
-                        background: #FEF9E7; color: #7D6608; font-size: 16px;
-                        cursor: pointer; font-family: inherit; grid-column: 1 / -1;">提醒語調</button>
-            </div>
-            <div id="tts-test-status" style="text-align: center; margin-top: 12px;
-                font-size: 14px; color: #7F8C8D; display: none;">播放中...</div>
-        </div>
     </div>
 
-    <!-- iSafe 安全監控 -->
+    <!-- 安全觀察 -->
     <div id="page-isafe" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="card" style="text-align: center;">
@@ -440,21 +406,6 @@
             </div>
         </div>
 
-        <div class="card" style="margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
-                <div>
-                    <h2 style="font-size: 18px; font-weight: 500;">iSafe 分級測試</h2>
-                    <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">固定案例可用於現場展示安全判斷</div>
-                </div>
-                <button onclick="runAllISafeTests()"
-                    style="padding: 8px 14px; border-radius: 8px; border: none;
-                        background: #C17F5A; color: white; cursor: pointer; font-family: inherit;">
-                    全部測試
-                </button>
-            </div>
-            <div id="isafe-test-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        </div>
-
         <div class="card">
             <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">近期安全事件</h2>
             <div id="isafe-events" style="display: flex; flex-direction: column; gap: 10px;">
@@ -471,21 +422,21 @@
                 <div class="sop-step">
                     <div class="sop-num">1</div>
                     <div>
-                        <div style="font-weight: 500; font-size: 15px;">iSafe 偵測異常</div>
+                        <div style="font-weight: 500; font-size: 15px;">安全觀察偵測異常</div>
                         <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">長者說話觸發緊急關鍵字</div>
                     </div>
                 </div>
                 <div class="sop-step">
                     <div class="sop-num">2</div>
                     <div>
-                        <div style="font-weight: 500; font-size: 15px;">Decision 評估危險等級</div>
+                        <div style="font-weight: 500; font-size: 15px;">照護流程評估危險等級</div>
                         <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">LLM 判斷是否為真實緊急狀況</div>
                     </div>
                 </div>
                 <div class="sop-step">
                     <div class="sop-num">3</div>
                     <div>
-                        <div style="font-weight: 500; font-size: 15px;">MagicAI 立即回應</div>
+                        <div style="font-weight: 500; font-size: 15px;">陪伴回應立即安撫</div>
                         <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">使用緊急語調安撫長者</div>
                     </div>
                 </div>
@@ -528,33 +479,47 @@
         </div>
     </div>
 
-    <!-- Agent 監控 -->
+    <!-- 系統處理紀錄 -->
     <div id="page-agents" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 500;">查看長者處理紀錄</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">依長者分開查看，避免不同個案的系統紀錄混在一起</div>
+                </div>
+                <select id="agent-elder-select" onchange="loadAgentLogs()"
+                    style="width:auto;min-width:150px;font-size:16px;text-align:center;height:auto;padding:8px;">
+                    <option value="W001">王大明</option>
+                    <option value="C001">陳秀英</option>
+                    <option value="L001">林月琴</option>
+                </select>
+            </div>
+        </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="agent-card">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                     <span class="agent-dot" id="dot-magic"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #C17F5A;">MagicAI</span>
+                    <span style="font-weight: 500; font-size: 16px; color: #C17F5A;">陪伴回應</span>
                 </div>
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">互動代理人</div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">回應處理</div>
                 <div style="font-size: 13px;">第一線情感陪伴</div>
                 <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="magic-last">尚未啟動</div>
             </div>
             <div class="agent-card">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                     <span class="agent-dot" id="dot-isafe"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #4A90E2;">iSafe</span>
+                    <span style="font-weight: 500; font-size: 16px; color: #4A90E2;">安全觀察</span>
                 </div>
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">感知代理人</div>
-                <div style="font-size: 13px;">安全監控 + 語意分級</div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">風險辨識</div>
+                <div style="font-size: 13px;">安全觀察 + 語意分級</div>
                 <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="isafe-last">尚未啟動</div>
             </div>
             <div class="agent-card">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                     <span class="agent-dot" id="dot-decision"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #7B9E87;">Decision</span>
+                    <span style="font-weight: 500; font-size: 16px; color: #7B9E87;">照護流程</span>
                 </div>
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">決策代理人</div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">流程調度</div>
                 <div style="font-size: 13px;">任務調度 + SOP</div>
                 <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="decision-last">尚未啟動</div>
             </div>
@@ -562,7 +527,7 @@
 
         <div class="card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h2 style="font-size: 18px; font-weight: 500;">Agent 互動紀錄</h2>
+                <h2 style="font-size: 18px; font-weight: 500;">系統處理紀錄</h2>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 13px; color: #9B8E87;" id="log-update-time">--</span>
                     <button onclick="loadAgentLogs()" style="padding: 6px 14px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">重新整理</button>
@@ -587,8 +552,8 @@
                 </select>
             </div>
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">目前使用人格</div>
-                <div id="active-persona-name" style="font-size: 24px; font-weight: 500; color: #C17F5A;">AI 助理</div>
+                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">目前陪伴者</div>
+                <div id="active-persona-name" style="font-size: 24px; font-weight: 500; color: #C17F5A;">預設陪伴者</div>
             </div>
         </div>
 
@@ -726,13 +691,6 @@ const DEMO_ELDERS = [
     { id: 'C001', name: '陳秀英' },
     { id: 'L001', name: '林月琴' },
 ];
-const ISAFE_TEST_CASES = [
-    { label: '跌倒風險', message: '我頭很暈快跌倒了', expected: 'Level 3' },
-    { label: '胸痛急症', message: '我胸口很痛，喘不過氣', expected: 'Level 3' },
-    { label: '孤單低落', message: '我今天很孤單，有點不開心', expected: 'Level 1' },
-    { label: '正向日常', message: '今天晚餐很好吃，我很開心', expected: 'Level 0' },
-    { label: '懷舊思念', message: '我想念以前的家和老朋友', expected: 'Level 1' },
-];
 const DEMO_SCHEDULES = [
     { id: 'morning_med', title: '早晨服藥提醒', detail: '每日 08:00', enabled: true },
     { id: 'water', title: '午間喝水提醒', detail: '每日 13:00', enabled: true },
@@ -800,7 +758,7 @@ function escapeHtml(text) {
 }
 
 function safeAvatarSrc(path) {
-    if (!path) return '/static/avatars/ai_assistant_bg.png';
+    if (!path) return '/static/avatars/ai_assistant_nobg.png';
     const value = String(path).trim().replaceAll('\\', '/');
     if (/^personas\/[A-Za-z0-9_-]+\.(png|jpg|jpeg|webp)$/i.test(value)) {
         return `/static/avatars/${value}`;
@@ -809,7 +767,7 @@ function safeAvatarSrc(path) {
     if (/^[A-Za-z0-9_-]+(?:_bg|_nobg)?\.png$/.test(filename)) {
         return `/static/avatars/${filename}`;
     }
-    return '/static/avatars/ai_assistant_bg.png';
+    return '/static/avatars/ai_assistant_nobg.png';
 }
 
 function showToast(message, type = 'info') {
@@ -842,12 +800,6 @@ function closeSidebar() {
     document.getElementById('overlay').classList.remove('open');
 }
 
-function startCareSession() {
-    const elderId = document.getElementById('elder-select').value;
-    const url = `/?elder=${elderId}`;
-    window.open(url, '_blank');
-}
-
 async function loadDemoOverview() {
     const container = document.getElementById('demo-overview-grid');
     if (!container) return;
@@ -874,7 +826,7 @@ async function loadDemoOverview() {
             const personaList = Object.values(personas).map(p =>
                 `${p.name}${p.relation ? `（${p.relation}）` : ''}`
             ).join('、');
-            const active = personas[personaData.active_persona]?.name || 'AI 助理';
+            const active = personas[personaData.active_persona]?.name || '預設陪伴者';
             const hazardHigh = safety.hazard_level === 'high';
             const card = document.createElement('div');
             card.style.cssText = `
@@ -905,7 +857,7 @@ async function loadDemoOverview() {
 }
 
 function navigateTo(page) {
-    ['profile','dashboard','isafe','decision','agents','persona'].forEach(p => {
+    ['profile','persona','dashboard','isafe','agents'].forEach(p => {
         document.getElementById('page-' + p).classList.add('hidden');
     });
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -915,9 +867,8 @@ function navigateTo(page) {
     const titles = {
         profile: ['長者資料建檔', '建立照護所需的背景、健康注意事項與家人資訊'],
         dashboard: ['照護總覽', '快速查看三位長者、重要記憶與安全事件'],
-        isafe: ['安全監控', '用固定案例檢查危急、低落與日常狀態'],
-        decision: ['照護決策', '查看緊急 SOP、提醒任務與記憶資料來源'],
-        agents: ['系統協作紀錄', '確認陪伴、安全與決策流程是否正常運作'],
+        isafe: ['安全觀察', '用固定案例檢查危急、低落與日常狀態'],
+        agents: ['系統處理紀錄', '確認陪伴、安全與流程是否正常運作'],
         persona: ['陪伴者管理', '設定家人或陪伴者的稱呼、關係與說話風格'],
     };
     document.getElementById('page-title').textContent = titles[page][0];
@@ -929,10 +880,8 @@ function navigateTo(page) {
         loadHistory(document.getElementById('dash-elder-select').value);
     }
     if (page === 'isafe') {
-        renderISafeTests();
         loadSafety(document.getElementById('isafe-elder-select').value);
     }
-    if (page === 'decision') renderSchedules();
     if (page === 'persona') loadPersonas(document.getElementById('persona-elder-select').value);
 
     if (page === 'agents') {
@@ -969,8 +918,10 @@ async function loadElderData(elderId) {
             bioSection.style.display = 'block';
             bioDisplay.textContent = biography.content;
             bioEdit.value = biography.content;
+            currentBiographyDraftSources = biography.sources || [];
         } else {
             bioSection.style.display = 'none';
+            currentBiographyDraftSources = [];
         }
         renderFamilyNotes(profile.family_notes || []);
     } catch (e) { console.error('載入失敗', e); }
@@ -1101,7 +1052,7 @@ async function searchElderBackground() {
         if (data.success) {
             resultEl.style.background = '#E8F5EC';
             resultEl.style.color = '#2D6A4F';
-            resultEl.innerHTML = `已整理生平資料，AI 會在對話中自然帶入。`;
+            resultEl.innerHTML = `已整理生平資料，陪伴者會在合適時自然帶入。`;
 
             const bioSection = document.getElementById('biography-section');
             const bioDisplay = document.getElementById('biography-display');
@@ -1334,29 +1285,6 @@ function renderEvent(evt, container, isLong) {
     container.appendChild(div);
 }
 
-async function testTTS(emotion, text) {
-    const status = document.getElementById('tts-test-status');
-    status.style.display = 'block';
-    status.textContent = `播放中：${emotion} 語調...`;
-    try {
-        const res = await fetch(`${API_BASE}/api/tts`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, emotion })
-        });
-        const audioBlob = await res.blob();
-        const audio = new Audio(URL.createObjectURL(audioBlob));
-        audio.play();
-        audio.onended = () => {
-            status.textContent = '播放完成';
-            setTimeout(() => status.style.display = 'none', 2000);
-        };
-    } catch (e) {
-        status.textContent = '播放失敗';
-        showToast('語音播放失敗。', 'error');
-    }
-}
-
 async function searchElderBackground() {
     const elderId = document.getElementById('elder-select').value;
     const name = document.getElementById('field-name').value;
@@ -1390,7 +1318,7 @@ async function searchElderBackground() {
         if (data.success) {
             resultEl.style.background = '#E8F5EC';
             resultEl.style.color = '#2D6A4F';
-            resultEl.innerHTML = `已整理生平資料，AI 會在對話中自然帶入。`;
+            resultEl.innerHTML = `已整理生平資料，陪伴者會在合適時自然帶入。`;
 
             const bioSection = document.getElementById('biography-section');
             const bioDisplay = document.getElementById('biography-display');
@@ -1408,6 +1336,162 @@ async function searchElderBackground() {
         resultEl.style.color = '#922B21';
         resultEl.textContent = '搜尋失敗';
         showToast('搜尋失敗，請稍後再試。', 'error');
+    }
+}
+
+let currentBackgroundCandidates = [];
+let currentBiographyDraftSources = [];
+
+function parseSupplementalKeywords() {
+    return document.getElementById('search-keywords').value
+        .split(/[,，、\s]+/)
+        .map(k => k.trim())
+        .filter(Boolean);
+}
+
+async function findBackgroundCandidates() {
+    const elderId = document.getElementById('elder-select').value;
+    const name = document.getElementById('field-name').value.trim();
+    const resultEl = document.getElementById('search-result');
+    const queryEl = document.getElementById('search-query-list');
+    const candidateEl = document.getElementById('candidate-source-list');
+    const draftBtn = document.getElementById('draft-biography-btn');
+
+    if (!name) {
+        showToast('請先填入長者姓名。', 'warn');
+        return;
+    }
+
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#F7F3EE';
+    resultEl.style.color = '#7F8C8D';
+    resultEl.textContent = '正在自動整理搜尋線索並尋找候選來源...';
+    queryEl.style.display = 'none';
+    candidateEl.style.display = 'none';
+    candidateEl.innerHTML = '';
+    draftBtn.style.display = 'none';
+    currentBackgroundCandidates = [];
+
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/background-candidates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: elderId,
+                extra_keywords: parseSupplementalKeywords()
+            })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            resultEl.style.background = '#FEF9E7';
+            resultEl.style.color = '#7D6608';
+            resultEl.textContent = data.message || '候選來源搜尋失敗。';
+            return;
+        }
+
+        resultEl.style.background = data.candidates?.length ? '#E8F5EC' : '#FEF9E7';
+        resultEl.style.color = data.candidates?.length ? '#2D6A4F' : '#7D6608';
+        resultEl.textContent = data.message || '已完成搜尋線索整理。';
+
+        queryEl.style.display = 'block';
+        queryEl.innerHTML = `<strong>系統使用的搜尋線索：</strong> ${escapeHtml((data.queries || []).join('、') || '無')}`;
+
+        currentBackgroundCandidates = data.candidates || [];
+        renderBackgroundCandidates(currentBackgroundCandidates);
+    } catch (e) {
+        resultEl.style.background = '#FDECEA';
+        resultEl.style.color = '#922B21';
+        resultEl.textContent = '搜尋候選來源失敗';
+        showToast('搜尋候選來源失敗，請確認後端服務。', 'error');
+    }
+}
+
+function renderBackgroundCandidates(candidates) {
+    const candidateEl = document.getElementById('candidate-source-list');
+    const draftBtn = document.getElementById('draft-biography-btn');
+    candidateEl.innerHTML = '';
+
+    if (!candidates.length) {
+        candidateEl.style.display = 'none';
+        draftBtn.style.display = 'block';
+        draftBtn.textContent = '沒有公開來源，直接用基本資料產生草稿';
+        return;
+    }
+
+    candidateEl.style.display = 'flex';
+    draftBtn.style.display = 'block';
+    draftBtn.textContent = '根據確認來源產生生平草稿';
+
+    candidates.forEach((source, index) => {
+        const card = document.createElement('label');
+        card.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid #D6CEC7;border-radius:10px;background:white;cursor:pointer;';
+        card.innerHTML = `
+            <input type="checkbox" class="candidate-source-check" value="${index}" style="margin-top:5px;width:18px;height:18px;">
+            <div style="flex:1;">
+                <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+                    <div style="font-size:15px;font-weight:700;color:#3D3530;">${escapeHtml(source.title || '未命名來源')}</div>
+                    <span style="font-size:12px;color:#7B9E87;white-space:nowrap;">${escapeHtml(source.confidence || '需要確認')}</span>
+                </div>
+                <div style="font-size:12px;color:#7F8C8D;margin-top:4px;">搜尋線索：${escapeHtml(source.query || '')}</div>
+                <div style="font-size:13px;color:#6B5E58;line-height:1.6;margin-top:6px;">${escapeHtml(source.summary || '無摘要')}</div>
+                ${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:13px;color:#4A90E2;text-decoration:none;">查看來源</a>` : ''}
+            </div>
+        `;
+        candidateEl.appendChild(card);
+    });
+}
+
+async function generateBiographyDraft() {
+    const elderId = document.getElementById('elder-select').value;
+    const resultEl = document.getElementById('search-result');
+    const checked = [...document.querySelectorAll('.candidate-source-check:checked')]
+        .map(input => currentBackgroundCandidates[Number(input.value)])
+        .filter(Boolean);
+
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#F7F3EE';
+    resultEl.style.color = '#7F8C8D';
+    resultEl.textContent = checked.length
+        ? '正在根據確認來源產生生平草稿...'
+        : '正在根據基本資料產生生平草稿...';
+
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/biography-draft`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                elder_id: elderId,
+                selected_sources: checked
+            })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            resultEl.style.background = '#FEF9E7';
+            resultEl.style.color = '#7D6608';
+            resultEl.textContent = data.message || '生平草稿生成失敗。';
+            return;
+        }
+
+        resultEl.style.background = '#E8F5EC';
+        resultEl.style.color = '#2D6A4F';
+        resultEl.textContent = '已產生生平草稿，請檢查內容後再儲存。';
+
+        const bioSection = document.getElementById('biography-section');
+        const bioDisplay = document.getElementById('biography-display');
+        const bioEdit = document.getElementById('biography-edit');
+        bioSection.style.display = 'block';
+        bioDisplay.textContent = data.biography;
+        bioEdit.value = data.biography;
+        bioDisplay.style.display = 'none';
+        bioEdit.style.display = 'block';
+        currentBiographyDraftSources = data.sources || [];
+        document.getElementById('bio-save-btn').style.display = 'block';
+        document.getElementById('bio-edit-btn').textContent = '✕ 取消';
+    } catch (e) {
+        resultEl.style.background = '#FDECEA';
+        resultEl.style.color = '#922B21';
+        resultEl.textContent = '生平草稿生成失敗';
+        showToast('生平草稿生成失敗，請確認後端服務。', 'error');
     }
 }
 
@@ -1441,7 +1525,8 @@ async function saveBiography() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 elder_id: elderId,
-                biography: content
+                biography: content,
+                sources: currentBiographyDraftSources
             })
         });
         const data = await res.json();
@@ -1455,82 +1540,7 @@ async function saveBiography() {
     }
 }
 
-function startCareSession() {
-    const elderId = document.getElementById('elder-select').value;
-    const url = `/?elder=${elderId}`;
-    window.open(url, '_blank');
-}
-
-// ===== iSafe 安全監控 =====
-function renderISafeTests() {
-    const container = document.getElementById('isafe-test-list');
-    if (!container) return;
-    container.innerHTML = '';
-    ISAFE_TEST_CASES.forEach((test, index) => {
-        const row = document.createElement('div');
-        row.id = `isafe-test-${index}`;
-        row.style.cssText = `
-            display:grid; grid-template-columns: 120px 1fr 90px 110px;
-            gap:10px; align-items:center; background:#F7F3EE;
-            border:1px solid #D6CEC7; border-radius:10px; padding:10px 12px;
-            font-size:14px;
-        `;
-        row.innerHTML = `
-            <div style="font-weight:700;color:#3D3530;">${escapeHtml(test.label)}</div>
-            <div style="color:#7F8C8D;">${escapeHtml(test.message)}</div>
-            <div style="font-size:12px;color:#9B8E87;">預期 ${test.expected}</div>
-            <button onclick="runISafeTest(${index})"
-                style="padding:7px 10px;border-radius:8px;border:none;background:#7B9E87;color:white;cursor:pointer;font-family:inherit;">
-                測試
-            </button>
-        `;
-        container.appendChild(row);
-    });
-}
-
-async function runISafeTest(index) {
-    const elderId = document.getElementById('isafe-elder-select').value;
-    const test = ISAFE_TEST_CASES[index];
-    const row = document.getElementById(`isafe-test-${index}`);
-    row.style.opacity = '0.65';
-
-    try {
-        const res = await fetch(`${API_BASE}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                elder_id: elderId,
-                message: test.message,
-                speed_emotion: 'normal',
-            }),
-        });
-        const data = await res.json();
-        const level = data.escalation_level ?? 0;
-        const ok = test.expected.includes(String(level));
-        row.style.opacity = '1';
-        row.style.borderColor = ok ? '#7B9E87' : '#E67E22';
-        row.style.background = ok ? '#E8F5EC' : '#FEF3CD';
-        row.querySelector('button').outerHTML = `
-            <div style="font-size:13px;font-weight:700;color:${ok ? '#2D6A4F' : '#7D5A00'};">
-                ${data.emotion} / L${level}
-            </div>
-        `;
-        loadSafety(elderId);
-    } catch (e) {
-        row.style.opacity = '1';
-        row.style.background = '#FDECEA';
-        row.style.borderColor = '#E74C3C';
-        console.error('iSafe 測試失敗', e);
-    }
-}
-
-async function runAllISafeTests() {
-    renderISafeTests();
-    for (let i = 0; i < ISAFE_TEST_CASES.length; i++) {
-        await runISafeTest(i);
-    }
-}
-
+// ===== 安全觀察 =====
 async function loadSafety(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/safety/${elderId}`);
@@ -1692,35 +1702,38 @@ async function deleteFamilyNote(idx) {
     } catch (e) { showToast('家人資訊刪除失敗。', 'error'); }
 }
 
-// ===== Agent 監控 =====
+// ===== 系統處理紀錄 =====
 async function loadAgentLogs() {
     try {
         const res = await fetch(`${API_BASE}/api/agent-logs`);
         const data = await res.json();
-        const logs = data.logs || [];
+        const selectedElderId = document.getElementById('agent-elder-select')?.value || '';
+        const logs = (data.logs || []).filter(log => !selectedElderId || log.elder_id === selectedElderId);
 
         document.getElementById('log-update-time').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
 
-        if (logs.length === 0) {
-            document.getElementById('agent-logs').innerHTML =
-                '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無互動紀錄，請先開始對話</div>';
-            return;
-        }
-
         const dotMap = { MagicAI: 'dot-magic', iSafe: 'dot-isafe', Decision: 'dot-decision' };
         const lastMap = { MagicAI: 'magic-last', iSafe: 'isafe-last', Decision: 'decision-last' };
+        const agentLabels = { MagicAI: '陪伴回應', iSafe: '安全觀察', Decision: '照護流程' };
 
         ['MagicAI', 'iSafe', 'Decision'].forEach(agent => {
+            document.getElementById(dotMap[agent])?.classList.add('inactive');
+            const el = document.getElementById(lastMap[agent]);
+            if (el) el.textContent = '尚未啟動';
             const lastLog = logs.find(l => l.agent === agent);
             if (lastLog) {
                 document.getElementById(dotMap[agent])?.classList.remove('inactive');
-                const el = document.getElementById(lastMap[agent]);
                 if (el) el.textContent = `最後活動：${lastLog.time}`;
             }
         });
 
         const container = document.getElementById('agent-logs');
         container.innerHTML = '';
+        if (logs.length === 0) {
+            container.innerHTML =
+                '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">這位長者目前尚無系統處理紀錄</div>';
+            return;
+        }
         logs.forEach(log => {
             const row = document.createElement('div');
             row.className = 'log-row';
@@ -1730,13 +1743,14 @@ async function loadAgentLogs() {
                                log.action === '降級' ? '#E74C3C' : '#7F8C8D';
             row.innerHTML = `
                 <span class="log-time">${log.time}</span>
-                <span class="log-agent ${log.agent}">${log.agent}</span>
+                <span class="log-agent ${log.agent}">${agentLabels[log.agent] || escapeHtml(log.agent)}</span>
                 <span style="min-width: 70px; color: ${actionColor}; font-size: 13px;">${log.action}</span>
                 <span style="color: #3D3530; font-size: 13px;">${escapeHtml(log.detail)}</span>
+                ${log.persona_id ? `<span style="margin-left:auto;color:#9B8E87;font-size:12px;">${escapeHtml(log.persona_id)}</span>` : ''}
             `;
             container.appendChild(row);
         });
-    } catch (e) { console.error('Agent log 載入失敗', e); }
+    } catch (e) { console.error('系統處理紀錄載入失敗', e); }
 }
 
 // ===== 原型一鍵套用 =====
@@ -1789,7 +1803,6 @@ function initTagLimits() {
 window.addEventListener('load', () => {
     loadElderData('W001');
     loadDemoOverview();
-    renderISafeTests();
     renderSchedules();
     initTagLimits();
 });
@@ -1802,7 +1815,7 @@ async function loadPersonas(elderId) {
         const activeId = data.active_persona || 'ai';
 
         // 更新目前使用人格
-        const activeName = personas[activeId]?.name || 'AI 助理';
+        const activeName = personas[activeId]?.name || '預設陪伴者';
         document.getElementById('active-persona-name').textContent = activeName;
 
         // 顯示人格列表
@@ -1830,7 +1843,7 @@ async function loadPersonas(elderId) {
                     <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">
                         ${persona.relation ? escapeHtml(persona.relation) + '｜' : ''}
                         稱呼：${escapeHtml(persona.honorific || '')}｜
-                        引擎：${persona.voice_path ? 'XTTS' : 'Edge TTS（後援）'}
+                        聲音：${persona.voice_path ? '已上傳語音樣本' : '使用後援語音'}
                         ${persona.voice_path ? '｜已上傳語音樣本' : ''}
                         ${persona.avatar_path ? '｜已上傳照片' : ''}
                         ${persona.is_deceased ? '｜<span style="color:#E74C3C;">已故親人</span>' : ''}
@@ -1978,7 +1991,7 @@ async function uploadPersonaVoice(elderId, personaId, file) {
         if (!res.ok) throw new Error(await res.text());
         msgEl.style.background = '#E8F5EC';
         msgEl.style.color = '#2D6A4F';
-        msgEl.textContent = '聲音樣本已上傳，將優先使用 XTTS。';
+        msgEl.textContent = '聲音樣本已上傳，會優先使用這份聲音。';
         showToast('聲音樣本已上傳。', 'success');
         loadPersonas(elderId);
     } catch (e) {
@@ -2041,7 +2054,7 @@ async function switchPersona(elderId, personaId) {
 }
 
 async function deletePersona(elderId, personaId) {
-    if (!confirm('確定要刪除這個人格嗎？')) return;
+    if (!confirm('確定要刪除這位陪伴者嗎？')) return;
     try {
         const res = await fetch(`${API_BASE}/api/profile/persona/delete`, {
             method: 'POST',

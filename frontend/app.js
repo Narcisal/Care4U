@@ -1,6 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
-let ELDER_ID = urlParams.get("elder") || null;
-let SELECTED_PERSONA = "ai";
+let ELDER_ID = urlParams.get("elder") || "W001";
+let SELECTED_PERSONA = urlParams.get("persona") || null;
 const API_BASE = "http://127.0.0.1:8000";
 const SESSION_ID = (() => {
     const key = "care4u_session_id";
@@ -26,7 +26,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function safeAvatarSrc(path, fallback = "/static/avatars/ai_assistant.png") {
+function safeAvatarSrc(path, fallback = "/static/avatars/ai_assistant_nobg.png") {
     if (!path) return fallback;
     const value = String(path).trim().replaceAll("\\", "/");
     if (/^personas\/[A-Za-z0-9_-]+\.(png|jpg|jpeg|webp)$/i.test(value)) {
@@ -77,7 +77,7 @@ async function switchElder(elderId) {
 
 async function startSession() {
     const btn = document.getElementById("start-btn");
-    btn.textContent = "⏳ 啟動中...";
+    btn.textContent = "準備中...";
     btn.disabled = true;
 
     try {
@@ -95,14 +95,14 @@ async function startSession() {
         addMessage("ai", data.message);
         enableButtons();
         document.getElementById("text-input").focus();
-        btn.textContent = "✅ 對話進行中";
+        btn.textContent = "正在陪你聊天";
         updateEmotionStatus("😊", "正常");
         await speakText(data.message, "normal");
 
     } catch (e) {
-        btn.textContent = "啟動失敗，請重試";
+        btn.textContent = "再試一次";
         btn.disabled = false;
-        addMessage("system", "系統啟動失敗。");
+        addMessage("system", "剛剛沒有準備好，我們再試一次。");
     }
 }
 
@@ -175,7 +175,7 @@ async function processAndRespond(message, speedEmotion = "normal") {
 
     } catch (e) {
         removeThinking(thinkingId);
-        addMessage("system", "回應失敗。");
+        addMessage("system", "剛剛沒有回好，我們再試一次。");
     } finally {
         document.getElementById("text-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
@@ -208,12 +208,12 @@ async function startRecording() {
         isRecording = true;
 
         document.getElementById("hold-talk-btn").classList.add("recording");
-        document.getElementById("hold-talk-btn").textContent = "🔴 錄音中...";
+        document.getElementById("hold-talk-btn").textContent = "我在聽你說";
         document.getElementById("recording-indicator").classList.add("active");
-        document.getElementById("voice-status").textContent = "正在錄音...";
+        document.getElementById("voice-status").textContent = "我在聽你說";
 
     } catch (e) {
-        addMessage("system", "無法存取麥克風，請確認瀏覽器權限。");
+        addMessage("system", "現在聽不到聲音，請確認麥克風可以使用。");
     }
 }
 
@@ -222,8 +222,8 @@ function stopRecording() {
         mediaRecorder.stop();
         isRecording = false;
         document.getElementById("hold-talk-btn").classList.remove("recording");
-        document.getElementById("hold-talk-btn").textContent = "🎙️ 按住說話";
-        document.getElementById("voice-status").textContent = "辨識中...";
+        document.getElementById("hold-talk-btn").textContent = "開始說話";
+        document.getElementById("voice-status").textContent = "我想一下";
     }
 }
 
@@ -241,11 +241,11 @@ async function sendAudioToSTT(audioBlob) {
             addMessage("user", data.text);
             await processAndRespond(data.text, data.speed_emotion || "normal");
         } else {
-            addMessage("system", "語音辨識失敗，請再試一次。");
+            addMessage("system", "剛剛沒聽清楚，我們再說一次。");
         }
     } catch (e) {
         document.getElementById("recording-indicator").classList.remove("active");
-        addMessage("system", "語音傳送失敗。");
+        addMessage("system", "聲音沒有送出去，我們再試一次。");
     }
 }
 
@@ -283,12 +283,12 @@ function addMessage(role, text) {
     const row = document.createElement("div");
 
     if (role === "ai") {
-        const avatarSrc = safeAvatarSrc(currentPersonaAvatar, "/static/avatars/ai_assistant.png");
+        const avatarSrc = safeAvatarSrc(currentPersonaAvatar, "/static/avatars/ai_assistant_nobg.png");
         row.className = "msg-row";
         const avatar = document.createElement("img");
         avatar.className = "msg-avatar";
         avatar.src = avatarSrc;
-        avatar.alt = "AI";
+        avatar.alt = "陪伴者";
         const bubble = document.createElement("div");
         bubble.className = "msg-bubble ai";
         bubble.textContent = text || "";
@@ -305,7 +305,7 @@ function addMessage(role, text) {
         bubble.textContent = text || "";
         row.append(avatar, bubble);
     } else {
-        row.style.cssText = "text-align:center;color:#BDC3C7;font-size:16px;padding:8px;";
+        row.style.cssText = "text-align:center;color:#6B5E58;font-size:22px;padding:10px;";
         row.textContent = text;
     }
 
@@ -321,7 +321,7 @@ function addThinking() {
     div.id = id;
     div.className = "msg-row";
     div.innerHTML = `
-        <div class="msg-avatar ai">🌸</div>
+        <div class="msg-avatar ai">…</div>
         <div class="msg-bubble ai" style="padding: 16px 20px;">
             <div style="display:flex; gap:6px; align-items:center;">
                 <div style="width:10px;height:10px;background:#D6CEC7;border-radius:50%;animation:bounce 1s infinite;animation-delay:0s"></div>
@@ -333,6 +333,14 @@ function addThinking() {
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     return id;
+}
+
+function setListeningStatus() {
+    const lbl = document.getElementById("status-label");
+    if (lbl) {
+        lbl.textContent = "可以慢慢說，我在聽";
+        lbl.className = "status-label listening";
+    }
 }
 
 function removeThinking(id) {
@@ -417,14 +425,14 @@ function updateEmotionStatus(emoji, text) {
 
 function clearChat() {
     document.getElementById("chat-container").innerHTML =
-        `<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">請點擊下方「開始對話」<br>來啟動陪伴系統</div></div>`;
+        `<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">可以慢慢說<br>我會在這裡陪你</div></div>`;
     chatCount = 0;
     document.getElementById("chat-count").textContent = "0";
-    document.getElementById("emotion-display").textContent = "💛 等待對話...";
+    document.getElementById("emotion-display").textContent = "💛 等你說話";
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
     document.getElementById("hold-talk-btn").disabled = true;
-    document.getElementById("start-btn").textContent = "開始對話";
+    document.getElementById("start-btn").textContent = "開始聊天";
     document.getElementById("start-btn").disabled = false;
     document.getElementById("image-frame").style.display = "none";
     const wrap = document.querySelector(".speaking-wrap");
@@ -462,22 +470,25 @@ async function loadWelcomePersonas(elderId) {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
         const data = await res.json();
         const personas = data.personas || {};
-        const activeId = SELECTED_PERSONA || data.active_persona || 'ai';
+        const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
+        const activeId = visiblePersonas.some(([id]) => id === SELECTED_PERSONA)
+            ? SELECTED_PERSONA
+            : null;
 
         const container = document.getElementById('welcome-persona-list');
         container.innerHTML = '';
 
         const avatarMap = {
-            'ai': '/static/avatars/ai_assistant_bg.png',
+            'ai': '/static/avatars/ai_assistant_nobg.png',
             'daughter': '/static/avatars/daughter_bg.png',
             'son': '/static/avatars/son_bg.png',
             'granddaughter': '/static/avatars/granddaughter_bg.png',
             'grandson': '/static/avatars/grandson_bg.png',
         };
 
-        Object.entries(personas).forEach(([id, persona]) => {
+        visiblePersonas.forEach(([id, persona]) => {
             const isSelected = id === activeId;
-            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant.png');
+            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant_nobg.png');
 
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
@@ -492,7 +503,7 @@ async function loadWelcomePersonas(elderId) {
             avatar.alt = persona.name || '陪伴者';
             const name = document.createElement('div');
             name.className = 'persona-cell-name';
-            name.textContent = persona.name || 'AI 助理';
+            name.textContent = persona.name || '陪伴者';
             div.append(avatar, name);
             if (persona.relation) {
                 const relation = document.createElement('div');
@@ -502,8 +513,7 @@ async function loadWelcomePersonas(elderId) {
             }
             container.appendChild(div);
             if (isSelected) {
-                SELECTED_PERSONA = id;
-                currentPersonaAvatar = avatarSrc;
+                selectPersona(id, avatarSrc, persona.name, persona.relation);
             }
         });
     } catch (e) {
@@ -527,6 +537,38 @@ function addEscalationAlert(level, message) {
     container.scrollTop = container.scrollHeight;
 }
 
+async function prepareActivePersona(elderId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        const data = await res.json();
+        const personas = data.personas || {};
+        const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
+        const activeId = urlParams.get("persona") || SELECTED_PERSONA || data.active_persona || visiblePersonas[0]?.[0] || "ai";
+        const persona = personas[activeId] || visiblePersonas[0]?.[1] || Object.values(personas)[0] || {};
+        const personaId = personas[activeId] ? activeId : (visiblePersonas[0]?.[0] || Object.keys(personas)[0] || "ai");
+
+        const avatarMap = {
+            'ai': '/static/avatars/ai_assistant_nobg.png',
+            'daughter': '/static/avatars/daughter.png',
+            'son': '/static/avatars/son.png',
+            'granddaughter': '/static/avatars/granddaughter.png',
+            'grandson': '/static/avatars/grandson.png',
+        };
+
+        SELECTED_PERSONA = personaId;
+        currentPersonaAvatar = safeAvatarSrc(persona.avatar_path, avatarMap[personaId] || '/static/avatars/ai_assistant_nobg.png');
+
+        const portrait = document.getElementById('persona-portrait');
+        const nameDisplay = document.getElementById('persona-portrait-name');
+        const relDisplay = document.getElementById('persona-portrait-rel');
+        if (portrait) portrait.src = currentPersonaAvatar;
+        if (nameDisplay) nameDisplay.textContent = persona.name || '陪伴者';
+        if (relDisplay) relDisplay.textContent = persona.relation || '陪你說說話';
+    } catch (e) {
+        console.error('準備陪伴者失敗', e);
+    }
+}
+
 function selectPersona(personaId, avatarSrc, name, relation) {
     SELECTED_PERSONA = personaId;
     currentPersonaAvatar = avatarSrc;
@@ -544,6 +586,11 @@ function selectPersona(personaId, avatarSrc, name, relation) {
         check.className = 'persona-cell-check';
         selected.appendChild(check);
     }
+
+    const welcomeBubble = document.getElementById('welcome-active-bubble');
+    if (welcomeBubble) {
+        welcomeBubble.innerHTML = '家人和我都在這裡陪你喔<br>想和我，還是哪位家人說說話？';
+    }
 }
 
 async function speakText(text, emotion = "normal") {
@@ -559,7 +606,7 @@ async function speakText(text, emotion = "normal") {
             const lbl = document.getElementById("status-label");
             const pname = document.getElementById("persona-portrait-name");
             if (lbl && pname) {
-                lbl.textContent = pname.textContent + "正在說話...";
+                lbl.textContent = `${pname.textContent} 正在回你`;
                 lbl.className = "status-label speaking";
             }
 
@@ -582,7 +629,7 @@ async function speakText(text, emotion = "normal") {
                 const lbl = document.getElementById("status-label");
                 const pname = document.getElementById("persona-portrait-name");
                 if (lbl && pname) {
-                    lbl.textContent = pname.textContent + "正在聆聽";
+                    lbl.textContent = "可以慢慢說，我在聽";
                     lbl.className = "status-label listening";
                 }
             };
@@ -597,13 +644,12 @@ async function speakText(text, emotion = "normal") {
 }
 
 async function enterChat() {
-    ELDER_ID = document.getElementById('welcome-elder-select').value;
+    ELDER_ID = urlParams.get("elder") || ELDER_ID || "W001";
 
     document.getElementById('welcome-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'flex';
 
-    const portrait = document.getElementById('persona-portrait');
-    if (portrait) portrait.src = currentPersonaAvatar;
+    await prepareActivePersona(ELDER_ID);
 
     try {
         const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
@@ -615,12 +661,6 @@ async function enterChat() {
             ? '/static/avatars/elder_female.png'
             : '/static/avatars/elder_male.png';
 
-        const personas = profile.personas || {};
-        const activePersona = personas[SELECTED_PERSONA] || {};
-        const nameDisplay = document.getElementById('persona-portrait-name');
-        const relDisplay = document.getElementById('persona-portrait-rel');
-        if (nameDisplay) nameDisplay.textContent = activePersona.name || 'AI 助理';
-        if (relDisplay) relDisplay.textContent = activePersona.relation || '您的智慧照護陪伴';
     } catch (e) {
         console.error('載入長者資料失敗', e);
     }
@@ -638,7 +678,7 @@ async function showPersonaSwitcher() {
         const activeId = SELECTED_PERSONA || data.active_persona || 'ai';
 
         const avatarMap = {
-            'ai': '/static/avatars/ai_assistant.png',
+            'ai': '/static/avatars/ai_assistant_nobg.png',
             'daughter': '/static/avatars/daughter.png',
             'son': '/static/avatars/son.png',
             'granddaughter': '/static/avatars/granddaughter.png',
@@ -650,37 +690,40 @@ async function showPersonaSwitcher() {
 
         Object.entries(personas).forEach(([id, persona]) => {
             const isActive = id === activeId;
-            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant.png');
+            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant_nobg.png');
 
             const div = document.createElement('div');
-            div.style.cssText = `
-                display: flex; align-items: center; gap: 16px; padding: 14px 18px;
-                border-radius: 14px; cursor: pointer;
-                border: 2px solid ${isActive ? 'var(--orange)' : 'var(--border)'};
-                background: ${isActive ? '#FEF3E8' : 'white'};
-                transition: all 0.2s;
-            `;
+            div.className = `switcher-persona-option${isActive ? ' active' : ''}`;
+            div.tabIndex = 0;
+            div.setAttribute('role', 'button');
+            div.setAttribute('aria-label', `換成${persona.name || '陪伴者'}陪你說話`);
             const avatar = document.createElement('img');
             avatar.src = avatarSrc;
             avatar.alt = persona.name || '陪伴者';
-            avatar.style.cssText = "width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border);";
             const textWrap = document.createElement('div');
             const name = document.createElement('div');
-            name.style.cssText = "font-size:20px;font-weight:700;color:var(--text-dark);";
-            name.textContent = persona.name || 'AI 助理';
+            name.style.cssText = "font-size:24px;font-weight:700;color:var(--text-dark);";
+            name.textContent = persona.name || '陪伴者';
             const relation = document.createElement('div');
-            relation.style.cssText = "font-size:14px;color:var(--text-light);";
-            relation.textContent = persona.relation || 'AI 陪伴助理';
+            relation.style.cssText = "font-size:18px;color:var(--text-mid);margin-top:4px;";
+            relation.textContent = persona.relation || '陪你說說話';
             textWrap.append(name, relation);
             div.append(avatar, textWrap);
             if (isActive) {
                 const active = document.createElement('div');
-                active.style.cssText = "margin-left:auto;color:var(--orange);font-size:20px;";
-                active.textContent = "✓ 使用中";
+                active.style.cssText = "margin-left:auto;color:var(--orange);font-size:20px;font-weight:700;";
+                active.textContent = "正在陪你";
                 div.appendChild(active);
             }
             if (!isActive) {
-                div.onclick = () => switchPersonaInChat(id, avatarSrc, persona.name, persona.relation);
+                const choose = () => switchPersonaInChat(id, avatarSrc, persona.name, persona.relation);
+                div.onclick = choose;
+                div.onkeydown = (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        choose();
+                    }
+                };
             }
             container.appendChild(div);
         });
@@ -698,13 +741,14 @@ async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
         currentPersonaAvatar = avatarSrc;
         document.getElementById('persona-portrait').src = avatarSrc;
         document.getElementById('persona-portrait-name').textContent = name;
-        document.getElementById('persona-portrait-rel').textContent = relation || 'AI 陪伴助理';
+        document.getElementById('persona-portrait-rel').textContent = relation || '陪你說說話';
 
         closeSwitcher();
 
         // 清除對話重新開始
         clearChat();
-        addMessage('system', `已切換到 ${name}，請重新開始對話`);
+        addMessage('system', `已換成 ${name || '陪伴者'}，可以繼續說話。`);
+        await startSession();
 
     } catch (e) {
         console.error('切換失敗', e);
@@ -714,15 +758,18 @@ async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
 function closeSwitcher() {
     document.getElementById('persona-switcher').style.display = 'none';
 }
-if (ELDER_ID) {
-    document.getElementById('welcome-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'flex';
-    loadElderProfile();
+if (urlParams.get("autostart") === "1") {
+    enterChat();
 } else {
-    loadWelcomePersonas('W001');
-    document.getElementById('welcome-elder-select')?.addEventListener('change', (event) => {
-        loadWelcomePersonas(event.target.value);
-    });
+    document.getElementById('welcome-screen').style.display = 'flex';
+    document.getElementById('main-screen').style.display = 'none';
+    loadWelcomePersonas(ELDER_ID);
+}
+
+async function startGuideChat() {
+    SELECTED_PERSONA = "ai";
+    currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
+    await enterChat();
 }
 
 let vadActive = false;
@@ -767,7 +814,7 @@ async function startVAD() {
                 const lbl = document.getElementById('status-label');
                 const pname = document.getElementById('persona-portrait-name');
                 if (lbl && pname) {
-                    lbl.textContent = pname.textContent + '正在聆聽';
+                    lbl.textContent = '可以慢慢說，我在聽';
                     lbl.className = 'status-label listening';
                 }
                 document.getElementById('recording-indicator')?.classList.add('active');

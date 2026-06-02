@@ -27,7 +27,7 @@
       "voice_path": null,
       "honorific": "奶奶",
       "tone": "像耐心的照護助理，慢慢說、少量資訊、先安撫再提醒。",
-      "avatar_path": "ai_assistant_bg.png",
+      "avatar_path": "ai_assistant_nobg.png",
       "is_deceased": false
     },
     "daughter": {

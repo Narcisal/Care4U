@@ -15,6 +15,7 @@
 - 後台支援可選式 Basic Auth；設定 `ADMIN_PASSWORD` 後 `/admin` 會要求登入。
 - 台語 STT 已補上 `/api/stt/status` 診斷與 Breeze ASR 切換流程驗證；`/api/stt/language` 已驗證可切到 `tai` 並載入 Breeze ASR 26。正式辨識準確度仍需真人錄音樣本確認。
 - 下一階段功能已具備工程骨架：角色式後台權限、session 管理 API、RAG hit-rate 評估 API、台語 STT transcript CER 評估 API。
+- 前台已改成「陪你說說話」方向，降低 AI/系統字眼，放大長者可讀文字與主要狀態提示；後台第一層命名也改為照護語言。
 - Demo mode 可在沒有 Gemini API key、資料庫或外部服務時跑基本展示。
 - iSafe 已有固定測試案例，可展示 Level 0、Level 1、Level 3。
 - Decision 任務排程已做成可切換啟用/暫停的 demo 管理狀態。
