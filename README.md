@@ -35,14 +35,14 @@ AI Care U addresses these issues through persona-based companionship, profile-gr
 
 - 3 demo elder profiles: `W001`, `C001`, and `L001`
 - 4 companion personas for each elder
-- Elder-friendly frontend chat experience
+- Elder-friendly frontend chat experience with an AI guide and family companion selection
 - Caregiver-facing admin dashboard
 - Admin upload for companion persona photos
 - Admin upload for companion persona `.wav` voice samples
 - TTS priority order: XTTS first, edge-tts fallback, Windows SAPI offline last-resort fallback
 - iSafe emotion and safety monitoring
-- Decision demo schedule controls
-- Agent activity monitoring and conversation history review
+- Caregiver-assisted public background search and biography drafting
+- Agent activity monitoring and conversation history review, filtered by elder profile
 - Demo mode that can run without Gemini, PostgreSQL, Tavily, XTTS, or GPU
 
 ## Out of Current Scope
@@ -72,9 +72,10 @@ Caregiver Admin UI
   -> Profile management
   -> Persona management
   -> Voice/photo upload
+  -> Public background candidates and biography drafts
   -> Conversation history
   -> iSafe and Decision monitoring
-  -> Agent logs
+  -> Agent logs filtered by elder
 ```
 
 ## Agent Architecture
@@ -121,7 +122,8 @@ Decision is the orchestration layer. It coordinates iSafe, MagicAI, memory updat
 2. The caregiver adds or edits companion personas such as daughter, son, spouse, or grandchild.
 3. The caregiver can upload a persona photo.
 4. The caregiver can upload a `.wav` voice sample for XTTS voice cloning.
-5. The active persona can be switched for the next chat session.
+5. The caregiver can generate a biography draft from basic profile fields and optional public sources.
+6. The elder chooses the active companion from the elder-facing chat UI.
 
 ### Caregiver Reviews Safety Events
 
@@ -289,9 +291,9 @@ Important boundaries:
 3. Confirm each elder has 4 companion personas.
 4. Upload companion persona photos and `.wav` samples if needed.
 5. Open the elder chat UI.
-6. Select an elder and start a chat session.
+6. Open the prepared elder chat session and choose a companion persona.
 7. Test the safety sentence: "I feel very dizzy and might fall."
-8. Review iSafe, conversation history, and Agent logs in the admin dashboard.
+8. Review safety events, conversation history, and elder-filtered Agent logs in the admin dashboard.
 9. Run through `demo_script.md` once before the final presentation.
 
 ## Taiwanese STT Verification

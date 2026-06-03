@@ -37,6 +37,63 @@
         .nav-item.active { background: var(--care); color: white; }
         .nav-item span:first-child { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 19px !important; line-height: 1; }
         .nav-item.active span:first-child { background: transparent; }
+        .sidebar-footer {
+            position: absolute;
+            bottom: 18px;
+            left: 0;
+            right: 0;
+            padding: 0 18px;
+        }
+        .sidebar-status {
+            border-top: 1px solid #D6CEC7;
+            padding-top: 14px;
+            margin-bottom: 14px;
+            text-align: left;
+        }
+        .sidebar-status-title {
+            font-size: 12px;
+            color: #9B8E87;
+            margin-bottom: 10px;
+        }
+        .sidebar-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--muted);
+            margin: 7px 0;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--ink);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--care);
+            box-shadow: 0 0 0 3px rgba(47,125,104,0.12);
+        }
+        .sidebar-client-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            border-radius: 8px;
+            border: 1px solid #BFD6C8;
+            background: var(--care-soft);
+            color: var(--care);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .sidebar-client-link:hover { background: #D6ECE4; }
         .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--line); padding: 22px; box-shadow: 0 1px 2px rgba(38,49,45,0.04); }
         input, select { width: 100%; padding: 14px 16px; height: 50px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--surface-soft); color: var(--ink); box-sizing: border-box; font-family: 'Microsoft JhengHei', sans-serif; line-height: 1.5; }
         label { font-size: 14px; color: var(--muted); display: block; margin-bottom: 8px; margin-top: 4px; }
@@ -53,8 +110,6 @@
         .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
         .badge-high { background: var(--alert-soft); color: #922B21; }
         .badge-low { background: var(--care-soft); color: var(--care); }
-        .sop-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 8px; background: var(--surface-soft); margin-bottom: 8px; }
-        .sop-num { width: 28px; height: 28px; border-radius: 8px; background: var(--decision); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
         .coming-soon { background: #F0EBE5; border-radius: 12px; padding: 32px; text-align: center; color: #9B8E87; font-size: 15px; border: 2px dashed #D6CEC7; }
         .tag-option {
             display: flex; align-items: center; gap: 6px;
@@ -120,8 +175,25 @@
             <span>🔗</span><span>系統處理紀錄</span>
         </div>
     </div>
-    <div style="position: absolute; bottom: 24px; left: 0; right: 0; padding: 0 20px; text-align: center;">
-        <a href="/" style="font-size: 13px; color: #C17F5A; text-decoration: none;">← 返回長者對話頁面</a>
+    <div class="sidebar-footer">
+        <div class="sidebar-status">
+            <div class="sidebar-status-title">系統狀態</div>
+            <div class="sidebar-status-row">
+                <span>後端服務</span>
+                <span class="status-pill"><span class="status-dot"></span>正常</span>
+            </div>
+            <div class="sidebar-status-row">
+                <span>語音輸出</span>
+                <span class="status-pill">XTTS 優先</span>
+            </div>
+            <div class="sidebar-status-row">
+                <span>長者檔案</span>
+                <span class="status-pill">3 位</span>
+            </div>
+        </div>
+        <a class="sidebar-client-link" href="/">
+            <span>開啟長者端</span>
+        </a>
     </div>
 </div>
 
@@ -414,71 +486,6 @@
         </div>
     </div>
 
-    <!-- 決策後台 -->
-    <div id="page-decision" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-            <div class="card">
-                <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">緊急 SOP 流程</h2>
-                <div class="sop-step">
-                    <div class="sop-num">1</div>
-                    <div>
-                        <div style="font-weight: 500; font-size: 15px;">安全觀察偵測異常</div>
-                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">長者說話觸發緊急關鍵字</div>
-                    </div>
-                </div>
-                <div class="sop-step">
-                    <div class="sop-num">2</div>
-                    <div>
-                        <div style="font-weight: 500; font-size: 15px;">照護流程評估危險等級</div>
-                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">LLM 判斷是否為真實緊急狀況</div>
-                    </div>
-                </div>
-                <div class="sop-step">
-                    <div class="sop-num">3</div>
-                    <div>
-                        <div style="font-weight: 500; font-size: 15px;">陪伴回應立即安撫</div>
-                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">使用緊急語調安撫長者</div>
-                    </div>
-                </div>
-                <div class="sop-step">
-                    <div class="sop-num">4</div>
-                    <div>
-                        <div style="font-weight: 500; font-size: 15px;">寫入安全事件紀錄</div>
-                        <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">通知照護人員查看後台</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;">
-                    <div>
-                        <h2 style="font-size: 18px; font-weight: 500;">任務排程</h2>
-                        <div style="font-size:13px;color:var(--muted);margin-top:4px;">展示用排程，可切換啟用狀態</div>
-                    </div>
-                    <span class="badge" style="background:var(--decision-soft);color:var(--decision);">Demo</span>
-                </div>
-                <div id="schedule-list" style="display: flex; flex-direction: column; gap: 10px;">
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">知識大腦管理</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div style="background: #F7F3EE; border-radius: 12px; padding: 16px; text-align: center;">
-                    <div style="font-weight: 500; font-size: 15px; margin-bottom: 4px;">長者個人化資料</div>
-                    <div style="font-size: 13px; color: #7F8C8D;">JSON 格式已啟用</div>
-                    <span class="badge badge-low" style="margin-top: 8px; display: inline-block;">正常</span>
-                </div>
-                <div style="background: #F7F3EE; border-radius: 12px; padding: 16px; text-align: center;">
-                    <div style="font-weight: 500; font-size: 15px; margin-bottom: 4px;">向量記憶搜尋</div>
-                    <div style="font-size: 13px; color: #7F8C8D;">pgvector 已啟用</div>
-                    <span class="badge badge-low" style="margin-top: 8px; display: inline-block;">正常</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- 系統處理紀錄 -->
     <div id="page-agents" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div class="card" style="margin-bottom: 16px;">
@@ -517,7 +524,7 @@
             <div class="agent-card">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                     <span class="agent-dot" id="dot-decision"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #7B9E87;">照護流程</span>
+                    <span style="font-weight: 500; font-size: 16px; color: #7B9E87;">流程調度</span>
                 </div>
                 <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">流程調度</div>
                 <div style="font-size: 13px;">任務調度 + SOP</div>
@@ -691,65 +698,6 @@ const DEMO_ELDERS = [
     { id: 'C001', name: '陳秀英' },
     { id: 'L001', name: '林月琴' },
 ];
-const DEMO_SCHEDULES = [
-    { id: 'morning_med', title: '早晨服藥提醒', detail: '每日 08:00', enabled: true },
-    { id: 'water', title: '午間喝水提醒', detail: '每日 13:00', enabled: true },
-    { id: 'night_med', title: '晚間服藥提醒', detail: '每日 20:00', enabled: true },
-    { id: 'family_call', title: '家人聯絡提醒', detail: '情緒低落時由照護人員確認', enabled: false },
-];
-
-function loadScheduleState() {
-    try {
-        const saved = JSON.parse(localStorage.getItem('care4u_demo_schedules') || '{}');
-        DEMO_SCHEDULES.forEach(item => {
-            if (typeof saved[item.id] === 'boolean') item.enabled = saved[item.id];
-        });
-    } catch {}
-}
-
-function saveScheduleState() {
-    const state = {};
-    DEMO_SCHEDULES.forEach(item => state[item.id] = item.enabled);
-    localStorage.setItem('care4u_demo_schedules', JSON.stringify(state));
-}
-
-function renderSchedules() {
-    const container = document.getElementById('schedule-list');
-    if (!container) return;
-    loadScheduleState();
-    container.innerHTML = '';
-    DEMO_SCHEDULES.forEach(item => {
-        const row = document.createElement('div');
-        row.style.cssText = `
-            background:${item.enabled ? '#F7F3EE' : '#F0F2F1'};
-            border:1px solid ${item.enabled ? '#D6CEC7' : '#D8DDD9'};
-            border-radius:8px; padding:12px 14px;
-            display:flex; justify-content:space-between; align-items:center; gap:12px;
-        `;
-        row.innerHTML = `
-            <div>
-                <div style="font-weight:500;font-size:15px;color:var(--ink);">${escapeHtml(item.title)}</div>
-                <div style="font-size:13px;color:var(--muted);margin-top:3px;">${escapeHtml(item.detail)}</div>
-            </div>
-            <button onclick="toggleSchedule('${item.id}')"
-                style="min-width:74px;padding:7px 10px;border-radius:999px;border:1px solid ${item.enabled ? '#BFD6C8' : '#D8DDD9'};
-                       background:${item.enabled ? 'var(--care-soft)' : 'white'};color:${item.enabled ? 'var(--care)' : 'var(--muted)'};
-                       font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
-                ${item.enabled ? '啟用' : '暫停'}
-            </button>
-        `;
-        container.appendChild(row);
-    });
-}
-
-function toggleSchedule(id) {
-    const item = DEMO_SCHEDULES.find(schedule => schedule.id === id);
-    if (!item) return;
-    item.enabled = !item.enabled;
-    saveScheduleState();
-    renderSchedules();
-}
-
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -1019,60 +967,6 @@ async function saveElderProfile() {
     }
 }
 
-async function searchElderBackground() {
-    const elderId = document.getElementById('elder-select').value;
-    const name = document.getElementById('field-name').value;
-    const keywords = document.getElementById('search-keywords').value
-        .split(/[,，、\s]+/)
-        .filter(k => k.trim());
-    const resultEl = document.getElementById('search-result');
-
-    if (!name) {
-        showToast('請先填入長者姓名。', 'warn');
-        return;
-    }
-
-    resultEl.style.display = 'block';
-    resultEl.style.background = '#F7F3EE';
-    resultEl.style.color = '#7F8C8D';
-    resultEl.textContent = '搜尋並整理生平資料中...';
-
-    try {
-        const res = await fetch(`${API_BASE}/api/profile/search-background`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                elder_id: elderId,
-                name: name,
-                keywords: keywords.length > 0 ? keywords : [name]
-            })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            resultEl.style.background = '#E8F5EC';
-            resultEl.style.color = '#2D6A4F';
-            resultEl.innerHTML = `已整理生平資料，陪伴者會在合適時自然帶入。`;
-
-            const bioSection = document.getElementById('biography-section');
-            const bioDisplay = document.getElementById('biography-display');
-            const bioEdit = document.getElementById('biography-edit');
-            bioSection.style.display = 'block';
-            bioDisplay.textContent = data.biography;
-            bioEdit.value = data.biography;
-        } else {
-            resultEl.style.background = '#FEF9E7';
-            resultEl.style.color = '#7D6608';
-            resultEl.textContent = data.message;
-        }
-    } catch (e) {
-        resultEl.style.background = '#FDECEA';
-        resultEl.style.color = '#922B21';
-        resultEl.textContent = '搜尋失敗';
-        showToast('搜尋失敗，請稍後再試。', 'error');
-    }
-}
-
 // ===== 對話紀錄後台 =====
 let emotionChartInstance = null;
 
@@ -1283,60 +1177,6 @@ function renderEvent(evt, container, isLong) {
         </div>
     `;
     container.appendChild(div);
-}
-
-async function searchElderBackground() {
-    const elderId = document.getElementById('elder-select').value;
-    const name = document.getElementById('field-name').value;
-    const keywords = document.getElementById('search-keywords').value
-        .split(/[,，、\s]+/)
-        .filter(k => k.trim());
-    const resultEl = document.getElementById('search-result');
-
-    if (!name) {
-        showToast('請先填入長者姓名。', 'warn');
-        return;
-    }
-
-    resultEl.style.display = 'block';
-    resultEl.style.background = '#F7F3EE';
-    resultEl.style.color = '#7F8C8D';
-    resultEl.textContent = '搜尋並整理生平資料中...';
-
-    try {
-        const res = await fetch(`${API_BASE}/api/profile/search-background`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                elder_id: elderId,
-                name: name,
-                keywords: keywords.length > 0 ? keywords : [name]
-            })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            resultEl.style.background = '#E8F5EC';
-            resultEl.style.color = '#2D6A4F';
-            resultEl.innerHTML = `已整理生平資料，陪伴者會在合適時自然帶入。`;
-
-            const bioSection = document.getElementById('biography-section');
-            const bioDisplay = document.getElementById('biography-display');
-            const bioEdit = document.getElementById('biography-edit');
-            bioSection.style.display = 'block';
-            bioDisplay.textContent = data.biography;
-            bioEdit.value = data.biography;
-        } else {
-            resultEl.style.background = '#FEF9E7';
-            resultEl.style.color = '#7D6608';
-            resultEl.textContent = data.message;
-        }
-    } catch (e) {
-        resultEl.style.background = '#FDECEA';
-        resultEl.style.color = '#922B21';
-        resultEl.textContent = '搜尋失敗';
-        showToast('搜尋失敗，請稍後再試。', 'error');
-    }
 }
 
 let currentBackgroundCandidates = [];
@@ -1709,12 +1549,13 @@ async function loadAgentLogs() {
         const data = await res.json();
         const selectedElderId = document.getElementById('agent-elder-select')?.value || '';
         const logs = (data.logs || []).filter(log => !selectedElderId || log.elder_id === selectedElderId);
+        const personaMap = await loadPersonaNameMap(selectedElderId);
 
         document.getElementById('log-update-time').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
 
         const dotMap = { MagicAI: 'dot-magic', iSafe: 'dot-isafe', Decision: 'dot-decision' };
         const lastMap = { MagicAI: 'magic-last', iSafe: 'isafe-last', Decision: 'decision-last' };
-        const agentLabels = { MagicAI: '陪伴回應', iSafe: '安全觀察', Decision: '照護流程' };
+        const agentLabels = { MagicAI: '陪伴回應', iSafe: '安全觀察', Decision: '流程調度' };
 
         ['MagicAI', 'iSafe', 'Decision'].forEach(agent => {
             document.getElementById(dotMap[agent])?.classList.add('inactive');
@@ -1746,11 +1587,28 @@ async function loadAgentLogs() {
                 <span class="log-agent ${log.agent}">${agentLabels[log.agent] || escapeHtml(log.agent)}</span>
                 <span style="min-width: 70px; color: ${actionColor}; font-size: 13px;">${log.action}</span>
                 <span style="color: #3D3530; font-size: 13px;">${escapeHtml(log.detail)}</span>
-                ${log.persona_id ? `<span style="margin-left:auto;color:#9B8E87;font-size:12px;">${escapeHtml(log.persona_id)}</span>` : ''}
+                ${log.persona_id ? `<span style="margin-left:auto;color:#9B8E87;font-size:12px;">${escapeHtml(personaMap[log.persona_id] || log.persona_id)}</span>` : ''}
             `;
             container.appendChild(row);
         });
     } catch (e) { console.error('系統處理紀錄載入失敗', e); }
+}
+
+async function loadPersonaNameMap(elderId) {
+    if (!elderId) return {};
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        const data = await res.json();
+        const personas = data.personas || {};
+        const map = {};
+        Object.entries(personas).forEach(([id, persona]) => {
+            map[id] = persona.name || id;
+        });
+        map.profile = '預設陪伴者';
+        return map;
+    } catch {
+        return {};
+    }
 }
 
 // ===== 原型一鍵套用 =====
@@ -1803,7 +1661,6 @@ function initTagLimits() {
 window.addEventListener('load', () => {
     loadElderData('W001');
     loadDemoOverview();
-    renderSchedules();
     initTagLimits();
 });
 // ===== 人格設定 =====

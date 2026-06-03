@@ -493,9 +493,19 @@ async function loadWelcomePersonas(elderId) {
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
             div.className = `persona-cell${isSelected ? ' selected' : ''}`;
-            div.onclick = () => {
+            div.tabIndex = 0;
+            div.setAttribute('role', 'button');
+            div.setAttribute('aria-label', `和${persona.name || '家人'}說話`);
+            const choose = () => {
                 selectPersona(id, avatarSrc, persona.name, persona.relation);
                 enterChat();
+            };
+            div.onclick = choose;
+            div.onkeydown = (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    choose();
+                }
             };
             const avatar = document.createElement('img');
             avatar.className = 'persona-cell-avatar';
@@ -758,6 +768,13 @@ async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
 function closeSwitcher() {
     document.getElementById('persona-switcher').style.display = 'none';
 }
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+        closeSwitcher();
+    }
+});
+
 if (urlParams.get("autostart") === "1") {
     enterChat();
 } else {

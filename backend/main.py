@@ -121,11 +121,6 @@ class ElderProfileUpdate(BaseModel):
     diet: str
     cognitive_status: str = "normal"
 
-class ElderSearchRequest(BaseModel):
-    elder_id: str
-    name: str
-    keywords: list
-
 class BackgroundCandidateRequest(BaseModel):
     elder_id: str
     extra_keywords: list = []
@@ -324,51 +319,6 @@ async def _generate_persona_tone(elder_id: str, persona_id: str):
 
     except Exception as e:
         print(f"說話風格生成失敗：{e}")
-
-
-async def _auto_search_biography(elder_id: str, name: str):
-    """Background task: search the web and generate a biography on first profile save."""
-    try:
-        print(f"自動搜尋生平資料：{name}")
-        memory = VectorMemoryStore()
-        profile = memory.get_profile(elder_id)
-        if not profile:
-            return
-
-        persona = profile.get("persona", {})
-        health = profile.get("health_notes", {})
-        search = SearchService()
-        loop = asyncio.get_event_loop()
-
-        result = await loop.run_in_executor(
-            None, search.search_elder_background, name, [name]
-        )
-        raw_summary = result.get("summary", "") if result.get("found") else ""
-
-        biography = await loop.run_in_executor(
-            None,
-            search.generate_biography,
-            name,
-            profile.get("gender", "male"),
-            persona.get("former_job", "未知"),
-            persona.get("hobbies", []),
-            profile.get("personas", {}),
-            health,
-            raw_summary,
-        )
-
-        if biography and len(biography) > 20:
-            profile["elder_biography"] = {
-                "content": biography,
-                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "sources": ["web_search"] if raw_summary else ["basic_profile"],
-                "manually_edited": False,
-            }
-            memory._save(elder_id, profile)
-            print(f"自動生平完成：{name}")
-
-    except Exception as e:
-        print(f"自動生平搜尋失敗：{e}")
 
 
 # ------------------------------------------------------------------
@@ -651,84 +601,6 @@ async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregi
         _reset_elder_state(req.elder_id)
 
         return {"success": True, "message": f"{req.name} 的資料已儲存"}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/profile/search-background")
-def search_elder_background(req: ElderSearchRequest, _: dict = Depends(require_caregiver)):
-    try:
-        memory = VectorMemoryStore()
-        profile = memory.get_profile(req.elder_id)
-        if not profile:
-            return {"success": False, "message": "找不到長者資料"}
-
-        persona = profile.get("persona", {})
-        health = profile.get("health_notes", {})
-        search = SearchService()
-
-        result = search.search_elder_background(req.name, req.keywords)
-        raw_summary = result.get("summary", "") if result.get("found") else ""
-
-        biography = search.generate_biography(
-            name=req.name,
-            gender=profile.get("gender", "male"),
-            job=persona.get("former_job", "未知"),
-            hobbies=persona.get("hobbies", []),
-            personas=profile.get("personas", {}),
-            health=health,
-            raw_summary=raw_summary,
-        )
-
-        if not biography or len(biography) < 20:
-            return {"success": False, "message": "生平生成失敗"}
-
-        profile["elder_biography"] = {
-            "content": biography,
-            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "sources": result["sources"],
-            "manually_edited": False,
-        }
-        profile["biography_usage_count"] = 0
-        memory._save(req.elder_id, profile)
-
-        embedding_service = EmbeddingService()
-        event = {
-            "event": f"生平資料：{biography[:100]}",
-            "sentiment": "neutral",
-            "emotion_score": 0.0,
-            "importance": 0.95,
-            "memory_type": "long",
-            "topic_tags": ["生平資料", "背景資訊"],
-            "reason": "網路搜尋整理的生平文章",
-            "source": "web_search",
-        }
-        memory.add_event(req.elder_id, event)
-
-        try:
-            emb = embedding_service.embed(biography)
-            if emb:
-                cursor = memory._get_cursor()
-                if cursor:
-                    cursor.execute(
-                        "SELECT id FROM elder_memories WHERE elder_id = %s ORDER BY created_at DESC LIMIT 1",
-                        (req.elder_id,),
-                    )
-                    row = cursor.fetchone()
-                    if row:
-                        memory.update_embedding(row["id"], emb)
-        except Exception as e:
-            print(f"向量生成失敗：{e}")
-
-        _reset_elder_state(req.elder_id)
-
-        return {
-            "success": True,
-            "message": f"已整理 {req.name} 的生平資料",
-            "biography": biography,
-            "sources": result["sources"],
-        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

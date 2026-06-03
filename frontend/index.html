@@ -199,10 +199,12 @@
             overflow: hidden;
         }
 
-        .persona-cell:hover {
+        .persona-cell:hover,
+        .persona-cell:focus-visible {
             border-color: var(--orange);
             background: var(--orange-pale);
             transform: scale(1.02);
+            outline: none;
         }
 
         .persona-cell.selected {
@@ -220,7 +222,8 @@
             transition: transform 0.18s;
         }
 
-        .persona-cell:hover .persona-cell-avatar {
+        .persona-cell:hover .persona-cell-avatar,
+        .persona-cell:focus-visible .persona-cell-avatar {
             transform: scale(1.05);
         }
 
@@ -750,7 +753,7 @@
     </div>
 </div>
 
-<div id="persona-switcher">
+<div id="persona-switcher" onclick="if (event.target === this) closeSwitcher()">
     <div class="switcher-box">
         <div class="switcher-title">想換誰陪你說話？</div>
         <div id="switcher-persona-list"></div>
@@ -758,6 +761,6 @@
     </div>
 </div>
 
-<script src="/static/app.js?v=25"></script>
+<script src="/static/app.js?v=26"></script>
 </body>
 </html>
