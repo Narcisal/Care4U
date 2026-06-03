@@ -23,7 +23,14 @@ def evaluate_rag_queries(elder_id: str, queries: list[dict], limit: int = 5) -> 
             limit=limit,
             query_text=query,
         )
-        retrieved_text = "\n".join(r.get("event", "") for r in retrieved)
+        retrieved_text = "\n".join(
+            " ".join([
+                str(r.get("event", "")),
+                str(r.get("reason", "")),
+                " ".join(r.get("topic_tags", []) or []),
+            ])
+            for r in retrieved
+        )
         hit = bool(expected) and any(term in retrieved_text for term in expected)
         if hit:
             hits += 1

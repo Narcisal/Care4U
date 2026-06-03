@@ -139,11 +139,32 @@
             padding: 16px 18px;
             color: var(--ink);
         }
+        .tool-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .session-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface-soft);
+        }
         @media (min-width: 1024px) {
             body { padding-left: 260px; }
             #sidebar { transform: none; }
             #overlay { display: none !important; }
             button[onclick="openSidebar()"] { display: none; }
+        }
+        @media (max-width: 680px) {
+            .tool-two-col { grid-template-columns: 1fr; }
+            .session-row { align-items: stretch; flex-direction: column; }
+            .session-row button { width: 100%; }
         }
     </style>
 </head>
@@ -185,7 +206,7 @@
             <span>🔗</span><span>系統處理紀錄</span>
         </div>
         <div class="nav-item" id="nav-memory" onclick="navigateTo('memory')">
-            <span>🧠</span><span>記憶評估</span>
+            <span>🧠</span><span>記憶檢索測試</span>
         </div>
         <div class="nav-item" id="nav-stt" onclick="navigateTo('stt')">
             <span>🎙️</span><span>語音驗證</span>
@@ -583,13 +604,13 @@
         </div>
     </div>
 
-    <!-- 記憶評估 -->
+    <!-- 記憶檢索測試 -->
     <div id="page-memory" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div class="card" style="margin-bottom: 16px;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;">
                 <div>
-                    <h2 style="font-size: 20px; font-weight: 500;">長期記憶 RAG 評估</h2>
-                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">檢查系統是否能從長者歷史記憶中找回相關內容</div>
+                    <h2 style="font-size: 20px; font-weight: 500;">記憶檢索測試</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">用精準問題確認重要記憶是否被保存並可被找回</div>
                 </div>
                 <select id="rag-elder-select" style="width:auto;min-width:150px;font-size:16px;text-align:center;height:auto;padding:8px;">
                     <option value="W001">王大明</option>
@@ -597,18 +618,21 @@
                     <option value="L001">林月琴</option>
                 </select>
             </div>
-            <label>評估問題</label>
+            <div style="background:#F7F3EE;border:1px solid #D6CEC7;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:var(--muted);line-height:1.7;">
+                目前展示模式使用 JSON 記憶 fallback，主要依關鍵字重疊與重要度檢索。這頁適合做 hit-rate smoke test；更自然的語意查詢需要接 embedding / pgvector 後再正式評估。
+            </div>
+            <label>測試問題與期待命中關鍵字</label>
             <textarea id="rag-query-input"
                 style="width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--surface-soft);font-size:15px;line-height:1.7;font-family:'Microsoft JhengHei',sans-serif;color:var(--ink);"
                 placeholder="每行一題，可用：問題｜期待關鍵字1,關鍵字2"></textarea>
             <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
                 <button onclick="loadRagPreset()" style="padding: 11px 18px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 15px; cursor: pointer; font-family: inherit;">帶入預設題目</button>
-                <button onclick="runRagEvaluation()" style="padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">開始評估</button>
+                <button onclick="runRagEvaluation()" style="padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">開始測試</button>
             </div>
         </div>
         <div class="card">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
-                <h2 style="font-size:18px;font-weight:500;">評估結果</h2>
+                <h2 style="font-size:18px;font-weight:500;">測試結果</h2>
                 <div id="rag-summary" style="font-size:14px;color:var(--muted);">尚未執行</div>
             </div>
             <div id="rag-results" style="display:flex;flex-direction:column;gap:10px;">
@@ -633,7 +657,7 @@
         <div class="card" style="margin-bottom: 16px;">
             <h2 style="font-size:18px;font-weight:500;margin-bottom:14px;">錄音辨識測試</h2>
             <label>語言模式</label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+            <div class="tool-two-col">
                 <button onclick="setSttVerifyLanguage('zh')" id="btn-stt-verify-zh" style="padding:12px;border-radius:8px;border:1px solid #D6CEC7;background:white;font-size:15px;cursor:pointer;font-family:inherit;">華語模式</button>
                 <button onclick="setSttVerifyLanguage('tai')" id="btn-stt-verify-tai" style="padding:12px;border-radius:8px;border:1px solid #D6CEC7;background:white;font-size:15px;cursor:pointer;font-family:inherit;">台語模式</button>
             </div>
@@ -961,7 +985,7 @@ function navigateTo(page) {
         dashboard: ['照護總覽', '快速查看三位長者、重要記憶與安全事件'],
         isafe: ['安全觀察', '用固定案例檢查危急、低落與日常狀態'],
         agents: ['系統處理紀錄', '確認陪伴、安全與流程是否正常運作'],
-        memory: ['記憶評估', '檢查長期記憶是否能找回正確內容'],
+        memory: ['記憶檢索測試', '確認重要記憶是否能被精準問題找回'],
         stt: ['語音驗證', '測試台語 STT 與辨識準確度'],
         persona: ['陪伴者管理', '設定家人或陪伴者的稱呼、關係與說話風格'],
     };
@@ -1783,7 +1807,7 @@ async function loadSessions() {
         container.innerHTML = '';
         rows.forEach(row => {
             const div = document.createElement('div');
-            div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface-soft);';
+            div.className = 'session-row';
             div.innerHTML = `
                 <div style="min-width:0;">
                     <div style="font-size:15px;font-weight:700;color:var(--ink);">${escapeHtml(elderNames[row.elder_id] || row.elder_id)}</div>
@@ -1836,19 +1860,19 @@ function loadRagPreset() {
     const elderId = document.getElementById('rag-elder-select')?.value || 'W001';
     const presets = {
         W001: [
-            '王大明喜歡什麼休閒活動？｜鄧麗君,象棋',
-            '王大明以前做什麼工作？｜電腦工程師',
-            '王大明有哪些身體注意事項？｜腰部舊傷,怕冷',
+            '王大明最近有沒有頭暈跌倒的安全風險？｜頭很暈,跌倒,安全警報',
+            '王大明曾經提到胸口痛或喘不過氣嗎？｜胸口很痛,喘不過氣',
+            '王大明最近有沒有孤單或不開心？｜孤單,不開心',
         ],
         C001: [
-            '陳秀英過去的職業是什麼？｜老師',
-            '陳秀英喜歡哪些日常活動？｜園藝,做菜',
-            '陳秀英常提到哪些家人？｜家人',
+            '陳秀英最近有沒有想念以前的家？｜以前的家,老朋友',
+            '陳秀英有沒有頭暈快跌倒的紀錄？｜頭很暈,跌倒',
+            '陳秀英有沒有提到晚餐讓她開心？｜晚餐,開心',
         ],
         L001: [
-            '林月琴以前做什麼工作？｜裁縫',
-            '林月琴目前需要注意什麼認知狀態？｜失智',
-            '林月琴喜歡哪些生活習慣？｜家人',
+            '林月琴以前做旗袍的回憶是什麼？｜旗袍,裁縫',
+            '林月琴晚上是否會心慌或擔心忘記事情？｜心慌,女兒',
+            '林月琴最近有沒有想念以前的裁縫店？｜裁縫店,孤單',
         ],
     };
     document.getElementById('rag-query-input').value = (presets[elderId] || presets.W001).join('\n');
@@ -1875,10 +1899,10 @@ async function runRagEvaluation() {
     const container = document.getElementById('rag-results');
     const queries = parseRagQueries();
     if (queries.length === 0) {
-        showToast('請先輸入至少一題評估問題。', 'warn');
+        showToast('請先輸入至少一題測試問題。', 'warn');
         return;
     }
-    summary.textContent = '評估中...';
+    summary.textContent = '測試中...';
     container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:24px;font-size:15px;">正在搜尋相關記憶...</div>';
     try {
         const res = await fetch(`${API_BASE}/api/admin/rag/evaluate`, {
@@ -1905,13 +1929,14 @@ async function runRagEvaluation() {
                     <span class="badge ${row.hit ? 'badge-low' : 'badge-high'}">${row.hit ? '命中' : '未命中'}</span>
                 </div>
                 <div style="font-size:13px;color:var(--muted);margin-top:6px;">期待關鍵字：${escapeHtml((row.expected || []).join('、') || '未設定')}</div>
+                ${row.hit ? '' : '<div style="font-size:13px;color:#922B21;margin-top:8px;">未命中可能代表問法太抽象、期待關鍵字和記憶文字不同，或目前 JSON fallback 沒有語意同義詞能力。</div>'}
                 ${retrieved || '<div style="font-size:13px;color:var(--muted);margin-top:10px;">沒有找到相關記憶</div>'}
             `;
             container.appendChild(card);
         });
     } catch (e) {
-        summary.textContent = '評估失敗';
-        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:24px;font-size:15px;">RAG 評估失敗，請確認後端服務。</div>';
+        summary.textContent = '測試失敗';
+        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:24px;font-size:15px;">記憶檢索測試失敗，請確認後端服務。</div>';
     }
 }
 

@@ -71,7 +71,7 @@ Suggested screenshots:
 3. Caregiver dashboard elder overview.
 4. Companion management page with photo and `.wav` upload.
 5. Safety observation page after an urgent sentence.
-6. Memory RAG evaluation page showing hit rate and retrieved memories.
+6. Memory retrieval test page showing hit rate and retrieved memories.
 7. Taiwanese STT verification page with transcript/CER result.
 
 Suggested demo metrics:
@@ -83,7 +83,7 @@ Suggested demo metrics:
 | TTS fallback layers | 3 |
 | Safety escalation levels | 0 to 3 |
 | Offline biography draft | Supported |
-| RAG evaluation | Hit-rate tool available |
+| Memory retrieval test | Hit-rate smoke test available |
 | Taiwanese STT | Route verified; live audio testing page available |
 
 ## Contribution
@@ -94,7 +94,7 @@ AI Care U contributes a practical prototype for AI-assisted elder companionship 
 
 - Collect real Taiwanese elder speech samples and evaluate Breeze ASR transcription quality.
 - Prepare authorized `.wav` samples for XTTS voice cloning.
-- Evaluate long-term memory retrieval with structured caregiver/elder scenarios.
+- Evaluate long-term memory retrieval with structured caregiver/elder scenarios and embedding-based semantic search.
 - Improve role-based admin workflows for real care teams.
 - Produce final poster screenshots and demo video QR code.
 
@@ -107,4 +107,3 @@ Place at lower-right corner:
 - Optional short URL
 
 Keep this area visually clean and avoid placing dense text near the QR code.
-

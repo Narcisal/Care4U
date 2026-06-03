@@ -43,7 +43,7 @@ AI Care U addresses these issues through persona-based companionship, profile-gr
 - iSafe emotion and safety monitoring
 - Caregiver-assisted public background search and biography drafting
 - Agent activity monitoring and conversation history review, filtered by elder profile
-- Caregiver-visible admin identity, active session management, RAG evaluation, and STT verification tools
+- Caregiver-visible admin identity, active session management, memory retrieval smoke tests, and STT verification tools
 - Demo mode that can run without Gemini, PostgreSQL, Tavily, XTTS, or GPU
 
 ## Out of Current Scope
@@ -77,7 +77,7 @@ Caregiver Admin UI
   -> Conversation history
   -> iSafe and Decision monitoring
   -> Agent logs filtered by elder
-  -> Session, memory RAG, and STT verification tools
+  -> Session, memory retrieval, and STT verification tools
 ```
 
 ## Agent Architecture
@@ -296,7 +296,7 @@ Important boundaries:
 6. Open the prepared elder chat session and choose a companion persona.
 7. Test the safety sentence: "I feel very dizzy and might fall."
 8. Review safety events, conversation history, and elder-filtered Agent logs in the admin dashboard.
-9. Open memory evaluation and STT verification pages to confirm next-stage tools are available.
+9. Open memory retrieval and STT verification pages to confirm next-stage tools are available.
 10. Run through `demo_script.md` once before the final presentation.
 
 ## Taiwanese STT Verification
@@ -317,10 +317,10 @@ The next-stage evaluation endpoints are available behind admin access:
 
 - `GET /api/admin/sessions`: inspect active elder/persona sessions.
 - `POST /api/admin/sessions/clear`: clear a specific session or all sessions.
-- `POST /api/admin/rag/evaluate`: evaluate memory retrieval hit rate with prepared query/expected-term pairs.
+- `POST /api/admin/rag/evaluate`: run memory retrieval smoke tests with prepared query/expected-term pairs.
 - `POST /api/admin/stt/evaluate-transcripts`: evaluate prepared STT transcripts with character error rate.
 
-The caregiver admin dashboard now exposes these utilities as UI pages, so they can be demonstrated without manually calling the API.
+The caregiver admin dashboard now exposes these utilities as UI pages, so they can be demonstrated without manually calling the API. In demo mode, memory retrieval uses a JSON fallback based mainly on keyword overlap and importance; broader semantic queries should be evaluated after enabling embedding / pgvector retrieval.
 
 ## Poster Draft
 
