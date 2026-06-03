@@ -43,6 +43,7 @@ AI Care U addresses these issues through persona-based companionship, profile-gr
 - iSafe emotion and safety monitoring
 - Caregiver-assisted public background search and biography drafting
 - Agent activity monitoring and conversation history review, filtered by elder profile
+- Caregiver-visible admin identity, active session management, RAG evaluation, and STT verification tools
 - Demo mode that can run without Gemini, PostgreSQL, Tavily, XTTS, or GPU
 
 ## Out of Current Scope
@@ -76,6 +77,7 @@ Caregiver Admin UI
   -> Conversation history
   -> iSafe and Decision monitoring
   -> Agent logs filtered by elder
+  -> Session, memory RAG, and STT verification tools
 ```
 
 ## Agent Architecture
@@ -294,7 +296,8 @@ Important boundaries:
 6. Open the prepared elder chat session and choose a companion persona.
 7. Test the safety sentence: "I feel very dizzy and might fall."
 8. Review safety events, conversation history, and elder-filtered Agent logs in the admin dashboard.
-9. Run through `demo_script.md` once before the final presentation.
+9. Open memory evaluation and STT verification pages to confirm next-stage tools are available.
+10. Run through `demo_script.md` once before the final presentation.
 
 ## Taiwanese STT Verification
 
@@ -304,7 +307,7 @@ The backend exposes a lightweight diagnostic endpoint:
 GET /api/stt/status
 ```
 
-It reports whether Whisper, Torch, Transformers, ffmpeg, and the local Breeze ASR 26 cache are available. The admin dashboard language switch calls `/api/stt/language` and verifies that the Taiwanese STT route can be selected without breaking the main demo flow. Live transcription quality should still be checked with a real Taiwanese audio sample before making it a primary presentation feature.
+It reports whether Whisper, Torch, Transformers, ffmpeg, and the local Breeze ASR 26 cache are available. The admin dashboard includes a STT verification page for checking the route, uploading a real audio sample, and evaluating prepared transcripts with character error rate. Live transcription quality should still be checked with real Taiwanese audio before making it a primary presentation feature.
 
 The latest verification record is documented in `stt_verification.md`.
 
@@ -317,6 +320,12 @@ The next-stage evaluation endpoints are available behind admin access:
 - `POST /api/admin/rag/evaluate`: evaluate memory retrieval hit rate with prepared query/expected-term pairs.
 - `POST /api/admin/stt/evaluate-transcripts`: evaluate prepared STT transcripts with character error rate.
 
+The caregiver admin dashboard now exposes these utilities as UI pages, so they can be demonstrated without manually calling the API.
+
+## Poster Draft
+
+Poster content and architecture notes are drafted in `poster_content_draft.md`.
+
 ## Development Notes
 
 - STT is lazy-loaded. FastAPI startup does not immediately load Whisper.
@@ -326,9 +335,9 @@ The next-stage evaluation endpoints are available behind admin access:
 
 ## Future Work
 
-- Evaluate long-term memory retrieval quality with real caregiver/elder scenarios.
+- Expand memory retrieval evaluation with real caregiver/elder scenarios and poster-ready metrics.
 - Add richer caregiver analytics for emotion trends and safety history.
-- Add full role-based access control for the admin dashboard.
+- Prepare authorized `.wav` voice samples for XTTS voice cloning.
 - Improve multi-elder session isolation for real deployment.
 - Expand Taiwanese language support.
 - Add deployment packaging such as Docker Compose.

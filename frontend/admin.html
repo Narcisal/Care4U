@@ -72,6 +72,16 @@
             font-weight: 500;
             white-space: nowrap;
         }
+        .role-note {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #FFFFFF;
+            border: 1px solid #D8DDD9;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
         .status-dot {
             width: 8px;
             height: 8px;
@@ -174,6 +184,12 @@
         <div class="nav-item" id="nav-agents" onclick="navigateTo('agents')">
             <span>🔗</span><span>系統處理紀錄</span>
         </div>
+        <div class="nav-item" id="nav-memory" onclick="navigateTo('memory')">
+            <span>🧠</span><span>記憶評估</span>
+        </div>
+        <div class="nav-item" id="nav-stt" onclick="navigateTo('stt')">
+            <span>🎙️</span><span>語音驗證</span>
+        </div>
     </div>
     <div class="sidebar-footer">
         <div class="sidebar-status">
@@ -190,6 +206,11 @@
                 <span>長者檔案</span>
                 <span class="status-pill">3 位</span>
             </div>
+            <div class="sidebar-status-row">
+                <span>登入身分</span>
+                <span class="status-pill" id="admin-role-label">確認中</span>
+            </div>
+            <div class="role-note" id="admin-role-note">正在確認目前後台權限。</div>
         </div>
         <a class="sidebar-client-link" href="/">
             <span>開啟長者端</span>
@@ -532,6 +553,22 @@
             </div>
         </div>
 
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 500;">目前對話狀態</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">展示前可確認或清除暫存對話，避免不同長者互相影響</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button onclick="loadSessions()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">重新整理</button>
+                    <button onclick="clearAllSessions()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid #E7B7B7; background: var(--alert-soft); color: #922B21; font-size: 13px; cursor: pointer; font-family: inherit;">清除全部</button>
+                </div>
+            </div>
+            <div id="session-list" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">尚未載入</div>
+            </div>
+        </div>
+
         <div class="card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <h2 style="font-size: 18px; font-weight: 500;">系統處理紀錄</h2>
@@ -542,6 +579,82 @@
             </div>
             <div id="agent-logs" style="display: flex; flex-direction: column;">
                 <div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無互動紀錄，請先開始對話</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 記憶評估 -->
+    <div id="page-memory" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;">
+                <div>
+                    <h2 style="font-size: 20px; font-weight: 500;">長期記憶 RAG 評估</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">檢查系統是否能從長者歷史記憶中找回相關內容</div>
+                </div>
+                <select id="rag-elder-select" style="width:auto;min-width:150px;font-size:16px;text-align:center;height:auto;padding:8px;">
+                    <option value="W001">王大明</option>
+                    <option value="C001">陳秀英</option>
+                    <option value="L001">林月琴</option>
+                </select>
+            </div>
+            <label>評估問題</label>
+            <textarea id="rag-query-input"
+                style="width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--surface-soft);font-size:15px;line-height:1.7;font-family:'Microsoft JhengHei',sans-serif;color:var(--ink);"
+                placeholder="每行一題，可用：問題｜期待關鍵字1,關鍵字2"></textarea>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+                <button onclick="loadRagPreset()" style="padding: 11px 18px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 15px; cursor: pointer; font-family: inherit;">帶入預設題目</button>
+                <button onclick="runRagEvaluation()" style="padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">開始評估</button>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+                <h2 style="font-size:18px;font-weight:500;">評估結果</h2>
+                <div id="rag-summary" style="font-size:14px;color:var(--muted);">尚未執行</div>
+            </div>
+            <div id="rag-results" style="display:flex;flex-direction:column;gap:10px;">
+                <div style="text-align:center;color:#BDC3C7;padding:24px;font-size:15px;">請先執行評估</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 語音驗證 -->
+    <div id="page-stt" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
+        <div class="card" style="margin-bottom: 16px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;">
+                <div>
+                    <h2 style="font-size: 20px; font-weight: 500;">台語 STT 實測輔助</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">上傳真人錄音確認辨識結果，並可用 CER 粗略評估準確度</div>
+                </div>
+                <button onclick="loadSttStatus()" style="padding: 10px 16px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 14px; cursor: pointer; font-family: inherit;">檢查狀態</button>
+            </div>
+            <div id="stt-status-box" style="background:var(--surface-soft);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-size:14px;color:var(--muted);line-height:1.7;">尚未檢查</div>
+        </div>
+
+        <div class="card" style="margin-bottom: 16px;">
+            <h2 style="font-size:18px;font-weight:500;margin-bottom:14px;">錄音辨識測試</h2>
+            <label>語言模式</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                <button onclick="setSttVerifyLanguage('zh')" id="btn-stt-verify-zh" style="padding:12px;border-radius:8px;border:1px solid #D6CEC7;background:white;font-size:15px;cursor:pointer;font-family:inherit;">華語模式</button>
+                <button onclick="setSttVerifyLanguage('tai')" id="btn-stt-verify-tai" style="padding:12px;border-radius:8px;border:1px solid #D6CEC7;background:white;font-size:15px;cursor:pointer;font-family:inherit;">台語模式</button>
+            </div>
+            <label>上傳音檔</label>
+            <input id="stt-audio-file" type="file" accept="audio/*,.wav,.webm,.m4a,.mp3" style="height:auto;padding:10px;">
+            <button onclick="runSttAudioTest()" style="margin-top:14px;padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">開始辨識</button>
+            <div id="stt-audio-result" style="margin-top:14px;background:var(--surface-soft);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-size:15px;color:var(--ink);line-height:1.7;">尚未辨識</div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size:18px;font-weight:500;margin-bottom:14px;">CER 文字評估</h2>
+            <label>評估資料</label>
+            <textarea id="stt-cer-input"
+                style="width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--surface-soft);font-size:15px;line-height:1.7;font-family:'Microsoft JhengHei',sans-serif;color:var(--ink);"
+                placeholder="每行一筆：標準答案｜辨識結果"></textarea>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+                <button onclick="loadSttCerPreset()" style="padding: 11px 18px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 15px; cursor: pointer; font-family: inherit;">帶入範例</button>
+                <button onclick="runSttCerEvaluation()" style="padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">計算 CER</button>
+            </div>
+            <div id="stt-cer-result" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+                <div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">尚未評估</div>
             </div>
         </div>
     </div>
@@ -739,6 +852,37 @@ function showToast(message, type = 'info') {
     }, 3200);
 }
 
+async function loadAdminIdentity() {
+    const label = document.getElementById('admin-role-label');
+    const note = document.getElementById('admin-role-note');
+    if (!label || !note) return;
+
+    const roleText = {
+        admin: '系統管理者',
+        caregiver: '照護人員',
+        viewer: '檢視者',
+    };
+    const roleNote = {
+        admin: '可管理資料、陪伴者、語音樣本與系統設定。',
+        caregiver: '可管理長者資料、陪伴者與照護紀錄。',
+        viewer: '可查看紀錄與狀態，不能修改照護資料。',
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/me`);
+        if (!res.ok) throw new Error('auth');
+        const data = await res.json();
+        const role = data.role || 'viewer';
+        label.textContent = roleText[role] || role;
+        note.textContent = data.username === 'demo'
+            ? '目前未設定後台密碼，使用本機展示模式。'
+            : `${data.username}，${roleNote[role] || '依後端角色設定開放功能。'}`;
+    } catch {
+        label.textContent = '需要登入';
+        note.textContent = '請使用照護後台帳號登入後再操作。';
+    }
+}
+
 function openSidebar() {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('overlay').classList.add('open');
@@ -805,7 +949,7 @@ async function loadDemoOverview() {
 }
 
 function navigateTo(page) {
-    ['profile','persona','dashboard','isafe','agents'].forEach(p => {
+    ['profile','persona','dashboard','isafe','agents','memory','stt'].forEach(p => {
         document.getElementById('page-' + p).classList.add('hidden');
     });
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -817,6 +961,8 @@ function navigateTo(page) {
         dashboard: ['照護總覽', '快速查看三位長者、重要記憶與安全事件'],
         isafe: ['安全觀察', '用固定案例檢查危急、低落與日常狀態'],
         agents: ['系統處理紀錄', '確認陪伴、安全與流程是否正常運作'],
+        memory: ['記憶評估', '檢查長期記憶是否能找回正確內容'],
+        stt: ['語音驗證', '測試台語 STT 與辨識準確度'],
         persona: ['陪伴者管理', '設定家人或陪伴者的稱呼、關係與說話風格'],
     };
     document.getElementById('page-title').textContent = titles[page][0];
@@ -831,9 +977,18 @@ function navigateTo(page) {
         loadSafety(document.getElementById('isafe-elder-select').value);
     }
     if (page === 'persona') loadPersonas(document.getElementById('persona-elder-select').value);
+    if (page === 'memory' && !document.getElementById('rag-query-input').value.trim()) {
+        loadRagPreset();
+    }
+    if (page === 'stt') {
+        loadSttStatus();
+        if (!document.getElementById('stt-cer-input').value.trim()) loadSttCerPreset();
+    }
 
     if (page === 'agents') {
+        loadSessions();
         loadAgentLogs();
+        if (agentLogInterval) clearInterval(agentLogInterval);
         agentLogInterval = setInterval(loadAgentLogs, 3000);
     } else {
         clearInterval(agentLogInterval);
@@ -1611,6 +1766,267 @@ async function loadPersonaNameMap(elderId) {
     }
 }
 
+async function loadSessions() {
+    const container = document.getElementById('session-list');
+    if (!container) return;
+    container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">載入中...</div>';
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/sessions`);
+        if (!res.ok) throw new Error('sessions');
+        const data = await res.json();
+        const rows = data.sessions || [];
+        if (rows.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:#9B8E87;padding:18px;font-size:14px;">目前沒有暫存中的對話狀態</div>';
+            return;
+        }
+        const elderNames = Object.fromEntries(DEMO_ELDERS.map(elder => [elder.id, elder.name]));
+        container.innerHTML = '';
+        rows.forEach(row => {
+            const div = document.createElement('div');
+            div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface-soft);';
+            div.innerHTML = `
+                <div style="min-width:0;">
+                    <div style="font-size:15px;font-weight:700;color:var(--ink);">${escapeHtml(elderNames[row.elder_id] || row.elder_id)}</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:4px;">
+                        session：${escapeHtml(row.session_id || 'default')}｜陪伴者：${escapeHtml(row.persona_id || 'profile')}｜互動 ${row.chat_count || 0} 次
+                    </div>
+                    <div style="font-size:12px;color:#9B8E87;margin-top:2px;">最後活動：${escapeHtml(row.last_seen || '')}</div>
+                </div>
+                <button onclick="clearSession('${escapeHtml(row.elder_id)}','${escapeHtml(row.session_id || '')}')"
+                    style="flex-shrink:0;padding:7px 12px;border-radius:8px;border:1px solid #E7B7B7;background:white;color:#922B21;font-size:13px;cursor:pointer;font-family:inherit;">
+                    清除
+                </button>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:18px;font-size:14px;">對話狀態載入失敗</div>';
+    }
+}
+
+async function clearSession(elderId, sessionId = null) {
+    await postClearSessions({ elder_id: elderId, session_id: sessionId || null });
+}
+
+async function clearAllSessions() {
+    await postClearSessions({ elder_id: null, session_id: null });
+}
+
+async function postClearSessions(payload) {
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/sessions/clear`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+        if (res.status === 403) {
+            showToast('需要系統管理者權限才能清除對話狀態。', 'warn');
+            return;
+        }
+        if (!res.ok) throw new Error('clear');
+        showToast('對話狀態已清除。', 'success');
+        await loadSessions();
+        await loadAgentLogs();
+    } catch (e) {
+        showToast('清除失敗，請確認後端服務與權限。', 'error');
+    }
+}
+
+function loadRagPreset() {
+    const elderId = document.getElementById('rag-elder-select')?.value || 'W001';
+    const presets = {
+        W001: [
+            '王大明喜歡什麼休閒活動？｜鄧麗君,象棋',
+            '王大明以前做什麼工作？｜電腦工程師',
+            '王大明有哪些身體注意事項？｜腰部舊傷,怕冷',
+        ],
+        C001: [
+            '陳秀英過去的職業是什麼？｜老師',
+            '陳秀英喜歡哪些日常活動？｜園藝,做菜',
+            '陳秀英常提到哪些家人？｜家人',
+        ],
+        L001: [
+            '林月琴以前做什麼工作？｜裁縫',
+            '林月琴目前需要注意什麼認知狀態？｜失智',
+            '林月琴喜歡哪些生活習慣？｜家人',
+        ],
+    };
+    document.getElementById('rag-query-input').value = (presets[elderId] || presets.W001).join('\n');
+}
+
+function parseRagQueries() {
+    const text = document.getElementById('rag-query-input').value.trim();
+    return text.split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+            const [query, expectedText = ''] = line.split(/[|｜]/);
+            return {
+                query: query.trim(),
+                expected: expectedText.split(/[,，、]/).map(item => item.trim()).filter(Boolean),
+            };
+        })
+        .filter(item => item.query);
+}
+
+async function runRagEvaluation() {
+    const elderId = document.getElementById('rag-elder-select').value;
+    const summary = document.getElementById('rag-summary');
+    const container = document.getElementById('rag-results');
+    const queries = parseRagQueries();
+    if (queries.length === 0) {
+        showToast('請先輸入至少一題評估問題。', 'warn');
+        return;
+    }
+    summary.textContent = '評估中...';
+    container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:24px;font-size:15px;">正在搜尋相關記憶...</div>';
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/rag/evaluate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, queries }),
+        });
+        if (!res.ok) throw new Error('rag');
+        const data = await res.json();
+        summary.textContent = `命中 ${data.hits || 0}/${data.total || 0}，命中率 ${Math.round((data.hit_rate || 0) * 100)}%`;
+        container.innerHTML = '';
+        (data.rows || []).forEach(row => {
+            const card = document.createElement('div');
+            card.style.cssText = `border:1px solid ${row.hit ? '#BFD6C8' : '#E7B7B7'};background:${row.hit ? 'var(--care-soft)' : 'var(--alert-soft)'};border-radius:8px;padding:14px 16px;`;
+            const retrieved = (row.retrieved || []).map(item => `
+                <div style="margin-top:8px;padding:10px;border-radius:8px;background:white;border:1px solid var(--line);">
+                    <div style="font-size:14px;color:var(--ink);line-height:1.6;">${escapeHtml(item.event || '')}</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:4px;">重要度 ${item.importance || 0}｜相關度 ${item.rag_score ?? '—'}</div>
+                </div>
+            `).join('');
+            card.innerHTML = `
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+                    <div style="font-size:16px;font-weight:700;color:var(--ink);">${escapeHtml(row.query)}</div>
+                    <span class="badge ${row.hit ? 'badge-low' : 'badge-high'}">${row.hit ? '命中' : '未命中'}</span>
+                </div>
+                <div style="font-size:13px;color:var(--muted);margin-top:6px;">期待關鍵字：${escapeHtml((row.expected || []).join('、') || '未設定')}</div>
+                ${retrieved || '<div style="font-size:13px;color:var(--muted);margin-top:10px;">沒有找到相關記憶</div>'}
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        summary.textContent = '評估失敗';
+        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:24px;font-size:15px;">RAG 評估失敗，請確認後端服務。</div>';
+    }
+}
+
+async function loadSttStatus() {
+    const box = document.getElementById('stt-status-box');
+    if (!box) return;
+    box.textContent = '檢查中...';
+    try {
+        const res = await fetch(`${API_BASE}/api/stt/status`);
+        const data = await res.json();
+        box.innerHTML = `
+            <div><strong style="color:var(--ink);">台語路徑：</strong>${data.taiwanese_stt_verified ? '可選擇' : '尚未完整'}</div>
+            <div><strong style="color:var(--ink);">模型池：</strong>${data.pool_initialized ? `已載入 ${data.pool_size || 0} 個 worker` : '尚未載入，第一次辨識時才初始化'}</div>
+            <div><strong style="color:var(--ink);">Torch：</strong>${data.torch_available ? '可用' : '不可用'}｜<strong style="color:var(--ink);">Transformers：</strong>${data.transformers_available ? '可用' : '不可用'}｜<strong style="color:var(--ink);">Breeze Cache：</strong>${data.breeze_cache_exists ? '已找到' : '未找到'}</div>
+            <div style="margin-top:6px;color:#9B8E87;">${escapeHtml(data.verification_note || '')}</div>
+        `;
+    } catch (e) {
+        box.innerHTML = '<span style="color:#922B21;">STT 狀態檢查失敗</span>';
+    }
+}
+
+async function setSttVerifyLanguage(language) {
+    try {
+        const res = await fetch(`${API_BASE}/api/stt/language`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: 'W001', language }),
+        });
+        const data = await res.json();
+        document.getElementById('btn-stt-verify-zh').style.background = language === 'zh' ? 'var(--care-soft)' : 'white';
+        document.getElementById('btn-stt-verify-tai').style.background = language === 'tai' ? 'var(--care-soft)' : 'white';
+        showToast(language === 'tai' ? '已切換為台語模式。' : '已切換為華語模式。', data.success ? 'success' : 'warn');
+        await loadSttStatus();
+    } catch (e) {
+        showToast('語言模式切換失敗。', 'error');
+    }
+}
+
+async function runSttAudioTest() {
+    const input = document.getElementById('stt-audio-file');
+    const result = document.getElementById('stt-audio-result');
+    const file = input.files[0];
+    if (!file) {
+        showToast('請先選擇一個錄音檔。', 'warn');
+        return;
+    }
+    result.textContent = '辨識中，第一次載入模型可能需要較久...';
+    try {
+        const form = new FormData();
+        form.append('audio', file, file.name);
+        const res = await fetch(`${API_BASE}/api/stt`, { method: 'POST', body: form });
+        const data = await res.json();
+        result.innerHTML = `
+            <div><strong>辨識結果：</strong>${escapeHtml(data.text || '沒有辨識到文字')}</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:6px;">語速判定：${escapeHtml(data.speed_emotion || 'normal')}｜成功：${data.success ? '是' : '否'}</div>
+        `;
+    } catch (e) {
+        result.innerHTML = '<span style="color:#922B21;">辨識失敗，請確認音檔格式與 STT 模型狀態。</span>';
+    }
+}
+
+function loadSttCerPreset() {
+    document.getElementById('stt-cer-input').value = [
+        '阿嬤今仔日有食飯無｜阿嬤今仔日有食飯無',
+        '我頭殼有一點昏｜我頭殼有一點昏',
+        '阮想欲佮女兒講話｜阮想欲佮女兒講話',
+    ].join('\n');
+}
+
+function parseSttCerSamples() {
+    const text = document.getElementById('stt-cer-input').value.trim();
+    return text.split('\n')
+        .map((line, index) => {
+            const [reference = '', hypothesis = ''] = line.split(/[|｜]/);
+            return {
+                id: `sample-${index + 1}`,
+                reference: reference.trim(),
+                hypothesis: hypothesis.trim(),
+            };
+        })
+        .filter(sample => sample.reference || sample.hypothesis);
+}
+
+async function runSttCerEvaluation() {
+    const result = document.getElementById('stt-cer-result');
+    const samples = parseSttCerSamples();
+    if (samples.length === 0) {
+        showToast('請先輸入至少一筆標準答案與辨識結果。', 'warn');
+        return;
+    }
+    result.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">計算中...</div>';
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/stt/evaluate-transcripts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ samples }),
+        });
+        if (!res.ok) throw new Error('cer');
+        const data = await res.json();
+        result.innerHTML = `<div style="font-size:16px;font-weight:700;color:var(--ink);">平均 CER：${Math.round((data.average_cer || 0) * 100)}%</div>`;
+        (data.rows || []).forEach(row => {
+            const div = document.createElement('div');
+            div.style.cssText = 'border:1px solid var(--line);border-radius:8px;background:var(--surface-soft);padding:12px 14px;';
+            div.innerHTML = `
+                <div style="font-size:14px;color:var(--ink);line-height:1.6;">標準：${escapeHtml(row.reference || '')}</div>
+                <div style="font-size:14px;color:var(--ink);line-height:1.6;">辨識：${escapeHtml(row.hypothesis || '')}</div>
+                <div style="font-size:13px;color:var(--muted);margin-top:4px;">CER：${Math.round((row.cer || 0) * 100)}%</div>
+            `;
+            result.appendChild(div);
+        });
+    } catch (e) {
+        result.innerHTML = '<div style="text-align:center;color:#922B21;padding:18px;font-size:14px;">CER 評估失敗</div>';
+    }
+}
+
 // ===== 原型一鍵套用 =====
 function applyArchetype(type) {
     // 先清空所有標籤
@@ -1659,6 +2075,7 @@ function initTagLimits() {
 }
 
 window.addEventListener('load', () => {
+    loadAdminIdentity();
     loadElderData('W001');
     loadDemoOverview();
     initTagLimits();
