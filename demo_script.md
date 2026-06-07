@@ -172,7 +172,7 @@ C:\Users\user\bin\py.cmd -c "import json, urllib.request; payload={'elder_id':'W
 
 說明：
 
-「目前展示模式使用 JSON 記憶 fallback，適合用精準問題做 hit-rate smoke test。正式語意 RAG 需要接 embedding / pgvector 後，用更自然的問法再評估。」
+「這頁用預先設計的問題確認重要記憶是否能被找回。本機展示時即使 Linux 資料庫沒有啟動也能測；如果切到 Linux 上的 PostgreSQL / pgvector 環境，可以再比較更完整的檢索效果。」
 
 ### 7. 語音驗證
 

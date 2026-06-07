@@ -394,6 +394,40 @@
         </div>
 
         <div class="card" style="margin-bottom: 16px;">
+            <h2 style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">啟動長者 session</h2>
+            <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 14px;">
+                產生一次性 6 位 PIN，交給長者在前台登入。
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 10px; align-items: end;">
+                <label style="font-size: 13px; color: #7F8C8D;">
+                    長者
+                    <select id="pin-elder-select" style="margin-top: 5px;"></select>
+                </label>
+                <label style="font-size: 13px; color: #7F8C8D;">
+                    有效時間
+                    <select id="pin-ttl-select" style="margin-top: 5px;">
+                        <option value="240">4 小時</option>
+                        <option value="480" selected>8 小時</option>
+                        <option value="1440">24 小時</option>
+                    </select>
+                </label>
+                <button onclick="generateElderPin()"
+                    style="height: 43px; padding: 0 18px; border: none; border-radius: 9px;
+                        background: #C17F5A; color: white; cursor: pointer; font-family: inherit;">
+                    產生 PIN
+                </button>
+                <button onclick="revokeElderSession()"
+                    style="height: 43px; padding: 0 18px; border: 1px solid #C94C4C; border-radius: 9px;
+                        background: #FCEAEA; color: #922B21; cursor: pointer; font-family: inherit;">
+                    撤銷 session
+                </button>
+            </div>
+            <div id="elder-pin-result"
+                style="display: none; margin-top: 14px; padding: 14px; border-radius: 10px;
+                    background: #F7F3EE; text-align: center;"></div>
+        </div>
+
+        <div class="card" style="margin-bottom: 16px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
                 <div>
                     <h2 style="font-size: 20px; font-weight: 500;">長者照護概況</h2>
@@ -619,7 +653,7 @@
                 </select>
             </div>
             <div style="background:#F7F3EE;border:1px solid #D6CEC7;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:var(--muted);line-height:1.7;">
-                目前展示模式使用 JSON 記憶 fallback，主要依關鍵字重疊與重要度檢索。這頁適合做 hit-rate smoke test；更自然的語意查詢需要接 embedding / pgvector 後再正式評估。
+                用預先設計的問題確認重要記憶是否能被找回。展示時建議使用具體問題；若要測試更自然的自由問法，請切換到完整資料庫環境後再比較結果。
             </div>
             <label>測試問題與期待命中關鍵字</label>
             <textarea id="rag-query-input"
@@ -830,11 +864,76 @@
 <script>
 const API_BASE = "http://127.0.0.1:8000";
 let agentLogInterval = null;
-const DEMO_ELDERS = [
+let DEMO_ELDERS = [
     { id: 'W001', name: '王大明' },
     { id: 'C001', name: '陳秀英' },
     { id: 'L001', name: '林月琴' },
 ];
+
+async function loadAllowedElders() {
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/elders`);
+        if (!res.ok) throw new Error('無法載入長者清單');
+        const data = await res.json();
+        DEMO_ELDERS = (data.elders || []).map(elder => ({
+            id: elder.elder_id,
+            name: elder.name,
+        }));
+        const select = document.getElementById('pin-elder-select');
+        if (select) {
+            select.innerHTML = DEMO_ELDERS.map(elder =>
+                `<option value="${escapeHtml(elder.id)}">${escapeHtml(elder.name)}（${escapeHtml(elder.id)}）</option>`
+            ).join('');
+        }
+        return DEMO_ELDERS;
+    } catch (e) {
+        showToast(e.message || '長者清單載入失敗。', 'error');
+        return [];
+    }
+}
+
+async function generateElderPin() {
+    const elderId = document.getElementById('pin-elder-select')?.value;
+    const ttlMinutes = Number(document.getElementById('pin-ttl-select')?.value || 480);
+    const result = document.getElementById('elder-pin-result');
+    if (!elderId || !result) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/elder-pin`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, ttl_minutes: ttlMinutes }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'PIN 產生失敗');
+        result.style.display = 'block';
+        result.innerHTML = `
+            <div style="font-size: 13px; color: #7F8C8D;">${escapeHtml(data.elder_id)} 一次性 PIN</div>
+            <div style="font: 700 36px/1.4 system-ui; letter-spacing: 8px; color: #3D3530;">${escapeHtml(data.pin)}</div>
+            <div style="font-size: 12px; color: #9B8E87;">有效至 ${escapeHtml(new Date(data.expires_at).toLocaleString('zh-TW'))}</div>
+        `;
+    } catch (e) {
+        showToast(e.message || 'PIN 產生失敗。', 'error');
+    }
+}
+
+async function revokeElderSession() {
+    const elderId = document.getElementById('pin-elder-select')?.value;
+    if (!elderId || !confirm(`確定撤銷 ${elderId} 的所有登入 session？`)) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/elder-session/revoke`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || '撤銷失敗');
+        const result = document.getElementById('elder-pin-result');
+        if (result) result.style.display = 'none';
+        showToast(`已撤銷 ${elderId} 的 ${data.removed_tokens} 個登入 token。`, 'success');
+    } catch (e) {
+        showToast(e.message || '撤銷 session 失敗。', 'error');
+    }
+}
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -1929,7 +2028,7 @@ async function runRagEvaluation() {
                     <span class="badge ${row.hit ? 'badge-low' : 'badge-high'}">${row.hit ? '命中' : '未命中'}</span>
                 </div>
                 <div style="font-size:13px;color:var(--muted);margin-top:6px;">期待關鍵字：${escapeHtml((row.expected || []).join('、') || '未設定')}</div>
-                ${row.hit ? '' : '<div style="font-size:13px;color:#922B21;margin-top:8px;">未命中可能代表問法太抽象、期待關鍵字和記憶文字不同，或目前 JSON fallback 沒有語意同義詞能力。</div>'}
+                ${row.hit ? '' : '<div style="font-size:13px;color:#922B21;margin-top:8px;">未命中可能代表問法太抽象、期待關鍵字和記憶文字不同，或目前展示環境尚未切換到完整資料庫檢索。</div>'}
                 ${retrieved || '<div style="font-size:13px;color:var(--muted);margin-top:10px;">沒有找到相關記憶</div>'}
             `;
             container.appendChild(card);
@@ -2099,9 +2198,11 @@ function initTagLimits() {
     });
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     loadAdminIdentity();
-    loadElderData('W001');
+    const elders = await loadAllowedElders();
+    const firstElderId = elders[0]?.id || 'W001';
+    loadElderData(firstElderId);
     loadDemoOverview();
     initTagLimits();
 });

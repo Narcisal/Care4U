@@ -98,6 +98,15 @@ desktop.ini
 
 test.py
 test_*.py
+!tests/
+!tests/test_*.py
 convert_audio.py
 generate_avatars.py
 generated/
+
+# ------------------------------------------------------------------
+# Local task tracking (agent working notes, not for version control)
+# ------------------------------------------------------------------
+
+TASKS.md
+BUGS.md

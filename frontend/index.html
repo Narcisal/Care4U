@@ -39,6 +39,126 @@
             overflow: hidden;
         }
 
+        .demo-controls {
+            position: fixed;
+            top: 14px;
+            right: 20px;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            background: rgba(253, 250, 246, 0.96);
+            box-shadow: 0 5px 18px rgba(44, 36, 32, 0.12);
+        }
+
+        .pin-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(44, 36, 32, 0.55);
+            backdrop-filter: blur(8px);
+        }
+
+        .pin-card {
+            width: min(430px, 100%);
+            padding: 34px;
+            border-radius: 26px;
+            background: var(--warm-white);
+            box-shadow: 0 24px 70px rgba(44, 36, 32, 0.28);
+            text-align: center;
+        }
+
+        .pin-title {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .pin-hint {
+            color: var(--text-mid);
+            font-size: 17px;
+            margin-bottom: 22px;
+        }
+
+        .pin-display {
+            min-height: 62px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            background: var(--cream);
+            font: 700 34px/1.2 system-ui, sans-serif;
+            letter-spacing: 12px;
+        }
+
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .pin-keypad button {
+            min-height: 58px;
+            border: 1.5px solid var(--border);
+            border-radius: 13px;
+            background: white;
+            color: var(--text-dark);
+            font: 700 22px inherit;
+            cursor: pointer;
+        }
+
+        .pin-keypad .pin-submit {
+            background: var(--orange);
+            color: white;
+            border-color: var(--orange);
+        }
+
+        .pin-error {
+            min-height: 24px;
+            margin-top: 14px;
+            color: var(--red);
+            font-size: 15px;
+        }
+
+        .demo-controls label {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-mid);
+        }
+
+        .demo-controls select,
+        .demo-admin-link {
+            min-height: 42px;
+            padding: 7px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            background: var(--warm-white);
+            color: var(--text-dark);
+            font: 700 16px inherit;
+        }
+
+        .demo-controls select {
+            cursor: pointer;
+        }
+
+        .demo-admin-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .demo-controls select:focus-visible,
+        .demo-admin-link:focus-visible {
+            outline: 3px solid rgba(193,127,90,0.35);
+            border-color: var(--orange);
+        }
+
         /* ══════════════════════════════════════
            狀態 A：角色選擇主頁
         ══════════════════════════════════════ */
@@ -161,7 +281,7 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            padding: 48px 52px;
+            padding: 84px 52px 48px;
             background: var(--warm-white);
             position: relative;
             overflow-y: auto;
@@ -277,7 +397,7 @@
             flex-shrink: 0;
             background: #EDE0D0;
             border-bottom: 1.5px solid var(--border);
-            padding: 16px 36px;
+            padding: 16px 390px 16px 36px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -663,7 +783,7 @@
             body { overflow: auto; height: auto; min-height: 100dvh; }
             #welcome-screen { flex-direction: column; min-height: 100dvh; }
             .welcome-left { width: 100%; height: 34dvh; min-height: 260px; }
-            .welcome-right { padding: 28px 22px; }
+            .welcome-right { padding: 72px 22px 28px; }
             .speech-bubble { min-width: min(380px, 86vw); bottom: 70%; }
             .speech-bubble-text { font-size: 21px; }
             .persona-grid { gap: 12px; }
@@ -674,10 +794,67 @@
             .speaking-ring { width: min(78vw, 480px); height: min(78vw, 480px); }
             #speaking-ring-2 { width: min(84vw, 530px); height: min(84vw, 530px); }
             .main-body { justify-content: flex-start; padding-top: 24px; overflow-y: auto; }
+            .demo-controls {
+                position: fixed;
+                top: 8px;
+                right: 8px;
+                gap: 6px;
+                padding: 6px;
+            }
+            .demo-controls label { display: none; }
+            .demo-controls select,
+            .demo-admin-link {
+                min-height: 38px;
+                padding: 6px 9px;
+                font-size: 14px;
+            }
+            .top-bar {
+                padding: 60px 16px 12px;
+                align-items: flex-end;
+            }
+            .top-right { gap: 8px; }
+            .btn-switch-top {
+                min-height: 44px;
+                padding: 7px 12px;
+                font-size: 17px;
+            }
         }
     </style>
 </head>
 <body>
+
+<div id="pin-overlay" class="pin-overlay">
+    <div class="pin-card">
+        <div class="pin-title">輸入陪伴 PIN</div>
+        <div class="pin-hint">請輸入照護人員提供的 6 位數字</div>
+        <div id="pin-display" class="pin-display" aria-live="polite">••••••</div>
+        <div class="pin-keypad">
+            <button type="button" onclick="appendPin('1')">1</button>
+            <button type="button" onclick="appendPin('2')">2</button>
+            <button type="button" onclick="appendPin('3')">3</button>
+            <button type="button" onclick="appendPin('4')">4</button>
+            <button type="button" onclick="appendPin('5')">5</button>
+            <button type="button" onclick="appendPin('6')">6</button>
+            <button type="button" onclick="appendPin('7')">7</button>
+            <button type="button" onclick="appendPin('8')">8</button>
+            <button type="button" onclick="appendPin('9')">9</button>
+            <button type="button" onclick="clearPin()">清除</button>
+            <button type="button" onclick="appendPin('0')">0</button>
+            <button type="button" class="pin-submit" onclick="submitElderPin()">進入</button>
+        </div>
+        <div id="pin-error" class="pin-error"></div>
+    </div>
+</div>
+
+<nav class="demo-controls" aria-label="Demo 導覽">
+    <label for="elder-switch-select">目前長者</label>
+    <select id="elder-switch-select" onchange="switchElder(this.value)" aria-label="切換長者">
+        <option value="W001">王大明（W001）</option>
+        <option value="C001">陳秀英（C001）</option>
+        <option value="L001">林月琴（L001）</option>
+    </select>
+    <a class="demo-admin-link" href="/admin">後台管理</a>
+</nav>
 
 <!-- 狀態 A：照護人員示範用選擇頁，長者端不顯示 -->
 <div id="welcome-screen">
@@ -761,6 +938,6 @@
     </div>
 </div>
 
-<script src="/static/app.js?v=26"></script>
+<script src="/static/app.js?v=28"></script>
 </body>
 </html>

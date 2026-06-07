@@ -1,83 +1,360 @@
 import json
+import os
 import re
+import threading
 import uuid
 from datetime import datetime
 from pathlib import Path
-from .memory_manager import MemoryManager
+from typing import Callable
+from .memory_manager import BiographyUpdateResult, MemoryManager
+from backend.utils.validators import validate_elder_id, validate_persona_id
 
 DATA_DIR = Path(__file__).parent.parent / "data" / "elders"
+
+# Per-file locks so concurrent requests to different elders never block each other.
+_file_locks: dict[str, threading.Lock] = {}
+_file_locks_mutex = threading.Lock()
+
+
+def _get_file_lock(path: str) -> threading.Lock:
+    with _file_locks_mutex:
+        if path not in _file_locks:
+            _file_locks[path] = threading.Lock()
+        return _file_locks[path]
+
 
 class JsonMemoryStore(MemoryManager):
     MAX_EVENTS = 80
     IMPORTANT_KEEP_LIMIT = 40
 
+    # ------------------------------------------------------------------
+    # Path helpers
+    # ------------------------------------------------------------------
 
     def _get_path(self, elder_id: str) -> Path:
-        return DATA_DIR / f"{elder_id}.json"
+        return DATA_DIR / f"{validate_elder_id(elder_id)}.json"
 
-    def _get_conv_path(self, elder_id: str) -> Path:
-        return DATA_DIR / f"{elder_id}_conversation.json"
+    def _get_conv_path(self, elder_id: str, persona_id: str = "ai") -> Path:
+        valid_elder_id = validate_elder_id(elder_id)
+        valid_persona_id = validate_persona_id(persona_id or "ai")
+        return DATA_DIR / f"{valid_elder_id}_{valid_persona_id}_conv.json"
+
+    # ------------------------------------------------------------------
+    # Atomic write primitives
+    # ------------------------------------------------------------------
+
+    def _write_profile_unlocked(self, path: Path, data: dict) -> bool:
+        """Write atomically. Caller MUST already hold _get_file_lock(str(path))."""
+        tmp = path.with_suffix(".tmp")
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp, path)
+            return True
+        except Exception as e:
+            print(f"寫入失敗：{e}")
+            try:
+                tmp.unlink(missing_ok=True)
+            except Exception:
+                pass
+            return False
+
+    def _save(self, elder_id: str, data: dict) -> bool:
+        """Atomic profile write (acquires lock internally)."""
+        path = self._get_path(elder_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            return self._write_profile_unlocked(path, data)
+
+    def save_profile(self, elder_id: str, profile: dict) -> bool:
+        return self._save(elder_id, profile)
+
+    # ------------------------------------------------------------------
+    # Profile
+    # ------------------------------------------------------------------
 
     def get_profile(self, elder_id: str) -> dict:
         path = self._get_path(elder_id)
-        if not path.exists():
-            return {}
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if not path.exists():
+                return {}
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"讀取失敗：{e}")
+                return {}
 
-    def save_conversation(self, elder_id: str, history: list) -> bool:
+    def update_profile(self, elder_id: str, data: dict) -> bool:
+        path = self._get_path(elder_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if not path.exists():
+                return False
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    profile = json.load(f)
+            except Exception as e:
+                print(f"讀取失敗：{e}")
+                return False
+            profile.update(data)
+            return self._write_profile_unlocked(path, profile)
+
+    def _mutate_profile(
+        self,
+        elder_id: str,
+        mutator: Callable[[dict], bool],
+        *,
+        create: bool = False,
+    ) -> bool:
+        path = self._get_path(elder_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if path.exists():
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        profile = json.load(f)
+                except Exception as e:
+                    print(f"讀取失敗：{e}")
+                    return False
+            elif create:
+                profile = {"elder_id": elder_id}
+            else:
+                return False
+
+            if not mutator(profile):
+                return False
+            return self._write_profile_unlocked(path, profile)
+
+    def append_family_note(self, elder_id: str, note_dict: dict) -> bool:
+        def append(profile: dict) -> bool:
+            profile.setdefault("family_notes", []).append(note_dict)
+            return True
+
+        return self._mutate_profile(elder_id, append)
+
+    def delete_family_note_at(self, elder_id: str, index: int) -> bool:
+        def delete(profile: dict) -> bool:
+            notes = profile.get("family_notes", [])
+            if not 0 <= index < len(notes):
+                raise IndexError(
+                    f"family note index {index} out of range ({len(notes)})"
+                )
+            notes.pop(index)
+            profile["family_notes"] = notes
+            return True
+
+        return self._mutate_profile(elder_id, delete)
+
+    def set_persona(self, elder_id: str, persona_id: str, persona_dict: dict) -> bool:
+        persona_id = validate_persona_id(persona_id)
+
+        def set_value(profile: dict) -> bool:
+            profile.setdefault("personas", {})[persona_id] = persona_dict
+            return True
+
+        return self._mutate_profile(elder_id, set_value)
+
+    def add_persona_auto(self, elder_id: str, persona_dict: dict) -> str | None:
+        allocated_id: str | None = None
+
+        def add(profile: dict) -> bool:
+            nonlocal allocated_id
+            personas = profile.setdefault("personas", {})
+            numbers = [
+                int(match.group(1))
+                for persona_id in personas
+                if (match := re.fullmatch(r"persona_(\d+)", persona_id))
+            ]
+            allocated_id = validate_persona_id(
+                f"persona_{max(numbers, default=0) + 1}"
+            )
+            personas[allocated_id] = persona_dict
+            return True
+
+        return allocated_id if self._mutate_profile(elder_id, add) else None
+
+    def delete_persona(self, elder_id: str, persona_id: str) -> bool:
+        persona_id = validate_persona_id(persona_id)
+
+        def delete(profile: dict) -> bool:
+            personas = profile.get("personas", {})
+            if persona_id not in personas:
+                raise KeyError(persona_id)
+            personas.pop(persona_id)
+            if profile.get("active_persona") == persona_id:
+                profile["active_persona"] = "ai"
+            return True
+
+        return self._mutate_profile(elder_id, delete)
+
+    def set_active_persona(self, elder_id: str, persona_id: str) -> bool:
+        persona_id = validate_persona_id(persona_id)
+
+        def set_active(profile: dict) -> bool:
+            if persona_id not in profile.get("personas", {}):
+                return False
+            profile["active_persona"] = persona_id
+            return True
+
+        return self._mutate_profile(elder_id, set_active)
+
+    def set_persona_field(
+        self,
+        elder_id: str,
+        persona_id: str,
+        field: str,
+        value,
+    ) -> bool:
+        persona_id = validate_persona_id(persona_id)
+
+        def set_field(profile: dict) -> bool:
+            persona = profile.get("personas", {}).get(persona_id)
+            if persona is None:
+                return False
+            persona[field] = value
+            return True
+
+        return self._mutate_profile(elder_id, set_field)
+
+    def set_biography(
+        self,
+        elder_id: str,
+        biography_dict: dict,
+        *,
+        skip_if_manual: bool = False,
+        preserve_sources: bool = False,
+    ) -> BiographyUpdateResult:
+        result: BiographyUpdateResult = "failed"
+
+        def set_value(profile: dict) -> bool:
+            nonlocal result
+            existing = profile.get("elder_biography", {})
+            if skip_if_manual and existing.get("manually_edited"):
+                result = "skipped"
+                return False
+
+            value = dict(biography_dict)
+            if preserve_sources:
+                value["sources"] = list(existing.get("sources", []))
+            profile["elder_biography"] = value
+            profile["biography_usage_count"] = 0
+            result = "updated"
+            return True
+
+        written = self._mutate_profile(elder_id, set_value)
+        if result == "skipped":
+            return result
+        return "updated" if written else "failed"
+
+    def update_basic_fields(self, elder_id: str, fields_dict: dict) -> bool:
+        allowed_fields = {
+            "name",
+            "gender",
+            "cognitive_status",
+            "persona",
+            "health_notes",
+        }
+        if not set(fields_dict).issubset(allowed_fields):
+            return False
+
+        def update(profile: dict) -> bool:
+            profile.setdefault("recent_events", [])
+            profile.setdefault("memory_summary", {})
+            profile.setdefault("elder_biography", {})
+            profile.setdefault("biography_usage_count", 0)
+            profile.update(fields_dict)
+            return True
+
+        return self._mutate_profile(elder_id, update, create=True)
+
+    # ------------------------------------------------------------------
+    # Conversation persistence (per elder + persona)
+    # ------------------------------------------------------------------
+
+    def save_conversation(self, elder_id: str, history: list, persona_id: str = "ai") -> bool:
+        path = self._get_conv_path(elder_id, persona_id)
+        lock = _get_file_lock(str(path))
+        tmp = path.with_suffix(".tmp")
         try:
             data = {
                 "elder_id": elder_id,
+                "persona_id": persona_id or "ai",
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "history": history[-20:]
+                "history": history[-20:],
             }
-            path = self._get_conv_path(elder_id)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            with lock:
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+                os.replace(tmp, path)
             return True
         except Exception as e:
             print(f"對話記憶儲存失敗：{e}")
+            try:
+                tmp.unlink(missing_ok=True)
+            except Exception:
+                pass
             return False
 
-    def load_conversation(self, elder_id: str) -> list:
-        path = self._get_conv_path(elder_id)
-        if not path.exists():
-            return []
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            return data.get("history", [])
-        except Exception as e:
-            print(f"對話記憶載入失敗：{e}")
-            return []
+    def load_conversation(self, elder_id: str, persona_id: str = "ai") -> list:
+        path = self._get_conv_path(elder_id, persona_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if not path.exists():
+                return []
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                return data.get("history", [])
+            except Exception as e:
+                print(f"對話記憶載入失敗：{e}")
+                return []
 
-    def clear_conversation(self, elder_id: str) -> bool:
-        path = self._get_conv_path(elder_id)
-        if path.exists():
-            path.unlink()
+    def clear_conversation(self, elder_id: str, persona_id: str = "ai") -> bool:
+        path = self._get_conv_path(elder_id, persona_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if path.exists():
+                path.unlink()
         return True
 
+    def get_recent_conversation_summary(self, elder_id: str, limit: int = 6, persona_id: str = "ai") -> list:
+        history = self.load_conversation(elder_id, persona_id)
+        return [msg for msg in history if msg.get("role") == "user"][-limit:]
+
+    # ------------------------------------------------------------------
+    # Events
+    # ------------------------------------------------------------------
+
     def add_event(self, elder_id: str, event: dict) -> bool:
-        profile = self.get_profile(elder_id)
-        if not profile:
-            return False
-        event["id"] = str(uuid.uuid4())[:8]
-        if "spoken_at" in event:
-            event["date"] = event["spoken_at"][:10]
-            event["time"] = event["spoken_at"][11:]
-        else:
-            event["date"] = datetime.now().strftime("%Y-%m-%d")
-            event["time"] = datetime.now().strftime("%H:%M:%S")
-        profile.setdefault("recent_events", []).append(event)
-        profile["recent_events"] = self._trim_events(profile["recent_events"])
-        return self._save(elder_id, profile)
+        path = self._get_path(elder_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if not path.exists():
+                return False
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    profile = json.load(f)
+            except Exception as e:
+                print(f"讀取失敗：{e}")
+                return False
+
+            event["id"] = str(uuid.uuid4())[:8]
+            if "spoken_at" in event:
+                event["date"] = event["spoken_at"][:10]
+                event["time"] = event["spoken_at"][11:]
+            else:
+                event["date"] = datetime.now().strftime("%Y-%m-%d")
+                event["time"] = datetime.now().strftime("%H:%M:%S")
+
+            profile.setdefault("recent_events", []).append(event)
+            profile["recent_events"] = self._trim_events(profile["recent_events"])
+            return self._write_profile_unlocked(path, profile)
 
     def _trim_events(self, events: list) -> list:
-        """Keep recent events while preserving high-importance memories."""
         if len(events) <= self.MAX_EVENTS:
             return events
-
         important = [
             e for e in events
             if e.get("importance", 0) >= 0.7 or e.get("memory_type") == "long"
@@ -87,21 +364,21 @@ class JsonMemoryStore(MemoryManager):
             e for e in events[-self.MAX_EVENTS:]
             if not e.get("id") or e.get("id") not in important_ids
         ]
-        combined = important + recent
-        return combined[-self.MAX_EVENTS:]
+        return (important + recent)[-self.MAX_EVENTS:]
 
     def get_recent_events(self, elder_id: str, limit: int = 5) -> list:
         profile = self.get_profile(elder_id)
-        events = profile.get("recent_events", [])
-        return events[-limit:]
+        return profile.get("recent_events", [])[-limit:]
 
-    def get_important_memories(self, elder_id: str,
-                                importance_threshold: float = 0.7,
-                                limit: int = 10) -> list:
+    def get_important_memories(
+        self,
+        elder_id: str,
+        importance_threshold: float = 0.7,
+        limit: int = 10,
+    ) -> list:
         profile = self.get_profile(elder_id)
-        events = profile.get("recent_events", [])
         important = [
-            e for e in events
+            e for e in profile.get("recent_events", [])
             if e.get("importance", 0) >= importance_threshold
         ]
         important.sort(key=lambda x: x.get("importance", 0), reverse=True)
@@ -114,12 +391,7 @@ class JsonMemoryStore(MemoryManager):
         limit: int = 5,
         persona_id: str = None,
     ) -> list:
-        """Lightweight JSON fallback RAG for demo mode.
-
-        PostgreSQL/pgvector remains the preferred semantic search path. This
-        fallback uses token overlap plus importance so demo mode can still show
-        relevant historical memories when DB_ENABLED=false.
-        """
+        """Lightweight token-overlap RAG fallback for demo mode."""
         profile = self.get_profile(elder_id)
         events = profile.get("recent_events", [])
         query_tokens = self._tokens(query)
@@ -129,10 +401,9 @@ class JsonMemoryStore(MemoryManager):
         scored = []
         for event in events:
             if persona_id and persona_id != "ai":
-                event_persona = event.get("persona_id")
-                if event_persona not in (None, "", "ai", persona_id):
+                ep = event.get("persona_id")
+                if ep not in (None, "", "ai", persona_id):
                     continue
-
             text = " ".join([
                 str(event.get("event", "")),
                 str(event.get("reason", "")),
@@ -141,11 +412,9 @@ class JsonMemoryStore(MemoryManager):
             event_tokens = self._tokens(text)
             if not event_tokens:
                 continue
-
             overlap = query_tokens & event_tokens
             if not overlap:
                 continue
-
             importance = float(event.get("importance", 0) or 0)
             score = len(overlap) + importance
             row = dict(event)
@@ -168,36 +437,10 @@ class JsonMemoryStore(MemoryManager):
     def _tokens(text: str) -> set[str]:
         value = str(text or "").lower()
         latin = re.findall(r"[a-z0-9]+", value)
-        chinese = re.findall(r"[\u4e00-\u9fff]{2,}", value)
-        chars = set()
+        chinese = re.findall(r"[一-鿿]{2,}", value)
+        chars: set[str] = set()
         for chunk in chinese:
             chars.update(chunk[i:i + 2] for i in range(len(chunk) - 1))
             if len(chunk) <= 4:
                 chars.add(chunk)
         return set(latin) | chars
-
-    def get_recent_conversation_summary(self, elder_id: str,
-                                         limit: int = 6) -> list:
-        history = self.load_conversation(elder_id)
-        user_messages = [
-            msg for msg in history
-            if msg.get("role") == "user"
-        ]
-        return user_messages[-limit:]
-
-    def update_profile(self, elder_id: str, data: dict) -> bool:
-        profile = self.get_profile(elder_id)
-        if not profile:
-            return False
-        profile.update(data)
-        return self._save(elder_id, profile)
-
-    def _save(self, elder_id: str, data: dict) -> bool:
-        try:
-            path = self._get_path(elder_id)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            return True
-        except Exception as e:
-            print(f"儲存失敗：{e}")
-            return False

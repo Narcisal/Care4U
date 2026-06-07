@@ -43,7 +43,7 @@ AI Care U addresses these issues through persona-based companionship, profile-gr
 - iSafe emotion and safety monitoring
 - Caregiver-assisted public background search and biography drafting
 - Agent activity monitoring and conversation history review, filtered by elder profile
-- Caregiver-visible admin identity, active session management, memory retrieval smoke tests, and STT verification tools
+- Caregiver-visible admin identity, active session management, memory retrieval checks, and STT verification tools
 - Demo mode that can run without Gemini, PostgreSQL, Tavily, XTTS, or GPU
 
 ## Out of Current Scope
@@ -210,6 +210,10 @@ XTTS_URL=http://localhost:8082
 C:\Users\user\bin\py.cmd -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
+The elder PIN and bearer-token store is in process memory. Run one Uvicorn
+worker for the current demo deployment; multiple workers do not share elder
+sessions. Configure `ALLOWED_ELDER_IDS` to control which profiles may log in.
+
 Or with a normal Python command:
 
 ```powershell
@@ -248,7 +252,7 @@ Before the final demo, prepare and upload `.wav` samples for the companion perso
 | `DB_NAME` | `aicaeru` | PostgreSQL database |
 | `DB_USER` | `postgres` | PostgreSQL user |
 | `DB_PASSWORD` | empty | PostgreSQL password |
-| `STT_POOL_SIZE` | `1` | Whisper worker count; 1 is recommended for demo |
+| `STT_POOL_SIZE` | `1` | Concurrent STT workers; use up to N for N simultaneous speakers only when memory permits |
 | `STT_MODEL_SIZE` | `medium` | Whisper model size |
 | `STT_DEVICE` | `cuda` or `cpu` | STT device |
 | `XTTS_URL` | `http://localhost:8082` | Primary XTTS API endpoint |
@@ -273,6 +277,21 @@ Example `ADMIN_USERS`:
   "supervisor": {"password": "change-me-too", "role": "admin"}
 }
 ```
+
+## PostgreSQL Schema and Indexing
+
+When `DB_ENABLED=true`, initialize PostgreSQL and pgvector with:
+
+```powershell
+psql -d aicaeru -f backend/data/schema.sql
+```
+
+The schema includes the B-tree indexes used by the current elder, importance,
+and recency filters. It intentionally does not create an HNSW index by default.
+For a small demo dataset, an approximate vector index adds build and maintenance
+cost without a meaningful query benefit. Consider HNSW only after memory volume
+and latency grow, then compare representative retrieval queries with
+`EXPLAIN ANALYZE` before and after adding the index.
 
 ## Safety, Privacy, and Ethics
 
@@ -317,10 +336,10 @@ The next-stage evaluation endpoints are available behind admin access:
 
 - `GET /api/admin/sessions`: inspect active elder/persona sessions.
 - `POST /api/admin/sessions/clear`: clear a specific session or all sessions.
-- `POST /api/admin/rag/evaluate`: run memory retrieval smoke tests with prepared query/expected-term pairs.
+- `POST /api/admin/rag/evaluate`: run memory retrieval checks with prepared query/expected-term pairs.
 - `POST /api/admin/stt/evaluate-transcripts`: evaluate prepared STT transcripts with character error rate.
 
-The caregiver admin dashboard now exposes these utilities as UI pages, so they can be demonstrated without manually calling the API. In demo mode, memory retrieval uses a JSON fallback based mainly on keyword overlap and importance; broader semantic queries should be evaluated after enabling embedding / pgvector retrieval.
+The caregiver admin dashboard now exposes these utilities as UI pages, so they can be demonstrated without manually calling the API. On the current Windows-only demo run, memory retrieval uses local profile data when the Linux PostgreSQL / pgvector service is not started. When the Linux database service is running, the same evaluation flow can be used to compare database-backed retrieval results.
 
 ## Poster Draft
 
@@ -329,6 +348,7 @@ Poster content and architecture notes are drafted in `poster_content_draft.md`.
 ## Development Notes
 
 - STT is lazy-loaded. FastAPI startup does not immediately load Whisper.
+- Each STT worker loads its own model instance. For N elders speaking at the same time, `STT_POOL_SIZE=N` avoids queueing, but Whisper `medium` needs roughly 5 GB of GPU memory per worker before runtime and Breeze ASR overhead. Keep the pool at `1` for the demo or whenever GPU/CPU memory is limited; requests will queue instead of exhausting memory.
 - PostgreSQL is optional. When `DB_ENABLED=false`, profile and event data use JSON files.
 - Demo fallback behavior is important because capstone presentations often run in unstable local environments.
 - `delivery_status.md` is the source of truth for current delivery status and remaining work.

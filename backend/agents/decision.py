@@ -1,9 +1,19 @@
+import asyncio
 import collections
+import concurrent.futures
+import os
+import threading
+import time
 from datetime import datetime
 from backend.agents.magic_ai import MagicAI
-from backend.agents.i_safe import ISafe
+from backend.agents.i_safe import ISafe, quick_keyword_check
 
 _agent_logs: collections.deque = collections.deque(maxlen=100)
+_agent_executor = concurrent.futures.ThreadPoolExecutor(
+    max_workers=max(1, int(os.getenv("AGENT_EXECUTOR_WORKERS", "4")))
+)
+_biography_updates_in_progress: set[str] = set()
+_biography_updates_lock = threading.Lock()
 
 
 def _log(agent: str, action: str, detail: str, elder_id: str = None, session_id: str = None, persona_id: str = None):
@@ -24,6 +34,15 @@ def get_logs() -> list:
 
 _magic_agents: dict[str, MagicAI] = {}
 _isafe_agents: dict[str, ISafe] = {}
+
+
+def flush_agent_conversations():
+    for magic in list(_magic_agents.values()):
+        try:
+            if not magic.flush_conversation():
+                print(f"對話歷史儲存失敗：{magic.elder_id}")
+        except Exception as e:
+            print(f"對話歷史儲存失敗：{e}")
 
 
 def _agent_key(elder_id: str, session_id: str = "default", persona_id: str = None) -> str:
@@ -48,7 +67,13 @@ def clear_agent(elder_id: str, session_id: str = None):
     prefix = f"{elder_id}:{session_id or ''}"
     for key in list(_magic_agents):
         if key.startswith(prefix):
-            _magic_agents.pop(key, None)
+            magic = _magic_agents.pop(key, None)
+            if magic:
+                try:
+                    if not magic.flush_conversation():
+                        print(f"對話歷史儲存失敗：{elder_id}")
+                except Exception as e:
+                    print(f"對話歷史儲存失敗：{e}")
     for key in list(_isafe_agents):
         if key.startswith(prefix):
             _isafe_agents.pop(key, None)
@@ -63,12 +88,12 @@ class Decision:
         self.persona_id = persona_id
         self.created_at = datetime.now()
         self.last_seen = self.created_at
+        self._lock = asyncio.Lock()
         self.magic = _get_magic(elder_id, self.session_id, persona_id)
         self.isafe = _get_isafe(elder_id, self.session_id, persona_id)
         self._setup_persona()
 
     def _setup_persona(self):
-        """Configure TTS engine from the active persona."""
         try:
             from backend.memory.vector_store import VectorMemoryStore
             from backend.services.tts_service import TTSService
@@ -79,12 +104,13 @@ class Decision:
             active = personas.get(active_id, personas.get("ai", {}))
 
             self.tts = TTSService()
-            engine = active.get("voice_engine", "xtts")
             voice_path = active.get("voice_path")
-
-            if voice_path:
-                self.tts.set_engine("xtts", voice_path)
-                print(f"TTS 切換為 XTTS，聲音樣本：{voice_path}")
+            voice_engine = TTSService.normalize_engine(
+                active.get("voice_engine", "xtts")
+            )
+            if voice_engine != "edge":
+                self.tts.set_engine(voice_engine, voice_path)
+                print(f"TTS 切換為 {voice_engine}，聲音樣本：{voice_path}")
             else:
                 self.tts.reset_engine()
 
@@ -98,9 +124,7 @@ class Decision:
 
     def _log(self, agent: str, action: str, detail: str):
         _log(
-            agent,
-            action,
-            detail,
+            agent, action, detail,
             elder_id=self.elder_id,
             session_id=self.session_id,
             persona_id=self.persona_id or "ai",
@@ -130,27 +154,57 @@ class Decision:
             }
 
     def chat(self, user_message: str, speed_emotion: str = "normal") -> dict:
+        t_chat = time.perf_counter()
         self.last_seen = datetime.now()
         self.chat_count += 1
 
-        safety = self._run_isafe(user_message, speed_emotion)
-        response = self._run_magic(user_message)
-        image_data, image_caption = self._run_image_gen(user_message)
+        if quick_keyword_check(user_message) == 3:
+            self._log("Decision", "緊急回應", "關鍵字判定 level=3，跳過一般對話生成")
+            return {
+                "message": (
+                    "這可能是緊急狀況。請先不要移動，立即呼叫附近照護人員"
+                    "或撥打 119。"
+                ),
+                "emotion": "urgent",
+                "is_urgent": True,
+                "sentiment": "negative",
+                "trend_alert": None,
+                "escalation_level": 3,
+                "elder_id": self.elder_id,
+                "history_length": len(self.magic.get_history()),
+                "image": None,
+                "image_caption": None,
+                "health_info": None,
+                "persona_name": self.active_persona.get("name", "AI 助理"),
+                "_isafe_ms": None,
+                "_magic_ms": None,
+                "_chat_total_ms": round((time.perf_counter() - t_chat) * 1000),
+            }
+
+        safety_future = _agent_executor.submit(
+            self._run_isafe,
+            user_message,
+            speed_emotion,
+        )
+        response_future = _agent_executor.submit(self._run_magic, user_message)
+        safety = safety_future.result()
+        magic_result = response_future.result()
+        response = magic_result["_text"]
 
         escalation_level = safety.get("escalation_level", 0)
         if escalation_level >= 2:
-            self._log("Decision", "分級響應", f"level={escalation_level}，需要通知照護人員")
+            response = (
+                f"{response}\n\n"
+                "請立即通知附近照護人員確認狀況；若有生命危險，請撥打 119。"
+            )
 
-        health_info = None if escalation_level >= 2 else self._run_health_search(user_message)
+        if escalation_level >= 2:
+            self._log("Decision", "分級響應", f"level={escalation_level}，需要通知照護人員")
 
         self._log("Decision", "完成", f"emotion={safety['emotion']} → TTS 語調調整")
 
         if self.chat_count % 10 == 0:
-            try:
-                self._update_biography()
-                self._log("Decision", "生平更新", f"第 {self.chat_count} 次對話，更新生平文章")
-            except Exception as e:
-                print(f"生平更新失敗：{e}")
+            self._schedule_biography_update()
 
         return {
             "message": response,
@@ -161,10 +215,13 @@ class Decision:
             "escalation_level": escalation_level,
             "elder_id": self.elder_id,
             "history_length": len(self.magic.get_history()),
-            "image": image_data,
-            "image_caption": image_caption,
-            "health_info": health_info,
+            "image": None,
+            "image_caption": None,
+            "health_info": None,
             "persona_name": self.active_persona.get("name", "AI 助理"),
+            "_isafe_ms": safety.get("_isafe_ms"),
+            "_magic_ms": magic_result.get("_magic_ms"),
+            "_chat_total_ms": round((time.perf_counter() - t_chat) * 1000),
         }
 
     def get_history(self) -> list:
@@ -196,9 +253,11 @@ class Decision:
     # ------------------------------------------------------------------
 
     def _run_isafe(self, message: str, speed_emotion: str = "normal") -> dict:
+        t0 = time.perf_counter()
         self._log("iSafe", "分析中", f"收到訊息：{message[:20]}...")
         try:
             safety = self.isafe.analyze(message, speed_emotion)
+            safety["_isafe_ms"] = round((time.perf_counter() - t0) * 1000)
             self._log("iSafe", "分析完成",
                       f"emotion={safety['emotion']}, urgent={safety['is_urgent']}")
             return safety
@@ -211,18 +270,26 @@ class Decision:
                 "sentiment": "neutral",
                 "should_record": False,
                 "reason": "iSafe 降級",
+                "_isafe_ms": round((time.perf_counter() - t0) * 1000),
             }
 
-    def _run_magic(self, message: str) -> str:
+    def _run_magic(self, message: str) -> dict:
+        t0 = time.perf_counter()
         self._log("Decision", "協調中", "呼叫 MagicAI 生成回應")
         try:
             response = self.magic.chat(message)
             self._log("MagicAI", "回應完成", "已儲存對話記憶")
-            return response
+            return {
+                "_text": response,
+                "_magic_ms": round((time.perf_counter() - t0) * 1000),
+            }
         except Exception as e:
             self._log("MagicAI", "降級", f"回應失敗：{str(e)[:50]}")
             print(f"MagicAI 失敗，降級處理：{e}")
-            return "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"
+            return {
+                "_text": "抱歉，我剛剛沒聽清楚，可以再說一次嗎？",
+                "_magic_ms": round((time.perf_counter() - t0) * 1000),
+            }
 
     def _run_image_gen(self, message: str) -> tuple[str | None, str | None]:
         try:
@@ -237,7 +304,6 @@ class Decision:
             if not image_data:
                 return None, None
 
-            persona_name = self.active_persona.get("name", "AI 助理")
             honorific = self.active_persona.get("honorific", "爺爺")
             relation = self.active_persona.get("relation", "")
 
@@ -279,16 +345,36 @@ class Decision:
     # Periodic biography update
     # ------------------------------------------------------------------
 
+    def _schedule_biography_update(self):
+        with _biography_updates_lock:
+            if self.elder_id in _biography_updates_in_progress:
+                return
+            _biography_updates_in_progress.add(self.elder_id)
+
+        future = _agent_executor.submit(self._update_biography)
+
+        def complete(completed_future):
+            try:
+                completed_future.result()
+                self._log(
+                    "Decision",
+                    "生平更新",
+                    f"第 {self.chat_count} 次對話，完成生平文章更新",
+                )
+            except Exception as e:
+                print(f"生平更新失敗：{e}")
+            finally:
+                with _biography_updates_lock:
+                    _biography_updates_in_progress.discard(self.elder_id)
+
+        future.add_done_callback(complete)
+
     def _update_biography(self):
-        """Merge recent high-importance events into the elder's biography."""
         from backend.memory.vector_store import VectorMemoryStore
 
         memory = VectorMemoryStore()
         profile = memory.get_profile(self.elder_id)
         if not profile:
-            return
-
-        if profile.get("elder_biography", {}).get("manually_edited"):
             return
 
         name = profile.get("name", "長者")
@@ -310,20 +396,34 @@ class Decision:
             family_notes=family_notes,
         )
 
-        if biography and len(biography) > 50:
-            # Sanity-check: new bio must preserve the opening content of old bio
-            if existing_bio:
-                existing_words = set(existing_bio[:50])
-                new_words = set(biography[:100])
-                if len(existing_words & new_words) < 5 or len(biography) < len(existing_bio) * 0.8:
-                    print(f"生平更新品質不佳，放棄更新：{name}")
-                    return
+        if not biography or len(biography) <= 50:
+            return
 
-            profile["elder_biography"] = {
-                "content": biography,
-                "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "sources": profile.get("elder_biography", {}).get("sources", []),
-                "manually_edited": False,
-            }
-            memory._save(self.elder_id, profile)
-            print(f"生平文章已更新：{name}")
+        if existing_bio:
+            # Verify that key facts from the profile still appear in the new bio.
+            key_facts = [f for f in [
+                name,
+                profile.get("persona", {}).get("former_job"),
+                *(p.get("name") for pid, p in profile.get("personas", {}).items() if pid != "ai"),
+            ] if f]
+            missing = [fact for fact in key_facts if fact and fact not in biography]
+            if missing or len(biography) < len(existing_bio) * 0.7:
+                print(f"生平更新品質不佳（缺少事實：{missing}），放棄更新：{name}")
+                return
+
+        biography_data = {
+            "content": biography,
+            "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "sources": profile.get("elder_biography", {}).get("sources", []),
+            "manually_edited": False,
+        }
+        update_result = memory.set_biography(
+            self.elder_id,
+            biography_data,
+            skip_if_manual=True,
+        )
+        if update_result == "skipped":
+            return
+        if update_result == "failed":
+            raise RuntimeError("生平文章儲存失敗")
+        print(f"生平文章已更新：{name}")

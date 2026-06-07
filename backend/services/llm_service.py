@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 import time
 from datetime import datetime
 from google import genai
@@ -9,6 +10,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _client = None
+LLM_TIMEOUT_MS = int(os.getenv("LLM_TIMEOUT_MS", "15000"))
+LLM_MAX_CONCURRENT = int(os.getenv("LLM_MAX_CONCURRENT", "4"))
+_llm_semaphore = threading.BoundedSemaphore(LLM_MAX_CONCURRENT)
+
+
+def _generate_content(client, **kwargs):
+    with _llm_semaphore:
+        return client.models.generate_content(**kwargs)
 
 
 def _get_client():
@@ -165,7 +174,11 @@ class LLMService:
         ) if events else ""
 
         recent_conv_text = "\n".join(
-            f"- {msg['content']}" for msg in (recent_messages or [])
+            (
+                f"- {'[長者]' if msg.get('role') == 'user' else '[你]'}："
+                f"{msg.get('content', '')}"
+            )
+            for msg in (recent_messages or [])
         )
 
         long_term_text = "\n".join(
@@ -386,9 +399,11 @@ class LLMService:
 - emotion_score 和 importance 必須是數字（Float），絕對不可加引號
 - reason 說明 emotion 和 importance 的判斷依據，20個繁體中文字元以內"""
 
+        response = None
         for attempt in range(3):
             try:
-                response = client.models.generate_content(
+                response = _generate_content(
+                    client,
                     model=self.model_name,
                     contents=[types.Content(
                         role="user",
@@ -398,6 +413,7 @@ class LLMService:
                         temperature=0.0,
                         max_output_tokens=8000,
                         response_mime_type="application/json",
+                        http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
                     ),
                 )
 
@@ -425,8 +441,9 @@ class LLMService:
                 if "503" in str(e) and attempt < 2:
                     print(f"Gemini 過載，2秒後重試（第 {attempt + 1} 次）...")
                     time.sleep(2)
+                    response = None
                     continue
-                raw = response.text if "response" in dir() else "無回應"
+                raw = response.text if response is not None else "無回應"
                 print(f"情緒分析失敗，原始回傳：{raw}\n錯誤：{e}")
                 return {
                     "emotion": "normal",
@@ -483,13 +500,15 @@ class LLMService:
                 types.Content(role="user", parts=[types.Part(text=user_message)])
             )
 
-            response = client.models.generate_content(
+            response = _generate_content(
+                client,
                 model=self.model_name,
                 contents=history,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=0.9,
                     max_output_tokens=2000,
+                    http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
                 ),
             )
             return response.text
@@ -534,7 +553,8 @@ class LLMService:
     - 第三人稱，自然口語，不列點
     - 只回傳摘要文字，不要標題或其他說明"""
 
-        response = client.models.generate_content(
+        response = _generate_content(
+            client,
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=500),
@@ -590,7 +610,8 @@ class LLMService:
     6. 繁體中文、第三人稱，維持像老朋友介紹般自然溫暖的台灣口吻。
     7. 只回傳更新後的文章本體，不要任何標題、前言或說明。"""
 
-        response = client.models.generate_content(
+        response = _generate_content(
+            client,
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.2, max_output_tokens=1000),
@@ -626,7 +647,8 @@ class LLMService:
 - 融合關係和個性，自然口語
 - 只回傳描述文字，不要標題或說明"""
 
-        response = client.models.generate_content(
+        response = _generate_content(
+            client,
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=200),

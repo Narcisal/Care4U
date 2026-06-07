@@ -33,7 +33,7 @@ flowchart TB
     Decision["Decision Agent\nworkflow orchestration"]
     MagicAI["MagicAI\npersona-aware response generation"]
     ISafe["iSafe\nemotion and safety monitoring"]
-    Memory["Memory Layer\nJSON fallback + optional pgvector"]
+    Memory["Memory Layer\nlocal demo data + optional pgvector"]
     Search["Public Background Search\nTavily optional + local biography draft"]
     STT["STT\nWhisper + Breeze ASR route"]
     TTS["TTS\nXTTS -> edge-tts -> Windows SAPI"]
@@ -83,7 +83,7 @@ Suggested demo metrics:
 | TTS fallback layers | 3 |
 | Safety escalation levels | 0 to 3 |
 | Offline biography draft | Supported |
-| Memory retrieval test | Hit-rate smoke test available |
+| Memory retrieval test | Hit-rate check available |
 | Taiwanese STT | Route verified; live audio testing page available |
 
 ## Contribution
@@ -94,7 +94,7 @@ AI Care U contributes a practical prototype for AI-assisted elder companionship 
 
 - Collect real Taiwanese elder speech samples and evaluate Breeze ASR transcription quality.
 - Prepare authorized `.wav` samples for XTTS voice cloning.
-- Evaluate long-term memory retrieval with structured caregiver/elder scenarios and embedding-based semantic search.
+- Evaluate long-term memory retrieval with structured caregiver/elder scenarios under both local demo mode and the Linux PostgreSQL / pgvector environment.
 - Improve role-based admin workflows for real care teams.
 - Produce final poster screenshots and demo video QR code.
 

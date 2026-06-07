@@ -3,40 +3,103 @@ import json
 import os
 import shutil
 import traceback
+from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 import secrets
+import threading
+import time
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBasic,
+    HTTPBasicCredentials,
+    HTTPBearer,
+)
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, field_validator
 
-from backend.agents.decision import Decision, clear_agent
+from backend.agents.decision import Decision, clear_agent, flush_agent_conversations
 from backend.services.tts_service import TTSService
-from backend.memory.vector_store import VectorMemoryStore
+from backend.memory.vector_store import VectorMemoryStore, close_db_pool
 from backend.services.embedding_service import EmbeddingService
 from backend.services.llm_service import LLMService
 from backend.tools.search_service import SearchService
+from backend.elder_sessions import (
+    ElderIdentity,
+    FailRecord,
+    InvalidPinError,
+    LoginRateLimitedError,
+    issue_pin,
+    login_with_pin,
+    revoke_elder,
+    validate_token,
+)
+from backend.utils.validators import (
+    validate_elder_id,
+    validate_persona_id,
+    validate_session_id,
+)
 
-app = FastAPI(title="AI Care U")
+CARE4U_DEMO_MODE = os.getenv("CARE4U_DEMO_MODE", "true").lower() == "true"
+_allowed_elder_ids_raw = os.getenv(
+    "ALLOWED_ELDER_IDS",
+    "W001,C001,L001",
+)
+ALLOWED_ELDER_IDS = tuple(
+    validate_elder_id(value.strip())
+    for value in _allowed_elder_ids_raw.split(",")
+    if value.strip()
+)
+if not ALLOWED_ELDER_IDS:
+    raise RuntimeError("ALLOWED_ELDER_IDS 至少需要一個有效長者 ID")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    print(
+        f"STT worker pool 延遲初始化：size={STT_POOL_SIZE}, "
+        f"model={STT_MODEL_SIZE}, device={STT_DEVICE}"
+    )
+    yield
+    flush_agent_conversations()
+    close_db_pool()
+
+
+app = FastAPI(title="AI Care U", lifespan=lifespan)
+
+_cors_raw = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS: list[str] = [
+    origin.strip()
+    for origin in _cors_raw.split(",")
+    if origin.strip()
+]
+if not ALLOWED_ORIGINS and CARE4U_DEMO_MODE:
+    ALLOWED_ORIGINS = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 admin_security = HTTPBasic(auto_error=False)
+elder_security = HTTPBearer(auto_error=False)
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 ADMIN_USERS = os.getenv("ADMIN_USERS", "")
+DEMO_AUTH_ROLE = os.getenv("CARE4U_DEMO_AUTH_ROLE", "admin")
+ADMIN_AUTH_MAX_FAILURES = 5
+ADMIN_AUTH_LOCK_SECONDS = 60
+admin_auth_fail_counts: dict[str, FailRecord] = {}
+admin_auth_fail_lock = threading.Lock()
 
 # ------------------------------------------------------------------
 # STT worker pool
@@ -45,16 +108,70 @@ ADMIN_USERS = os.getenv("ADMIN_USERS", "")
 STT_POOL_SIZE = int(os.getenv("STT_POOL_SIZE", "1"))
 STT_MODEL_SIZE = os.getenv("STT_MODEL_SIZE", "medium")
 STT_DEVICE = os.getenv("STT_DEVICE", "cuda")
+MAX_SESSIONS = int(os.getenv("MAX_SESSIONS", "100"))
 stt_pool: list[object] = []
 stt_pool_lock: asyncio.Queue = asyncio.Queue()
 stt_init_lock = asyncio.Lock()
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
 decisions: dict[str, Decision] = {}
+chat_background_results: dict[str, dict] = {}
+chat_background_results_lock = threading.Lock()
+BACKGROUND_RESULTS_MAX = 200
+BACKGROUND_RESULTS_TTL_SECONDS = 300
 
 
-@app.on_event("startup")
-async def startup_event():
-    print(f"STT worker pool 延遲初始化：size={STT_POOL_SIZE}, model={STT_MODEL_SIZE}, device={STT_DEVICE}")
+def _background_all_done(result: dict) -> bool:
+    return (
+        result.get("image_status") in {"complete", "failed"}
+        and result.get("health_status") in {"complete", "failed"}
+    )
+
+
+def _update_background_result(task_id: str, values: dict):
+    with chat_background_results_lock:
+        result = chat_background_results.get(task_id)
+        if result is None:
+            return
+        result.update(values)
+        if _background_all_done(result):
+            result.setdefault("_completed_at", time.monotonic())
+
+
+def _reserve_background_result(owner_token: str) -> str | None:
+    now = time.monotonic()
+    with chat_background_results_lock:
+        expired = [
+            task_id
+            for task_id, result in chat_background_results.items()
+            if _background_all_done(result)
+            and now - result.get("_completed_at", now)
+            >= BACKGROUND_RESULTS_TTL_SECONDS
+        ]
+        for task_id in expired:
+            chat_background_results.pop(task_id, None)
+
+        while len(chat_background_results) >= BACKGROUND_RESULTS_MAX:
+            terminal = [
+                (result.get("_created_at", now), task_id)
+                for task_id, result in chat_background_results.items()
+                if _background_all_done(result)
+            ]
+            if not terminal:
+                return None
+            _, oldest_task_id = min(terminal)
+            chat_background_results.pop(oldest_task_id, None)
+
+        task_id = secrets.token_urlsafe(16)
+        chat_background_results[task_id] = {
+            "image_status": "pending",
+            "image": None,
+            "image_caption": None,
+            "health_status": "pending",
+            "health_info": None,
+            "_owner_token": owner_token,
+            "_created_at": now,
+        }
+        return task_id
 
 
 async def ensure_stt_pool():
@@ -92,25 +209,40 @@ async def ensure_stt_pool():
 # Request models
 # ------------------------------------------------------------------
 
-class ChatRequest(BaseModel):
-    elder_id: str
+class ValidatedRequest(BaseModel):
+    @field_validator("elder_id", check_fields=False)
+    @classmethod
+    def validate_elder_identifier(cls, value: Optional[str]) -> Optional[str]:
+        return validate_elder_id(value) if value is not None else None
+
+    @field_validator("persona_id", check_fields=False)
+    @classmethod
+    def validate_persona_identifier(cls, value: Optional[str]) -> Optional[str]:
+        return validate_persona_id(value) if value is not None else None
+
+    @field_validator("session_id", check_fields=False)
+    @classmethod
+    def validate_session_identifier(cls, value: Optional[str]) -> Optional[str]:
+        return validate_session_id(value) if value is not None else None
+
+
+class ChatRequest(ValidatedRequest):
     message: str
     speed_emotion: str = "normal"
     session_id: str = "default"
     persona_id: Optional[str] = None
 
-class GreetRequest(BaseModel):
-    elder_id: str
+class GreetRequest(ValidatedRequest):
     session_id: str = "default"
     persona_id: Optional[str] = None
 
-class TTSRequest(BaseModel):
+class TTSRequest(ValidatedRequest):
     text: str
     emotion: str = "normal"
     elder_id: Optional[str] = None
     persona_id: Optional[str] = None
 
-class ElderProfileUpdate(BaseModel):
+class ElderProfileUpdate(ValidatedRequest):
     elder_id: str
     name: str
     gender: str
@@ -121,20 +253,20 @@ class ElderProfileUpdate(BaseModel):
     diet: str
     cognitive_status: str = "normal"
 
-class BackgroundCandidateRequest(BaseModel):
+class BackgroundCandidateRequest(ValidatedRequest):
     elder_id: str
     extra_keywords: list = []
 
-class BiographyDraftRequest(BaseModel):
+class BiographyDraftRequest(ValidatedRequest):
     elder_id: str
     selected_sources: list = []
 
-class BiographyUpdateRequest(BaseModel):
+class BiographyUpdateRequest(ValidatedRequest):
     elder_id: str
     biography: str
-    sources: list = []
+    sources: Optional[list] = None
 
-class PersonaAddRequest(BaseModel):
+class PersonaAddRequest(ValidatedRequest):
     elder_id: str
     name: str
     relation: str
@@ -149,36 +281,64 @@ class PersonaAddRequest(BaseModel):
     current_status: str = ""
     forbidden_topics: str = ""
 
-class PersonaDeleteRequest(BaseModel):
+class PersonaDeleteRequest(ValidatedRequest):
     elder_id: str
     persona_id: str
 
-class PersonaSwitchRequest(BaseModel):
+class PersonaSwitchRequest(ValidatedRequest):
     elder_id: str
     persona_id: str
 
-class LanguageRequest(BaseModel):
+class LanguageRequest(ValidatedRequest):
     elder_id: str
     language: str
 
-class FamilyNoteRequest(BaseModel):
+class FamilyNoteRequest(ValidatedRequest):
     elder_id: str
     note: str
 
-class FamilyNoteDeleteRequest(BaseModel):
+class FamilyNoteDeleteRequest(ValidatedRequest):
     elder_id: str
     index: int
 
-class SessionClearRequest(BaseModel):
+class SessionClearRequest(ValidatedRequest):
     elder_id: Optional[str] = None
     session_id: Optional[str] = None
 
-class RAGEvaluationRequest(BaseModel):
+class RAGEvaluationRequest(ValidatedRequest):
     elder_id: str
     queries: list[dict]
 
-class STTEvaluationRequest(BaseModel):
+class STTEvaluationRequest(ValidatedRequest):
     samples: list[dict]
+
+
+class ElderPinRequest(ValidatedRequest):
+    elder_id: str
+    ttl_minutes: int = 480
+
+    @field_validator("ttl_minutes")
+    @classmethod
+    def validate_ttl_minutes(cls, value: int) -> int:
+        if value < 1 or value > 1440:
+            raise ValueError("ttl_minutes 必須介於 1 到 1440 分鐘")
+        return value
+
+
+class ElderLoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    pin: str
+
+    @field_validator("pin")
+    @classmethod
+    def validate_pin(cls, value: str) -> str:
+        if len(value) != 6 or not value.isascii() or not value.isdigit():
+            raise ValueError("PIN 必須是 6 位數字")
+        return value
+
+
+class ElderSessionRevokeRequest(ValidatedRequest):
+    elder_id: str
 
 
 # ------------------------------------------------------------------
@@ -204,10 +364,21 @@ def _load_admin_users() -> dict:
     return {}
 
 
-def _authenticate_admin(credentials: HTTPBasicCredentials | None) -> dict | None:
+def _authenticate_admin(
+    credentials: HTTPBasicCredentials | None,
+    request: Request,
+) -> dict | None:
     users = _load_admin_users()
     if not users:
-        return {"username": "demo", "role": "admin"}
+        client_host = request.client.host if request.client else ""
+        if not CARE4U_DEMO_MODE or client_host not in {"127.0.0.1", "::1"}:
+            return None
+        print(
+            f"警告：未設定 ADMIN_PASSWORD / ADMIN_USERS，"
+            f"以 demo 身份（role={DEMO_AUTH_ROLE}）登入。"
+            f"請設定 ADMIN_PASSWORD 以啟用認證。"
+        )
+        return {"username": "demo", "role": DEMO_AUTH_ROLE}
     if not credentials:
         return None
     user = users.get(credentials.username)
@@ -225,14 +396,39 @@ def require_admin_role(*allowed_roles: str):
     Local demo mode remains frictionless when no admin password/users are set.
     Set ADMIN_PASSWORD for one admin, or ADMIN_USERS JSON for role-based access.
     """
-    def dependency(credentials: HTTPBasicCredentials = Depends(admin_security)):
-        user = _authenticate_admin(credentials)
+    def dependency(
+        request: Request,
+        credentials: HTTPBasicCredentials = Depends(admin_security),
+    ):
+        client_key = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        with admin_auth_fail_lock:
+            record = admin_auth_fail_counts.get(client_key)
+            if record and record.locked_until > now:
+                raise HTTPException(
+                    status_code=429,
+                    detail="登入嘗試過多，請稍後再試",
+                )
+            if record and record.locked_until:
+                admin_auth_fail_counts.pop(client_key, None)
+
+        user = _authenticate_admin(credentials, request)
         if not user:
+            with admin_auth_fail_lock:
+                record = admin_auth_fail_counts.setdefault(
+                    client_key,
+                    FailRecord(),
+                )
+                record.failures += 1
+                if record.failures >= ADMIN_AUTH_MAX_FAILURES:
+                    record.locked_until = now + ADMIN_AUTH_LOCK_SECONDS
             raise HTTPException(
                 status_code=401,
                 detail="Admin login required",
                 headers={"WWW-Authenticate": "Basic"},
             )
+        with admin_auth_fail_lock:
+            admin_auth_fail_counts.pop(client_key, None)
         if allowed_roles and user["role"] not in allowed_roles:
             raise HTTPException(status_code=403, detail="Insufficient admin role")
         return user
@@ -243,8 +439,25 @@ require_admin = require_admin_role("admin", "caregiver", "viewer")
 require_caregiver = require_admin_role("admin", "caregiver")
 require_system_admin = require_admin_role("admin")
 
+
+def require_elder_token(
+    credentials: HTTPAuthorizationCredentials = Depends(elder_security),
+) -> ElderIdentity:
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise HTTPException(status_code=401, detail="需要長者登入 token")
+    identity = validate_token(credentials.credentials)
+    if identity is None:
+        raise HTTPException(status_code=401, detail="長者登入已失效")
+    if identity.elder_id not in ALLOWED_ELDER_IDS:
+        raise HTTPException(status_code=403, detail="此長者不在允許名單")
+    return identity
+
+
 def _session_key(elder_id: str, session_id: str = "default", persona_id: str = None) -> str:
-    return f"{elder_id}:{session_id or 'default'}:{persona_id or 'profile'}"
+    valid_elder_id = validate_elder_id(elder_id)
+    valid_session_id = validate_session_id(session_id or "default")
+    valid_persona_id = validate_persona_id(persona_id) if persona_id else "profile"
+    return f"{valid_elder_id}:{valid_session_id}:{valid_persona_id}"
 
 
 def get_decision(elder_id: str, session_id: str = "default", persona_id: str = None) -> Decision:
@@ -278,6 +491,28 @@ def _session_rows() -> list[dict]:
     return rows
 
 
+def _evict_stale_sessions(ttl_seconds: int = 3600):
+    now = datetime.now()
+    stale_keys = [
+        key
+        for key, decision in decisions.items()
+        if (now - decision.last_seen).total_seconds() > ttl_seconds
+    ]
+    for key in stale_keys:
+        decision = decisions.pop(key)
+        clear_agent(decision.elder_id, session_id=decision.session_id)
+
+    overflow = len(decisions) - MAX_SESSIONS
+    if overflow > 0:
+        oldest_keys = sorted(
+            decisions,
+            key=lambda key: decisions[key].last_seen,
+        )[:overflow]
+        for key in oldest_keys:
+            decision = decisions.pop(key)
+            clear_agent(decision.elder_id, session_id=decision.session_id)
+
+
 # ------------------------------------------------------------------
 # Background tasks
 # ------------------------------------------------------------------
@@ -302,7 +537,7 @@ async def _generate_persona_tone(elder_id: str, persona_id: str):
         language_text = language_map.get(persona.get("language", "mandarin"), "全華語")
 
         llm = LLMService()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         tone = await loop.run_in_executor(
             None,
             llm.generate_persona_tone,
@@ -313,8 +548,8 @@ async def _generate_persona_tone(elder_id: str, persona_id: str):
             persona.get("habits", []),
         )
 
-        profile["personas"][persona_id]["tone"] = tone
-        memory._save(elder_id, profile)
+        if not memory.set_persona_field(elder_id, persona_id, "tone", tone):
+            raise RuntimeError("說話風格儲存失敗")
         print(f"說話風格生成完成：{persona.get('name', '')} → {tone[:30]}...")
 
     except Exception as e:
@@ -325,22 +560,97 @@ async def _generate_persona_tone(elder_id: str, persona_id: str):
 # Static pages
 # ------------------------------------------------------------------
 
-@app.get("/")
 def read_root():
     return FileResponse("frontend/index.html")
 
 
-@app.get("/admin")
 def admin_page(_: dict = Depends(require_admin)):
     return FileResponse("frontend/admin.html")
+
+
+# ------------------------------------------------------------------
+# Elder authentication
+# ------------------------------------------------------------------
+
+def get_system_mode(request: Request):
+    client_host = request.client.host if request.client else ""
+    return {
+        "demo_mode": (
+            CARE4U_DEMO_MODE
+            and client_host in {"127.0.0.1", "::1"}
+        )
+    }
+
+
+def list_allowed_elders(_: dict = Depends(require_caregiver)):
+    memory = VectorMemoryStore()
+    elders = []
+    for elder_id in ALLOWED_ELDER_IDS:
+        profile = memory.get_profile(elder_id) or {}
+        elders.append({
+            "elder_id": elder_id,
+            "name": profile.get("name") or elder_id,
+        })
+    return {"elders": elders}
+
+
+def create_elder_pin(
+    req: ElderPinRequest,
+    _: dict = Depends(require_caregiver),
+):
+    if req.elder_id not in ALLOWED_ELDER_IDS:
+        raise HTTPException(status_code=403, detail="此長者不在允許名單")
+    pin, session = issue_pin(req.elder_id, req.ttl_minutes)
+    return {
+        "pin": pin,
+        "elder_id": req.elder_id,
+        "expires_at": session.expires_at.isoformat(),
+    }
+
+
+def elder_login(req: ElderLoginRequest, request: Request):
+    client_key = request.client.host if request.client else "unknown"
+    try:
+        token, session = login_with_pin(req.pin, client_key)
+    except LoginRateLimitedError:
+        raise HTTPException(
+            status_code=429,
+            detail="PIN 嘗試次數過多，請稍後再試",
+        )
+    except InvalidPinError:
+        raise HTTPException(status_code=401, detail="PIN 無效或已使用")
+    if session.elder_id not in ALLOWED_ELDER_IDS:
+        revoke_elder(session.elder_id)
+        raise HTTPException(status_code=403, detail="此長者不在允許名單")
+    return {
+        "elder_token": token,
+        "elder_id": session.elder_id,
+        "expires_at": session.expires_at.isoformat(),
+    }
+
+
+def revoke_elder_session(
+    req: ElderSessionRevokeRequest,
+    _: dict = Depends(require_caregiver),
+):
+    removed_pins, removed_tokens = revoke_elder(req.elder_id)
+    _reset_elder_state(req.elder_id)
+    return {
+        "success": True,
+        "elder_id": req.elder_id,
+        "removed_pins": removed_pins,
+        "removed_tokens": removed_tokens,
+    }
 
 
 # ------------------------------------------------------------------
 # Session management
 # ------------------------------------------------------------------
 
-@app.post("/api/switch-elder")
-def switch_elder(req: GreetRequest):
+def switch_elder(
+    req: GreetRequest,
+    _: dict = Depends(require_caregiver),
+):
     try:
         _reset_elder_state(req.elder_id, req.session_id)
         return {"success": True}
@@ -352,38 +662,142 @@ def switch_elder(req: GreetRequest):
 # Conversation
 # ------------------------------------------------------------------
 
-@app.post("/api/greet")
-def greet(req: GreetRequest):
+async def _run_background_image(
+    task_id: str,
+    decision: Decision,
+    message: str,
+):
     try:
-        return get_decision(req.elder_id, req.session_id, req.persona_id).greet()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/chat")
-async def chat(req: ChatRequest):
-    try:
-        decision = get_decision(req.elder_id, req.session_id, req.persona_id)
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None, decision.chat, req.message, req.speed_emotion
+        loop = asyncio.get_running_loop()
+        image, caption = await loop.run_in_executor(
+            None,
+            decision._run_image_gen,
+            message,
         )
+        _update_background_result(task_id, {
+            "image_status": "complete",
+            "image": image,
+            "image_caption": caption,
+        })
+    except Exception as e:
+        _update_background_result(task_id, {
+            "image_status": "failed",
+            "image_error": str(e),
+        })
+
+
+async def _run_background_health(
+    task_id: str,
+    decision: Decision,
+    message: str,
+):
+    try:
+        loop = asyncio.get_running_loop()
+        health_info = await loop.run_in_executor(
+            None,
+            decision._run_health_search,
+            message,
+        )
+        _update_background_result(task_id, {
+            "health_status": "complete",
+            "health_info": health_info,
+        })
+    except Exception as e:
+        _update_background_result(task_id, {
+            "health_status": "failed",
+            "health_error": str(e),
+        })
+
+
+def greet(
+    req: GreetRequest,
+    identity: ElderIdentity = Depends(require_elder_token),
+):
+    try:
+        return get_decision(
+            identity.elder_id,
+            req.session_id,
+            req.persona_id,
+        ).greet()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def chat(
+    req: ChatRequest,
+    identity: ElderIdentity = Depends(require_elder_token),
+):
+    try:
+        _evict_stale_sessions()
+        decision = get_decision(
+            identity.elder_id,
+            req.session_id,
+            req.persona_id,
+        )
+        async with decision._lock:
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                None,
+                decision.chat,
+                req.message,
+                req.speed_emotion,
+            )
+        result["background_task_id"] = None
+        if result.get("escalation_level", 0) < 2:
+            task_id = _reserve_background_result(identity.token)
+            if task_id:
+                asyncio.create_task(
+                    _run_background_image(task_id, decision, req.message)
+                )
+                asyncio.create_task(
+                    _run_background_health(task_id, decision, req.message)
+                )
+                result["background_task_id"] = task_id
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def _consume_background_result(
+    task_id: str,
+    owner_token: str | None = None,
+):
+    with chat_background_results_lock:
+        result = chat_background_results.get(task_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="找不到背景任務")
+        if owner_token is not None and result.get("_owner_token") != owner_token:
+            raise HTTPException(status_code=404, detail="找不到背景任務")
+        all_done = _background_all_done(result)
+        response = {
+            key: value
+            for key, value in result.items()
+            if not key.startswith("_")
+        }
+        response["all_done"] = all_done
+        if all_done:
+            chat_background_results.pop(task_id, None)
+        return response
+
+
+def get_chat_background_result(
+    task_id: str,
+    _: dict = Depends(require_caregiver),
+):
+    return _consume_background_result(task_id)
 
 
 # ------------------------------------------------------------------
 # Speech I/O
 # ------------------------------------------------------------------
 
-@app.post("/api/stt")
 async def speech_to_text(audio: UploadFile = File(...)):
     try:
         await ensure_stt_pool()
         audio_bytes = await audio.read()
         stt_instance = await stt_pool_lock.get()
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
                 None, stt_instance.transcribe_with_speed, audio_bytes
             )
@@ -403,17 +817,14 @@ async def speech_to_text(audio: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/admin/me")
 def admin_me(user: dict = Depends(require_admin)):
     return user
 
 
-@app.get("/api/admin/sessions")
 def list_sessions(_: dict = Depends(require_caregiver)):
     return {"sessions": _session_rows(), "count": len(decisions)}
 
 
-@app.post("/api/admin/sessions/clear")
 def clear_sessions(req: SessionClearRequest, _: dict = Depends(require_system_admin)):
     if req.elder_id:
         _reset_elder_state(req.elder_id, req.session_id)
@@ -424,7 +835,6 @@ def clear_sessions(req: SessionClearRequest, _: dict = Depends(require_system_ad
     return {"success": True, "sessions": _session_rows()}
 
 
-@app.post("/api/admin/rag/evaluate")
 def evaluate_rag(req: RAGEvaluationRequest, _: dict = Depends(require_caregiver)):
     try:
         from backend.tools.rag_evaluation import evaluate_rag_queries
@@ -433,7 +843,6 @@ def evaluate_rag(req: RAGEvaluationRequest, _: dict = Depends(require_caregiver)
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/admin/stt/evaluate-transcripts")
 def evaluate_stt_transcripts(req: STTEvaluationRequest, _: dict = Depends(require_caregiver)):
     try:
         from backend.tools.stt_corpus_eval import evaluate_transcripts
@@ -442,8 +851,7 @@ def evaluate_stt_transcripts(req: STTEvaluationRequest, _: dict = Depends(requir
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/stt/status")
-def get_stt_status():
+def get_stt_status(_: dict = Depends(require_admin)):
     try:
         from backend.services.stt_service import get_stt_environment_status
 
@@ -467,26 +875,27 @@ def get_stt_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/tts")
-async def text_to_speech(req: TTSRequest):
+async def _synthesize_speech(req: TTSRequest, elder_id: str | None):
     try:
         service = tts
-        if req.elder_id:
+        if elder_id:
             memory = VectorMemoryStore()
-            profile = memory.get_profile(req.elder_id)
+            profile = memory.get_profile(elder_id)
             personas = profile.get("personas", {}) if profile else {}
             active_id = req.persona_id or (profile.get("active_persona", "ai") if profile else "ai")
             active = personas.get(active_id, personas.get("ai", {}))
             voice_path = active.get("voice_path")
-            engine = active.get("voice_engine", "xtts")
+            engine = TTSService.normalize_engine(
+                active.get("voice_engine", "xtts")
+            )
 
             service = TTSService(voice="zh-TW-HsiaoChenNeural")
-            if voice_path:
-                service.set_engine("xtts", voice_path)
+            if engine != "edge":
+                service.set_engine(engine, voice_path)
             else:
                 service.reset_engine()
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         audio_bytes = await loop.run_in_executor(None, service.synthesize, req.text, req.emotion)
         if not audio_bytes:
             raise HTTPException(status_code=500, detail="TTS 失敗")
@@ -496,7 +905,20 @@ async def text_to_speech(req: TTSRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/stt/language")
+async def text_to_speech(
+    req: TTSRequest,
+    _: dict = Depends(require_caregiver),
+):
+    return await _synthesize_speech(req, req.elder_id)
+
+
+async def elder_text_to_speech(
+    req: TTSRequest,
+    identity: ElderIdentity = Depends(require_elder_token),
+):
+    return await _synthesize_speech(req, identity.elder_id)
+
+
 async def set_stt_language(req: LanguageRequest):
     try:
         print(f"收到語言切換請求：{req.language}")
@@ -528,7 +950,6 @@ async def set_stt_language(req: LanguageRequest):
 # Profile
 # ------------------------------------------------------------------
 
-@app.get("/api/profile/{elder_id}")
 def get_profile(elder_id: str, _: dict = Depends(require_admin)):
     try:
         decision = get_decision(elder_id)
@@ -543,7 +964,6 @@ def get_profile(elder_id: str, _: dict = Depends(require_admin)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/history/{elder_id}")
 def get_history(elder_id: str, _: dict = Depends(require_caregiver)):
     key = next((k for k in decisions if k.startswith(f"{elder_id}:")), None)
     if not key:
@@ -551,7 +971,6 @@ def get_history(elder_id: str, _: dict = Depends(require_caregiver)):
     return {"history": decisions[key].get_history()}
 
 
-@app.get("/api/safety/{elder_id}")
 def get_safety(elder_id: str, _: dict = Depends(require_caregiver)):
     try:
         return get_decision(elder_id).get_safety_status()
@@ -559,54 +978,37 @@ def get_safety(elder_id: str, _: dict = Depends(require_caregiver)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/agent-logs")
 def get_agent_logs(_: dict = Depends(require_caregiver)):
     from backend.agents.decision import get_logs
     return {"logs": get_logs()}
 
 
-@app.post("/api/profile/save")
 async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregiver)):
     try:
-        data_path = Path("backend/data/elders") / f"{req.elder_id}.json"
-
-        if data_path.exists():
-            with open(data_path, "r", encoding="utf-8") as f:
-                profile = json.load(f)
-        else:
-            profile = {
-                "elder_id": req.elder_id,
-                "recent_events": [],
-                "memory_summary": {},
-                "elder_biography": {},
-                "biography_usage_count": 0,
-            }
-
-        profile["name"] = req.name
-        profile["gender"] = req.gender
-        profile["cognitive_status"] = req.cognitive_status
-        profile["persona"] = {
-            "former_job": req.former_job,
-            "tone_preference": req.tone_preference,
-            "hobbies": [h.strip() for h in req.hobbies.split("、") if h.strip()],
-        }
-        profile["health_notes"] = {
-            "sensitivity": [s.strip() for s in req.sensitivity.split("、") if s.strip()],
-            "diet": req.diet,
-        }
-
-        with open(data_path, "w", encoding="utf-8") as f:
-            json.dump(profile, f, ensure_ascii=False, indent=2)
-
+        memory = VectorMemoryStore()
+        updated = memory.update_basic_fields(req.elder_id, {
+            "name": req.name,
+            "gender": req.gender,
+            "cognitive_status": req.cognitive_status,
+            "persona": {
+                "former_job": req.former_job,
+                "tone_preference": req.tone_preference,
+                "hobbies": [h.strip() for h in req.hobbies.split("、") if h.strip()],
+            },
+            "health_notes": {
+                "sensitivity": [s.strip() for s in req.sensitivity.split("、") if s.strip()],
+                "diet": req.diet,
+            },
+        })
+        if not updated:
+            raise RuntimeError("長者資料儲存失敗")
         _reset_elder_state(req.elder_id)
-
         return {"success": True, "message": f"{req.name} 的資料已儲存"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/save-biography")
 def save_biography(req: BiographyUpdateRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
@@ -614,18 +1016,24 @@ def save_biography(req: BiographyUpdateRequest, _: dict = Depends(require_caregi
         if not profile:
             raise HTTPException(status_code=404, detail="找不到長者資料")
 
-        profile["elder_biography"] = {
+        biography = {
             "content": req.biography,
             "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "sources": req.sources or profile.get("elder_biography", {}).get("sources", []),
+            "sources": req.sources if req.sources is not None else [],
             "manually_edited": True,
         }
-        profile["biography_usage_count"] = 0
-        memory._save(req.elder_id, profile)
+        if memory.set_biography(
+            req.elder_id,
+            biography,
+            preserve_sources=req.sources is None,
+        ) != "updated":
+            raise RuntimeError("生平資料儲存失敗")
 
         _reset_elder_state(req.elder_id)
         return {"success": True, "message": "生平資料已儲存"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -634,20 +1042,22 @@ def save_biography(req: BiographyUpdateRequest, _: dict = Depends(require_caregi
 # Personas
 # ------------------------------------------------------------------
 
-@app.get("/api/profile/{elder_id}/personas")
 def get_personas(elder_id: str, _: dict = Depends(require_admin)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(elder_id)
+        if not profile:
+            raise HTTPException(status_code=404, detail="找不到長者資料")
         return {
             "personas": profile.get("personas", {}),
             "active_persona": profile.get("active_persona", "ai"),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/persona/add")
 async def add_persona(req: PersonaAddRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
@@ -655,13 +1065,7 @@ async def add_persona(req: PersonaAddRequest, _: dict = Depends(require_caregive
         if not profile:
             raise HTTPException(status_code=404, detail="找不到長者資料")
 
-        if "personas" not in profile:
-            profile["personas"] = {}
-
-        existing_count = len([k for k in profile["personas"] if k != "ai"])
-        persona_id = f"persona_{existing_count + 1}"
-
-        profile["personas"][persona_id] = {
+        persona = {
             "name": req.name,
             "relation": req.relation,
             "voice_engine": req.voice_engine,
@@ -676,18 +1080,21 @@ async def add_persona(req: PersonaAddRequest, _: dict = Depends(require_caregive
             "current_status": req.current_status,
             "forbidden_topics": req.forbidden_topics,
         }
-        memory._save(req.elder_id, profile)
+        persona_id = memory.add_persona_auto(req.elder_id, persona)
+        if not persona_id:
+            raise RuntimeError("人格資料儲存失敗")
 
         asyncio.create_task(_generate_persona_tone(req.elder_id, persona_id))
 
         _reset_elder_state(req.elder_id)
         return {"success": True, "message": f"已新增：{req.name}", "persona_id": persona_id}
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/persona/delete")
 def delete_persona(req: PersonaDeleteRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
@@ -698,22 +1105,22 @@ def delete_persona(req: PersonaDeleteRequest, _: dict = Depends(require_caregive
         if req.persona_id == "ai":
             raise HTTPException(status_code=400, detail="不能刪除 AI 助理")
 
-        personas = profile.get("personas", {})
-        personas.pop(req.persona_id, None)
-        profile["personas"] = personas
+        if req.persona_id not in profile.get("personas", {}):
+            raise HTTPException(status_code=404, detail="找不到此人格")
 
-        if profile.get("active_persona") == req.persona_id:
-            profile["active_persona"] = "ai"
-
-        memory._save(req.elder_id, profile)
+        if not memory.delete_persona(req.elder_id, req.persona_id):
+            raise RuntimeError("人格資料刪除失敗")
         _reset_elder_state(req.elder_id)
         return {"success": True, "message": "已刪除人格"}
 
+    except KeyError:
+        raise HTTPException(status_code=404, detail="找不到此人格")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/persona/switch")
 def switch_persona(req: PersonaSwitchRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
@@ -725,19 +1132,20 @@ def switch_persona(req: PersonaSwitchRequest, _: dict = Depends(require_caregive
         if req.persona_id not in personas:
             raise HTTPException(status_code=404, detail="找不到此人格")
 
-        profile["active_persona"] = req.persona_id
-        memory._save(req.elder_id, profile)
+        if not memory.set_active_persona(req.elder_id, req.persona_id):
+            raise RuntimeError("啟用人格失敗")
         _reset_elder_state(req.elder_id)
         return {
             "success": True,
             "message": f"已切換到：{personas[req.persona_id]['name']}",
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/persona/upload-voice")
 async def upload_voice(
     elder_id: str = Form(...),
     persona_id: str = Form(...),
@@ -745,34 +1153,72 @@ async def upload_voice(
     _: dict = Depends(require_caregiver),
 ):
     try:
-        voices_dir = Path(f"backend/data/elders/{elder_id}_voices")
-        voices_dir.mkdir(exist_ok=True)
-
-        voice_path = voices_dir / f"{persona_id}.wav"
-        with open(voice_path, "wb") as f:
-            shutil.copyfileobj(voice.file, f)
-
+        elder_id = validate_elder_id(elder_id)
+        persona_id = validate_persona_id(persona_id)
         memory = VectorMemoryStore()
         profile = memory.get_profile(elder_id)
-        if profile and "personas" in profile and persona_id in profile["personas"]:
-            profile["personas"][persona_id]["voice_path"] = str(voice_path)
-            profile["personas"][persona_id]["voice_engine"] = "xtts"
-            memory._save(elder_id, profile)
+        persona = profile.get("personas", {}).get(persona_id) if profile else None
+        if persona is None:
+            raise HTTPException(status_code=404, detail="找不到此人格")
+
+        voices_dir = Path(f"backend/data/elders/{elder_id}_voices")
+        voices_dir.mkdir(parents=True, exist_ok=True)
+        voice_path = voices_dir / f"{persona_id}.wav"
+        temp_path = voice_path.with_name(
+            f".{voice_path.name}.{secrets.token_hex(8)}.tmp"
+        )
+        old_path = persona.get("voice_path")
+        old_engine = persona.get("voice_engine")
+        metadata_changed = False
+        try:
+            with open(temp_path, "wb") as f:
+                shutil.copyfileobj(voice.file, f)
+
+            path_updated = memory.set_persona_field(
+                elder_id,
+                persona_id,
+                "voice_path",
+                str(voice_path),
+            )
+            engine_updated = path_updated and memory.set_persona_field(
+                elder_id,
+                persona_id,
+                "voice_engine",
+                "xtts",
+            )
+            metadata_changed = path_updated or engine_updated
+            if not path_updated or not engine_updated:
+                raise RuntimeError("語音樣本資料儲存失敗")
+            os.replace(temp_path, voice_path)
+        except Exception:
+            if metadata_changed:
+                memory.set_persona_field(
+                    elder_id, persona_id, "voice_path", old_path
+                )
+                memory.set_persona_field(
+                    elder_id, persona_id, "voice_engine", old_engine
+                )
+            raise
+        finally:
+            temp_path.unlink(missing_ok=True)
 
         _reset_elder_state(elder_id)
         return {"success": True, "message": "語音樣本已上傳", "path": str(voice_path)}
 
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/background-candidates")
 def background_candidates(req: BackgroundCandidateRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
         if not profile:
-            return {"success": False, "message": "找不到長者資料"}
+            raise HTTPException(status_code=404, detail="找不到長者資料")
 
         search = SearchService()
         result = search.search_background_candidates(profile, req.extra_keywords)
@@ -782,17 +1228,18 @@ def background_candidates(req: BackgroundCandidateRequest, _: dict = Depends(req
             "candidates": result.get("candidates", []),
             "message": result.get("message", ""),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/biography-draft")
 def biography_draft(req: BiographyDraftRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
         if not profile:
-            return {"success": False, "message": "找不到長者資料"}
+            raise HTTPException(status_code=404, detail="找不到長者資料")
 
         persona = profile.get("persona", {})
         health = profile.get("health_notes", {})
@@ -815,7 +1262,7 @@ def biography_draft(req: BiographyDraftRequest, _: dict = Depends(require_caregi
         )
 
         if not biography or len(biography) < 20:
-            return {"success": False, "message": "生平草稿生成失敗"}
+            raise HTTPException(status_code=500, detail="生平草稿生成失敗")
 
         return {
             "success": True,
@@ -826,11 +1273,12 @@ def biography_draft(req: BiographyDraftRequest, _: dict = Depends(require_caregi
                 for s in sources
             ],
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/persona/upload-avatar")
 async def upload_avatar(
     elder_id: str = Form(...),
     persona_id: str = Form(...),
@@ -838,24 +1286,51 @@ async def upload_avatar(
     _: dict = Depends(require_caregiver),
 ):
     try:
+        elder_id = validate_elder_id(elder_id)
+        persona_id = validate_persona_id(persona_id)
         suffix = Path(avatar.filename or "").suffix.lower()
         if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
             raise HTTPException(status_code=400, detail="只支援 png、jpg、jpeg、webp")
+
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(elder_id)
+        persona = profile.get("personas", {}).get(persona_id) if profile else None
+        if persona is None:
+            raise HTTPException(status_code=404, detail="找不到此人格")
 
         avatars_dir = Path("frontend/avatars/personas")
         avatars_dir.mkdir(parents=True, exist_ok=True)
         avatar_filename = f"{elder_id}_{persona_id}{suffix}"
         avatar_path = avatars_dir / avatar_filename
-        with open(avatar_path, "wb") as f:
-            shutil.copyfileobj(avatar.file, f)
+        temp_path = avatar_path.with_name(
+            f".{avatar_path.name}.{secrets.token_hex(8)}.tmp"
+        )
+        old_avatar_path = persona.get("avatar_path")
+        metadata_changed = False
+        try:
+            with open(temp_path, "wb") as f:
+                shutil.copyfileobj(avatar.file, f)
 
-        memory = VectorMemoryStore()
-        profile = memory.get_profile(elder_id)
-        if not profile or "personas" not in profile or persona_id not in profile["personas"]:
-            raise HTTPException(status_code=404, detail="找不到此人格")
-
-        profile["personas"][persona_id]["avatar_path"] = f"personas/{avatar_filename}"
-        memory._save(elder_id, profile)
+            metadata_changed = memory.set_persona_field(
+                elder_id,
+                persona_id,
+                "avatar_path",
+                f"personas/{avatar_filename}",
+            )
+            if not metadata_changed:
+                raise RuntimeError("陪伴者照片資料儲存失敗")
+            os.replace(temp_path, avatar_path)
+        except Exception:
+            if metadata_changed:
+                memory.set_persona_field(
+                    elder_id,
+                    persona_id,
+                    "avatar_path",
+                    old_avatar_path,
+                )
+            raise
+        finally:
+            temp_path.unlink(missing_ok=True)
 
         _reset_elder_state(elder_id)
         return {
@@ -864,6 +1339,8 @@ async def upload_avatar(
             "avatar_path": f"personas/{avatar_filename}",
         }
 
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
@@ -874,38 +1351,153 @@ async def upload_avatar(
 # Family notes
 # ------------------------------------------------------------------
 
-@app.post("/api/profile/family-note/add")
 def add_family_note(req: FamilyNoteRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
         if not profile:
             raise HTTPException(status_code=404, detail="找不到長者資料")
-        if "family_notes" not in profile:
-            profile["family_notes"] = []
-        profile["family_notes"].append({
+        if not memory.append_family_note(req.elder_id, {
             "note": req.note,
             "date": datetime.now().strftime("%Y-%m-%d"),
             "added_by": "照護人員",
-        })
-        memory._save(req.elder_id, profile)
-        return {"success": True, "family_notes": profile["family_notes"]}
+        }):
+            raise RuntimeError("家屬備註儲存失敗")
+        updated_profile = memory.get_profile(req.elder_id)
+        return {"success": True, "family_notes": updated_profile.get("family_notes", [])}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/profile/family-note/delete")
 def delete_family_note(req: FamilyNoteDeleteRequest, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
         profile = memory.get_profile(req.elder_id)
         if not profile:
             raise HTTPException(status_code=404, detail="找不到長者資料")
-        notes = profile.get("family_notes", [])
-        if 0 <= req.index < len(notes):
-            notes.pop(req.index)
-            profile["family_notes"] = notes
-            memory._save(req.elder_id, profile)
-        return {"success": True, "family_notes": profile["family_notes"]}
+        if not memory.delete_family_note_at(req.elder_id, req.index):
+            raise RuntimeError("家屬備註刪除失敗")
+        updated_profile = memory.get_profile(req.elder_id)
+        return {"success": True, "family_notes": updated_profile.get("family_notes", [])}
+    except IndexError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def get_elder_profile(
+    identity: ElderIdentity = Depends(require_elder_token),
+):
+    profile = VectorMemoryStore().get_profile(identity.elder_id)
+    if not profile or not profile.get("name"):
+        raise HTTPException(status_code=404, detail="找不到長者資料")
+    return profile
+
+
+def get_elder_personas(
+    identity: ElderIdentity = Depends(require_elder_token),
+):
+    profile = VectorMemoryStore().get_profile(identity.elder_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="找不到長者資料")
+    return {
+        "personas": profile.get("personas", {}),
+        "active_persona": profile.get("active_persona", "ai"),
+    }
+
+
+def get_elder_background_result(
+    task_id: str,
+    identity: ElderIdentity = Depends(require_elder_token),
+):
+    return _consume_background_result(task_id, identity.token)
+
+
+from backend.routers.admin import build_router as build_admin_router
+from backend.routers.chat import build_router as build_chat_router
+from backend.routers.elder_session import build_router as build_elder_session_router
+from backend.routers.persona import build_router as build_persona_router
+from backend.routers.profile import build_router as build_profile_router
+from backend.routers.speech import build_router as build_speech_router
+
+
+app.include_router(
+    build_chat_router(
+        {
+            "read_root": read_root,
+            "switch_elder": switch_elder,
+            "greet": greet,
+            "chat": chat,
+            "get_chat_background_result": get_chat_background_result,
+        }
+    )
+)
+app.include_router(
+    build_profile_router(
+        {
+            "get_profile": get_profile,
+            "get_history": get_history,
+            "get_safety": get_safety,
+            "get_agent_logs": get_agent_logs,
+            "save_profile": save_profile,
+            "save_biography": save_biography,
+            "background_candidates": background_candidates,
+            "biography_draft": biography_draft,
+            "add_family_note": add_family_note,
+            "delete_family_note": delete_family_note,
+        }
+    )
+)
+app.include_router(
+    build_persona_router(
+        {
+            "get_personas": get_personas,
+            "add_persona": add_persona,
+            "delete_persona": delete_persona,
+            "switch_persona": switch_persona,
+            "upload_voice": upload_voice,
+            "upload_avatar": upload_avatar,
+        }
+    )
+)
+app.include_router(
+    build_admin_router(
+        {
+            "admin_page": admin_page,
+            "admin_me": admin_me,
+            "list_sessions": list_sessions,
+            "clear_sessions": clear_sessions,
+            "evaluate_rag": evaluate_rag,
+            "evaluate_stt_transcripts": evaluate_stt_transcripts,
+        }
+    )
+)
+app.include_router(
+    build_speech_router(
+        {
+            "speech_to_text": speech_to_text,
+            "get_stt_status": get_stt_status,
+            "text_to_speech": text_to_speech,
+            "set_stt_language": set_stt_language,
+        }
+    )
+)
+app.include_router(
+    build_elder_session_router(
+        {
+            "get_system_mode": get_system_mode,
+            "list_allowed_elders": list_allowed_elders,
+            "create_elder_pin": create_elder_pin,
+            "revoke_elder_session": revoke_elder_session,
+            "elder_login": elder_login,
+            "get_elder_profile": get_elder_profile,
+            "get_elder_personas": get_elder_personas,
+            "elder_text_to_speech": elder_text_to_speech,
+            "get_elder_background_result": get_elder_background_result,
+        }
+    )
+)

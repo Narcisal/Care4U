@@ -1,7 +1,9 @@
 const urlParams = new URLSearchParams(window.location.search);
-let ELDER_ID = urlParams.get("elder") || "W001";
+let ELDER_ID = sessionStorage.getItem("care4u_elder_id") || "";
+let ELDER_TOKEN = sessionStorage.getItem("care4u_elder_token") || "";
 let SELECTED_PERSONA = urlParams.get("persona") || null;
 const API_BASE = "http://127.0.0.1:8000";
+let pinValue = "";
 const SESSION_ID = (() => {
     const key = "care4u_session_id";
     let value = sessionStorage.getItem(key);
@@ -18,6 +20,84 @@ let audioChunks = [];
 let isRecording = false;
 let currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
 let currentElderAvatar = "/static/avatars/elder_male_nobg.png";
+
+function clearElderSession() {
+    ELDER_ID = "";
+    ELDER_TOKEN = "";
+    sessionStorage.removeItem("care4u_elder_id");
+    sessionStorage.removeItem("care4u_elder_token");
+}
+
+async function elderFetch(path, options = {}) {
+    if (!ELDER_TOKEN) {
+        throw new Error("尚未登入");
+    }
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${ELDER_TOKEN}`);
+    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    if (res.status === 401) {
+        clearElderSession();
+        showPinOverlay("登入已失效，請重新輸入 PIN");
+    }
+    return res;
+}
+
+function showPinOverlay(message = "") {
+    const overlay = document.getElementById("pin-overlay");
+    const error = document.getElementById("pin-error");
+    if (overlay) overlay.style.display = "flex";
+    if (error) error.textContent = message;
+}
+
+function hidePinOverlay() {
+    const overlay = document.getElementById("pin-overlay");
+    if (overlay) overlay.style.display = "none";
+}
+
+function renderPin() {
+    const display = document.getElementById("pin-display");
+    if (display) display.textContent = `${"●".repeat(pinValue.length)}${"•".repeat(6 - pinValue.length)}`;
+}
+
+function appendPin(digit) {
+    if (pinValue.length < 6) pinValue += digit;
+    renderPin();
+}
+
+function clearPin() {
+    pinValue = "";
+    renderPin();
+    const error = document.getElementById("pin-error");
+    if (error) error.textContent = "";
+}
+
+async function submitElderPin() {
+    const error = document.getElementById("pin-error");
+    if (pinValue.length !== 6) {
+        if (error) error.textContent = "請輸入完整 6 位 PIN";
+        return;
+    }
+    try {
+        const res = await fetch(`${API_BASE}/api/elder-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pin: pinValue })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "PIN 驗證失敗");
+        ELDER_ID = data.elder_id;
+        ELDER_TOKEN = data.elder_token;
+        sessionStorage.setItem("care4u_elder_id", ELDER_ID);
+        sessionStorage.setItem("care4u_elder_token", ELDER_TOKEN);
+        clearPin();
+        hidePinOverlay();
+        await startAuthenticatedView();
+    } catch (e) {
+        if (error) error.textContent = e.message || "PIN 驗證失敗";
+        pinValue = "";
+        renderPin();
+    }
+}
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -57,7 +137,8 @@ function enableButtons() {
 async function loadElderProfile() {
     if (!ELDER_ID) return;
     try {
-        const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
+        const res = await elderFetch("/api/elder/profile");
+        if (!res.ok) throw new Error("profile");
         const profile = await res.json();
         const nameEl = document.getElementById("elder-name-display");
         if (nameEl) nameEl.textContent = profile.name || "未知";
@@ -70,9 +151,38 @@ async function loadElderProfile() {
 }
 
 async function switchElder(elderId) {
-    ELDER_ID = elderId;
-    clearChat();
-    await loadElderProfile();
+    if (!elderId || elderId === ELDER_ID) {
+        return;
+    }
+
+    try {
+        const pinRes = await fetch(`${API_BASE}/api/admin/elder-pin`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                elder_id: elderId,
+                ttl_minutes: 480
+            })
+        });
+        const pinData = await pinRes.json();
+        if (!pinRes.ok) throw new Error(pinData.detail || "無法產生切換 PIN");
+        const loginRes = await fetch(`${API_BASE}/api/elder-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pin: pinData.pin })
+        });
+        const loginData = await loginRes.json();
+        if (!loginRes.ok) throw new Error(loginData.detail || "切換登入失敗");
+        ELDER_ID = loginData.elder_id;
+        ELDER_TOKEN = loginData.elder_token;
+        SELECTED_PERSONA = null;
+        sessionStorage.setItem("care4u_elder_id", ELDER_ID);
+        sessionStorage.setItem("care4u_elder_token", ELDER_TOKEN);
+        window.location.assign("/");
+    } catch (e) {
+        console.error("切換長者失敗", e);
+        alert(e.message || "切換長者失敗");
+    }
 }
 
 async function startSession() {
@@ -81,15 +191,15 @@ async function startSession() {
     btn.disabled = true;
 
     try {
-        const res = await fetch(`${API_BASE}/api/greet`, {
+        const res = await elderFetch("/api/greet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                elder_id: ELDER_ID,
                 session_id: SESSION_ID,
                 persona_id: SELECTED_PERSONA
             })
         });
+        if (!res.ok) throw new Error("greet");
         const data = await res.json();
 
         addMessage("ai", data.message);
@@ -122,11 +232,10 @@ async function processAndRespond(message, speedEmotion = "normal") {
 
     const thinkingId = addThinking();
     try {
-        const res = await fetch(`${API_BASE}/api/chat`, {
+        const res = await elderFetch("/api/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                elder_id: ELDER_ID,
                 message: message,
                 speed_emotion: speedEmotion,
                 session_id: SESSION_ID,
@@ -146,6 +255,9 @@ async function processAndRespond(message, speedEmotion = "normal") {
 
         if (data.health_info) {
             addHealthCard(data.health_info);
+        }
+        if (data.background_task_id) {
+            pollChatBackground(data.background_task_id);
         }
 
         if (data.trend_alert) {
@@ -180,6 +292,32 @@ async function processAndRespond(message, speedEmotion = "normal") {
         document.getElementById("text-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
         document.getElementById("hold-talk-btn").disabled = false;
+    }
+}
+
+async function pollChatBackground(taskId) {
+    let imageShown = false;
+    let healthShown = false;
+    for (let attempt = 0; attempt < 15; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            const res = await elderFetch(`/api/elder/chat/background/${encodeURIComponent(taskId)}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!imageShown && data.image_status !== "pending" && data.image) {
+                if (data.image_caption) addMessage("ai", data.image_caption);
+                addImageMessage(data.image);
+                imageShown = true;
+            }
+            if (!healthShown && data.health_status !== "pending" && data.health_info) {
+                addHealthCard(data.health_info);
+                healthShown = true;
+            }
+            if (data.image_status !== "pending" && data.health_status !== "pending") return;
+        } catch (e) {
+            console.error("背景結果查詢失敗", e);
+            return;
+        }
     }
 }
 
@@ -252,13 +390,12 @@ async function sendAudioToSTT(audioBlob) {
 async function speakText(text, emotion = "normal") {
     return new Promise(async (resolve) => {
         try {
-            const res = await fetch(`${API_BASE}/api/tts`, {
+            const res = await elderFetch("/api/elder/tts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     text: text,
                     emotion: emotion,
-                    elder_id: ELDER_ID,
                     persona_id: SELECTED_PERSONA
                 })
             });
@@ -444,12 +581,6 @@ function clearChat() {
 }
 
 try {
-    loadElderProfile();
-} catch (e) {
-    console.error("loadElderProfile 失敗：", e);
-}
-
-try {
     document.getElementById("text-input").addEventListener("keypress", (e) => {
         if (e.key === "Enter") sendMessage();
     });
@@ -467,7 +598,7 @@ try {
 }
 async function loadWelcomePersonas(elderId) {
     try {
-        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        const res = await elderFetch("/api/elder/personas");
         const data = await res.json();
         const personas = data.personas || {};
         const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
@@ -549,7 +680,7 @@ function addEscalationAlert(level, message) {
 
 async function prepareActivePersona(elderId) {
     try {
-        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        const res = await elderFetch("/api/elder/personas");
         const data = await res.json();
         const personas = data.personas || {};
         const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
@@ -620,13 +751,12 @@ async function speakText(text, emotion = "normal") {
                 lbl.className = "status-label speaking";
             }
 
-            const res = await fetch(`${API_BASE}/api/tts`, {
+            const res = await elderFetch("/api/elder/tts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     text,
                     emotion,
-                    elder_id: ELDER_ID,
                     persona_id: SELECTED_PERSONA
                 })
             });
@@ -654,15 +784,13 @@ async function speakText(text, emotion = "normal") {
 }
 
 async function enterChat() {
-    ELDER_ID = urlParams.get("elder") || ELDER_ID || "W001";
-
     document.getElementById('welcome-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'flex';
 
     await prepareActivePersona(ELDER_ID);
 
     try {
-        const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}`);
+        const res = await elderFetch("/api/elder/profile");
         const profile = await res.json();
         const nameEl = document.getElementById("elder-name-display");
         if (nameEl) nameEl.textContent = profile.name || "未知";
@@ -682,7 +810,7 @@ async function enterChat() {
 
 async function showPersonaSwitcher() {
     try {
-        const res = await fetch(`${API_BASE}/api/profile/${ELDER_ID}/personas`);
+        const res = await elderFetch("/api/elder/personas");
         const data = await res.json();
         const personas = data.personas || {};
         const activeId = SELECTED_PERSONA || data.active_persona || 'ai';
@@ -775,13 +903,66 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-if (urlParams.get("autostart") === "1") {
-    enterChat();
-} else {
+async function startAuthenticatedView() {
+    await loadElderProfile();
+    const elderSwitchSelect = document.getElementById("elder-switch-select");
+    if (elderSwitchSelect) elderSwitchSelect.value = ELDER_ID;
+    if (urlParams.get("autostart") === "1") {
+        await enterChat();
+        return;
+    }
     document.getElementById('welcome-screen').style.display = 'flex';
     document.getElementById('main-screen').style.display = 'none';
-    loadWelcomePersonas(ELDER_ID);
+    await loadWelcomePersonas(ELDER_ID);
 }
+
+async function loadDemoControls() {
+    const controls = document.querySelector(".demo-controls");
+    if (controls) controls.style.display = "flex";
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/elders`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const select = document.getElementById("elder-switch-select");
+        if (!select) return;
+        select.innerHTML = "";
+        for (const elder of data.elders || []) {
+            const option = document.createElement("option");
+            option.value = elder.elder_id;
+            option.textContent = `${elder.name}（${elder.elder_id}）`;
+            select.appendChild(option);
+        }
+        select.value = ELDER_ID;
+    } catch (e) {
+        console.error("載入 Demo 長者清單失敗", e);
+    }
+}
+
+async function initializeApp() {
+    try {
+        const modeRes = await fetch(`${API_BASE}/api/system/mode`);
+        const mode = await modeRes.json();
+        if (mode.demo_mode) await loadDemoControls();
+    } catch (e) {
+        console.error("載入系統模式失敗", e);
+    }
+
+    if (!ELDER_TOKEN || !ELDER_ID) {
+        showPinOverlay();
+        return;
+    }
+    try {
+        const res = await elderFetch("/api/elder/profile");
+        if (!res.ok) throw new Error("invalid token");
+        hidePinOverlay();
+        await startAuthenticatedView();
+    } catch {
+        clearElderSession();
+        showPinOverlay("請輸入照護人員提供的 PIN");
+    }
+}
+
+initializeApp();
 
 async function startGuideChat() {
     SELECTED_PERSONA = "ai";

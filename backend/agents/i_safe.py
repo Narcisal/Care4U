@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from backend.memory.vector_store import VectorMemoryStore
 from backend.services.embedding_service import EmbeddingService
@@ -10,20 +11,50 @@ def _log(text: str):
     except UnicodeEncodeError:
         print(text.encode("utf-8", errors="replace").decode("utf-8", errors="replace"))
 
+
 # ------------------------------------------------------------------
-# Escalation keyword tables — extend here, not inside the method
+# Escalation keyword tables
 # ------------------------------------------------------------------
 
-_EMERGENCY_KEYWORDS = [
+_EMERGENCY_ZH = [
     "跌倒", "跌落", "昏倒", "失去意識", "不能動",
     "胸口很痛", "胸痛", "心臟", "喘不過氣", "呼吸困難",
     "出血", "流血", "骨折", "救命", "快叫救護車",
 ]
+_EMERGENCY_EN = [
+    "help", "fallen", "fall", "faint", "unconscious",
+    "chest pain", "can't breathe", "bleeding", "broken bone", "call ambulance",
+]
 
-_URGENT_KEYWORDS = [
+_URGENT_ZH = [
     "頭很暈", "快跌倒", "站不穩", "看不清楚",
     "很痛", "痛到", "劇烈", "好暈", "想吐",
 ]
+_URGENT_EN = [
+    "dizzy", "can't stand", "blurry", "nausea", "severe pain", "hurts a lot",
+]
+
+# Cooldown: suppress duplicate trend alerts within this window.
+_TREND_ALERT_COOLDOWN_HOURS = 2
+
+
+def _keyword_match(message: str, zh_keywords: list, en_keywords: list) -> bool:
+    for kw in zh_keywords:
+        if kw in message:
+            return True
+    msg_lower = message.lower()
+    for kw in en_keywords:
+        if re.search(r"\b" + re.escape(kw) + r"\b", msg_lower):
+            return True
+    return False
+
+
+def quick_keyword_check(message: str) -> int:
+    if _keyword_match(message, _EMERGENCY_ZH, _EMERGENCY_EN):
+        return 3
+    if _keyword_match(message, _URGENT_ZH, _URGENT_EN):
+        return 2
+    return 0
 
 
 class ISafe:
@@ -35,7 +66,6 @@ class ISafe:
         self.embedding = EmbeddingService()
         self.llm = LLMService()
         self.emotion_history: list[str] = []
-        self.alert_triggered = False
         profile = self.memory.get_profile(elder_id)
         self.active_persona_id = persona_id or (profile.get("active_persona", "ai") if profile else "ai")
 
@@ -57,7 +87,6 @@ class ISafe:
             result["emotion"] = "comfort"
             result["reason"] = (result.get("reason", "") + "（語速偵測：說話緩慢）").strip()
             _log("語速修正：說話緩慢 -> comfort")
-
         elif speed_emotion == "fast" and result.get("emotion") == "normal":
             result["emotion"] = "urgent"
             result["reason"] = (result.get("reason", "") + "（語速偵測：說話急促）").strip()
@@ -88,11 +117,10 @@ class ISafe:
         return result
 
     def _apply_importance_rules(self, message: str, result: dict) -> dict:
-        """Stabilize memory importance beyond the raw LLM score."""
         importance = float(result.get("importance", 0.3) or 0.3)
         tags = set(result.get("topic_tags", []) or [])
 
-        if result.get("is_urgent") or any(kw in message for kw in _EMERGENCY_KEYWORDS + _URGENT_KEYWORDS):
+        if result.get("is_urgent") or _keyword_match(message, _EMERGENCY_ZH + _URGENT_ZH, _EMERGENCY_EN + _URGENT_EN):
             importance = max(importance, 0.8)
             tags.add("安全警報")
 
@@ -120,7 +148,6 @@ class ISafe:
         urgent_count = sum(1 for e in events if "安全警報" in e.get("topic_tags", []))
         negative_count = sum(1 for e in events if e.get("sentiment") == "negative")
         trend_alerts = sum(1 for e in events if "趨勢警報" in e.get("topic_tags", []))
-
         return {
             "elder_id": self.elder_id,
             "urgent_count": urgent_count,
@@ -135,14 +162,9 @@ class ISafe:
     # ------------------------------------------------------------------
 
     def _determine_escalation(self, message: str, emotion_result: dict) -> int:
-        """
-        0: normal  — AI handles alone
-        1: concern — AI soothes + backend flag
-        2: urgent  — AI soothes + notify caregiver
-        3: emergency — immediate caregiver notification
-        """
-        if any(kw in message for kw in _EMERGENCY_KEYWORDS):
-            return 3
+        keyword_level = quick_keyword_check(message)
+        if keyword_level:
+            return keyword_level
 
         emotion = emotion_result.get("emotion", "normal")
         importance = emotion_result.get("importance", 0)
@@ -150,18 +172,32 @@ class ISafe:
 
         if is_urgent and importance >= 0.7:
             return 2
-
-        if any(kw in message for kw in _URGENT_KEYWORDS):
-            return 2
-
         if emotion in ["urgent", "comfort"] or is_urgent:
             return 1
-
         return 0
 
     # ------------------------------------------------------------------
-    # Trend analysis
+    # Trend analysis with persistent cooldown
     # ------------------------------------------------------------------
+
+    def _check_trend_cooldown(self) -> bool:
+        """Return True if a trend alert was already persisted within the cooldown window."""
+        try:
+            cutoff_ts = datetime.now().timestamp() - _TREND_ALERT_COOLDOWN_HOURS * 3600
+            events = self.memory.get_recent_events(self.elder_id, limit=30)
+            for e in reversed(events):
+                if "趨勢警報" not in e.get("topic_tags", []):
+                    continue
+                raw = e.get("spoken_at") or f"{e.get('date', '')} {e.get('time', '')}"
+                try:
+                    ts = datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S").timestamp()
+                    if ts >= cutoff_ts:
+                        return True
+                except (ValueError, TypeError):
+                    continue
+        except Exception:
+            pass
+        return False
 
     def _analyze_trend(self, current_emotion: str) -> str | None:
         self.emotion_history.append(current_emotion)
@@ -171,8 +207,7 @@ class ISafe:
         recent = self.emotion_history[-3:]
 
         if len(recent) == 3 and all(e == "urgent" for e in recent):
-            if not self.alert_triggered:
-                self.alert_triggered = True
+            if not self._check_trend_cooldown():
                 self._save_event({
                     "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
                     "sentiment": "negative",
@@ -188,8 +223,7 @@ class ISafe:
                 return "緊急趨勢警報：連續三次偵測到緊急狀況！"
 
         elif len(recent) == 3 and all(e in ["comfort", "urgent"] for e in recent):
-            if not self.alert_triggered:
-                self.alert_triggered = True
+            if not self._check_trend_cooldown():
                 self._save_event({
                     "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
                     "sentiment": "negative",
@@ -204,9 +238,6 @@ class ISafe:
                 })
                 return "情緒趨勢警報：長者持續情緒低落"
 
-        elif current_emotion in ["happy", "normal"]:
-            self.alert_triggered = False
-
         return None
 
     # ------------------------------------------------------------------
@@ -214,26 +245,14 @@ class ISafe:
     # ------------------------------------------------------------------
 
     def _save_event(self, event: dict):
-        """Persist an event to memory and store its embedding if available."""
-        self.memory.add_event(elder_id=self.elder_id, event=event)
+        memory_id = self.memory.add_event(elder_id=self.elder_id, event=event)
+        if not isinstance(memory_id, int) or isinstance(memory_id, bool):
+            return
         try:
             text = event.get("event", "")
             embedding = self.embedding.embed(text)
             if embedding:
-                cursor = self.memory._get_cursor()
-                if cursor:
-                    cursor.execute(
-                        """
-                        SELECT id FROM elder_memories
-                        WHERE elder_id = %s
-                        ORDER BY created_at DESC LIMIT 1
-                        """,
-                        (self.elder_id,),
-                    )
-                    row = cursor.fetchone()
-                    if row:
-                        self.memory.update_embedding(row["id"], embedding)
-                        _log(f"向量已儲存，維度：{len(embedding)}")
+                self.memory.save_event_embedding(memory_id, embedding)
         except Exception as e:
             _log(f"向量生成失敗（不影響對話）：{e}")
 

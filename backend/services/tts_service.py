@@ -23,6 +23,7 @@ EMOTION_PROSODY: dict[str, tuple[str, str, str]] = {
 
 
 class TTSService:
+    SUPPORTED_ENGINES = {"edge", "breezyvoice", "luxtts", "xtts"}
 
     def __init__(self, voice: str = "zh-TW-HsiaoChenNeural"):
         self.voice = voice
@@ -31,9 +32,15 @@ class TTSService:
 
     def set_engine(self, engine: str, voice_path: str = None):
         """Switch TTS engine. engine: "edge" | "breezyvoice" | "luxtts" | "xtts" """
-        self.engine = engine
-        self.voice_path = voice_path
-        print(f"TTS 引擎切換為：{engine}, 聲音樣本：{voice_path}")
+        normalized = self.normalize_engine(engine)
+        self.engine = normalized
+        self.voice_path = voice_path if normalized != "edge" else None
+        print(f"TTS 引擎切換為：{normalized}, 聲音樣本：{self.voice_path}")
+
+    @classmethod
+    def normalize_engine(cls, engine: str | None) -> str:
+        normalized = (engine or "").strip().lower()
+        return normalized if normalized in cls.SUPPORTED_ENGINES else "edge"
 
     def reset_engine(self):
         """Reset to default edge-tts."""

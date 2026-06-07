@@ -58,7 +58,7 @@ Use these screenshots for the Results section of the poster. Capture at 1920 x 1
 - URL: `http://127.0.0.1:8000/admin`
 - Action: open `記憶檢索測試`, press `帶入預設題目`, then `開始測試`.
 - Show: hit rate and retrieved memories.
-- Purpose: demonstrates a keyword-based retrieval smoke test for important elder memories. Formal semantic RAG evaluation should be shown as future work.
+- Purpose: demonstrates that important elder memories can be retrieved during the Windows demo. If the Linux PostgreSQL / pgvector service is running, the same page can be used to compare database-backed retrieval.
 
 ### 9. Taiwanese STT Verification
 
