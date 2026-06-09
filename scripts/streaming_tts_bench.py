@@ -53,10 +53,15 @@ def extract_first_sentence(text: str) -> str | None:
     return m.group(0).strip() if m else None
 
 
+PERSONA_ID = None   # 全域，由 --persona-id 設定
+
+
 def tts_request(base_url: str, elder_id: str, text: str) -> float:
     """送 TTS 請求，回傳合成時間（秒）。失敗回傳 None。"""
-    payload = json.dumps(
-        {"text": text, "emotion": "normal", "elder_id": elder_id},
+    body = {"text": text, "emotion": "normal", "elder_id": elder_id}
+    if PERSONA_ID:
+        body["persona_id"] = PERSONA_ID
+    payload = json.dumps(body,
         ensure_ascii=False,
     ).encode("utf-8")
     req = urllib_request.Request(
@@ -231,5 +236,12 @@ if __name__ == "__main__":
         "--elder", choices=[*MESSAGES, "all"], default="all",
         help="指定長者，或 all 跑全部"
     )
+    parser.add_argument(
+        "--persona-id", default=None,
+        help="指定 TTS 使用的 persona（如 daughter），不指定則用 active_persona"
+    )
     args = parser.parse_args()
+    if args.persona_id:
+        import sys
+        sys.modules[__name__].PERSONA_ID = args.persona_id
     run(args.base_url, args.elder)
