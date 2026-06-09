@@ -17,7 +17,10 @@ def _get_client():
     if not api_key or api_key == "your_api_key_here":
         return None
     if client is None:
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(timeout=20000),  # 每次 API 呼叫最多等 20s
+        )
     return client
 
 def detect_image_trigger(message: str) -> str | None:
@@ -129,16 +132,18 @@ No human faces. No modern vehicles or electronics. No text or numbers."""
                     model="gemini-2.5-flash-image",
                     contents=prompt,
                     config=types.GenerateContentConfig(
-                        response_modalities=["IMAGE"]
+                        response_modalities=["IMAGE"],
                     )
                 )
                 break
             except Exception as e:
-                if "503" in str(e) and attempt == 0:
-                    print(f"圖片生成 503，3s 後重試一次")
-                    time.sleep(3)
+                err = str(e)
+                if ("503" in err or "timeout" in err.lower()) and attempt == 0:
+                    print(f"圖片生成暫時失敗（{err[:40]}），5s 後重試一次")
+                    time.sleep(5)
                     continue
-                raise
+                print(f"圖片生成放棄：{err[:80]}")
+                return None   # 不 raise，讓 image_status 快速變 failed
 
         if response is None or not response.candidates:
             print("圖片生成：無 candidates")
