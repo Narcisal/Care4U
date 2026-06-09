@@ -31,7 +31,7 @@
       "name": "小玲",
       "relation": "女兒",
       "voice_engine": "xtts",
-      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\W001_voices\\daughter.wav",
+      "voice_path": null,
       "honorific": "爸爸",
       "language": "mandarin",
       "personality": [

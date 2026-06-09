@@ -113,6 +113,17 @@ BUGS.md
 GUI_REDESIGN.md
 
 # ------------------------------------------------------------------
+# Internal project working documents (commit drafts, delivery
+# checklists, poster drafts, screenshot plans, ad-hoc verifications)
+# ------------------------------------------------------------------
+
+commit_notes.md
+delivery_status.md
+poster_content_draft.md
+poster_screenshot_plan.md
+stt_verification.md
+
+# ------------------------------------------------------------------
 # Runtime conversation session files (generated at runtime, per-elder)
 # ------------------------------------------------------------------
 
