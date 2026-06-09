@@ -30,8 +30,8 @@
     "daughter": {
       "name": "小玲",
       "relation": "女兒",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\W001_voices\\daughter.wav",
       "honorific": "爸爸",
       "language": "mandarin",
       "personality": [
@@ -100,25 +100,348 @@
   "active_persona": "son",
   "recent_events": [
     {
-      "event": "聽了一整個下午的鄧麗君，說想起年輕時和老婆一起唱歌跳舞的日子，說那時候他唱得不好聽，但老婆從不嫌棄",
-      "sentiment": "positive",
-      "emotion_score": 0.5,
-      "importance": 0.85,
+      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
       "memory_type": "long",
-      "persona_id": "daughter",
+      "persona_id": "son",
       "topic_tags": [
-        "音樂",
-        "鄧麗君",
-        "懷念",
-        "妻子"
+        "情緒"
       ],
-      "reason": "長者沉浸在鄧麗君音樂中，回憶與妻子共同的美好時光",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "id": "w001_s01",
-      "date": "2026-03-15",
-      "time": "14:30:00",
+      "spoken_at": "2026-06-09 09:08:59",
+      "id": "56697e17",
+      "date": "2026-06-09",
+      "time": "09:08:59",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:16:54",
+      "id": "df507849",
+      "date": "2026-06-09",
+      "time": "11:16:54",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:56:03",
+      "id": "c21bd0c9",
+      "date": "2026-06-09",
+      "time": "10:56:03",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:06:06",
+      "id": "cb9d1b02",
+      "date": "2026-06-09",
+      "time": "12:06:06",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:01",
+      "id": "ff54a85b",
+      "date": "2026-06-09",
+      "time": "09:18:01",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 16:49:28",
+      "id": "ee9e4296",
+      "date": "2026-06-09",
+      "time": "16:49:28",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:06",
+      "id": "8f15ed6b",
+      "date": "2026-06-09",
+      "time": "09:18:06",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:08",
+      "id": "1d9a0fa9",
+      "date": "2026-06-09",
+      "time": "09:18:08",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:03:59",
+      "id": "ccc0b919",
+      "date": "2026-06-09",
+      "time": "12:03:59",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然很痛，呼吸也很困難。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:11",
+      "id": "5fe2ae10",
+      "date": "2026-06-09",
+      "time": "09:18:11",
       "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
+      "acknowledged_at": "2026-06-09 11:44:17"
+    },
+    {
+      "event": "說了：兒子最近都在忙電腦的工作，不知道哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:14:13",
+      "id": "3f06c96c",
+      "date": "2026-06-09",
+      "time": "12:14:13",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:07:26",
+      "id": "e7853af4",
+      "date": "2026-06-09",
+      "time": "11:07:26",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:20:38",
+      "id": "c4759a0a",
+      "date": "2026-06-09",
+      "time": "09:20:38",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然很痛，呼吸也很困難。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:17:04",
+      "id": "5b4a4d5c",
+      "date": "2026-06-09",
+      "time": "11:17:04",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 11:44:16"
+    },
+    {
+      "event": "說了：最近常常想起以前和太太騎車的日子。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:06:40",
+      "id": "ec8a455c",
+      "date": "2026-06-09",
+      "time": "11:06:40",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兒子最近都在忙電腦的工作，不知道哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:09:21",
+      "id": "997d9f69",
+      "date": "2026-06-09",
+      "time": "12:09:21",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:26:14",
+      "id": "366bbba5",
+      "date": "2026-06-09",
+      "time": "09:26:14",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:02:44",
+      "id": "21c33c3a",
+      "date": "2026-06-09",
+      "time": "11:02:44",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:16:56",
+      "id": "7d01b462",
+      "date": "2026-06-09",
+      "time": "11:16:56",
+      "acknowledged": false
     },
     {
       "event": "哼著《月亮代表我的心》，說這首歌聽了幾十年還是最喜歡，比現在那些新歌好聽多了",
@@ -141,6 +464,663 @@
       "acknowledged_at": "2026-06-09 00:36:52"
     },
     {
+      "event": "說了：兒子最近都在忙電腦的工作，不知道哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:06:24",
+      "id": "c858bdac",
+      "date": "2026-06-09",
+      "time": "12:06:24",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:56:05",
+      "id": "01c43e04",
+      "date": "2026-06-09",
+      "time": "10:56:05",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 11:44:16"
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 16:49:44",
+      "id": "6bea7573",
+      "date": "2026-06-09",
+      "time": "16:49:44",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:16:49",
+      "id": "69b40999",
+      "date": "2026-06-09",
+      "time": "11:16:49",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我懷念和我老婆憶起唱歌跳舞",
+      "sentiment": "negative",
+      "importance": 0.85,
+      "memory_type": "long",
+      "topic_tags": [
+        "懷念",
+        "妻子",
+        "音樂"
+      ],
+      "reason": "長者表達對妻子的深切思念，回憶共同唱歌的時光",
+      "source": "voice",
+      "id": "7deeb8e9",
+      "date": "2026-04-28",
+      "time": "15:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說了：兒子最近都在忙電腦的工作，不知道哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:04:05",
+      "id": "801904e7",
+      "date": "2026-06-09",
+      "time": "12:04:05",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:14:51",
+      "id": "1c51f9a8",
+      "date": "2026-06-09",
+      "time": "11:14:51",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:14:26",
+      "id": "86f58a90",
+      "date": "2026-06-09",
+      "time": "12:14:26",
+      "acknowledged": false
+    },
+    {
+      "event": "說最近睡眠不太好，躺下去就想事情，有時候想妻子，有時候想以前在工廠的往事，睡睡醒醒",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.75,
+      "memory_type": "long",
+      "topic_tags": [
+        "健康",
+        "睡眠",
+        "懷念",
+        "妻子"
+      ],
+      "reason": "長者睡眠困難且伴隨思念情緒，需持續關注身心狀況",
+      "source": "voice",
+      "id": "w001_s14",
+      "date": "2026-05-22",
+      "time": "21:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說了：我剛才站起來時腰有點痠，坐一下就好多了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:12:46",
+      "id": "ab2d33bb",
+      "date": "2026-06-09",
+      "time": "11:12:46",
+      "acknowledged": false
+    },
+    {
+      "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "sentiment": "negative",
+      "emotion_score": -1.0,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-09 11:17:07",
+      "id": "c954909c",
+      "date": "2026-06-09",
+      "time": "11:17:07",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 05:36:20",
+      "id": "38a751e9",
+      "date": "2026-06-09",
+      "time": "05:36:20",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:09:26",
+      "id": "7fc48f90",
+      "date": "2026-06-09",
+      "time": "12:09:26",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 05:37:31",
+      "id": "500e9ade",
+      "date": "2026-06-09",
+      "time": "05:37:31",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然很痛，呼吸也很困難。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 05:37:42",
+      "id": "7af649e4",
+      "date": "2026-06-09",
+      "time": "05:37:42",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:16:59",
+      "id": "5ff49dc2",
+      "date": "2026-06-09",
+      "time": "11:16:59",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 08:44:00",
+      "id": "31733a36",
+      "date": "2026-06-09",
+      "time": "08:44:00",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:06:31",
+      "id": "2642d7dd",
+      "date": "2026-06-09",
+      "time": "12:06:31",
+      "acknowledged": false
+    },
+    {
+      "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "sentiment": "negative",
+      "emotion_score": -1.0,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-09 09:26:22",
+      "id": "82eac208",
+      "date": "2026-06-09",
+      "time": "09:26:22",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 16:55:21",
+      "id": "8e976f56",
+      "date": "2026-06-09",
+      "time": "16:55:21",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:56:02",
+      "id": "e8c0e91a",
+      "date": "2026-06-09",
+      "time": "10:56:02",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 08:59:52",
+      "id": "789bdfdc",
+      "date": "2026-06-09",
+      "time": "08:59:52",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:04:17",
+      "id": "2a40de3b",
+      "date": "2026-06-09",
+      "time": "12:04:17",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "明確安全日常語句，使用快速路徑",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:14:56",
+      "id": "7dc8cda1",
+      "date": "2026-06-09",
+      "time": "11:14:56",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前老家門口有一棵大榕樹，夏天坐在樹下乘涼，風吹過來很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 16:20:21",
+      "id": "276aad22",
+      "date": "2026-06-09",
+      "time": "16:20:21",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 08:59:59",
+      "id": "62d2826a",
+      "date": "2026-06-09",
+      "time": "08:59:59",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 11:44:15"
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:12:51",
+      "id": "95ed4be4",
+      "date": "2026-06-09",
+      "time": "11:12:51",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:17:06",
+      "id": "f2a3a8a5",
+      "date": "2026-06-09",
+      "time": "11:17:06",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 11:44:14"
+    },
+    {
+      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:04:53",
+      "id": "db60a5dc",
+      "date": "2026-06-09",
+      "time": "09:04:53",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:13:49",
+      "id": "1ccf4dc3",
+      "date": "2026-06-09",
+      "time": "12:13:49",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:04:58",
+      "id": "053819f6",
+      "date": "2026-06-09",
+      "time": "09:04:58",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然很痛，呼吸也很困難。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:08",
+      "id": "ae07a4a8",
+      "date": "2026-06-09",
+      "time": "09:05:08",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 11:44:15"
+    },
+    {
+      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:17:01",
+      "id": "507dbf37",
+      "date": "2026-06-09",
+      "time": "11:17:01",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 11:44:14"
+    },
+    {
+      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:08:44",
+      "id": "d5b3da8b",
+      "date": "2026-06-09",
+      "time": "09:08:44",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 12:09:12",
+      "id": "6fa54478",
+      "date": "2026-06-09",
+      "time": "12:09:12",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛才站起來時腰有點痠，坐一下就好多了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:02:42",
+      "id": "57cc52f1",
+      "date": "2026-06-09",
+      "time": "11:02:42",
+      "acknowledged": false
+    },
+    {
       "event": "下午去附近公園和老鄰居老張下象棋，贏了兩局，說好久沒贏得這麼開心了",
       "sentiment": "positive",
       "emotion_score": 0.8,
@@ -158,129 +1138,6 @@
       "id": "w001_s03",
       "date": "2026-03-28",
       "time": "17:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說孫女安安前天來陪他下象棋，輸了還不服氣，一直要再下一局，說孫女聰明，再學幾年說不定會贏他",
-      "sentiment": "positive",
-      "emotion_score": 0.9,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "granddaughter",
-      "topic_tags": [
-        "象棋",
-        "孫女安安",
-        "家人",
-        "開心"
-      ],
-      "reason": "與孫女下棋互動，家庭情感連結強烈，心情明顯愉悅",
-      "source": "voice",
-      "id": "w001_s04",
-      "date": "2026-04-05",
-      "time": "15:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "翻出年輕時的老照片，說有一張是他騎重機、妻子坐後座、在海邊照的，說那個年代台灣的海很藍",
-      "sentiment": "negative",
-      "emotion_score": -0.5,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "daughter",
-      "topic_tags": [
-        "懷念",
-        "妻子",
-        "重機",
-        "老照片"
-      ],
-      "reason": "長者睹物思人，深切懷念妻子與年輕歲月",
-      "source": "voice",
-      "id": "w001_s05",
-      "date": "2026-04-12",
-      "time": "20:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說好想回苗栗老家走走，那裡的山路這個季節應該很美，說以前每年清明都會回去祭祖，好多年沒回了",
-      "sentiment": "negative",
-      "emotion_score": -0.4,
-      "importance": 0.75,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "苗栗",
-        "老家",
-        "懷念",
-        "清明"
-      ],
-      "reason": "長者思念家鄉並回憶清明祭祖習俗，帶有淡淡鄉愁",
-      "source": "voice",
-      "id": "w001_s06",
-      "date": "2026-04-18",
-      "time": "11:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說兒子建宏問他老主機板怎麼排線，兩個人研究了一個多小時，說現在的電腦都藏起來了，以前的看得到每一條線",
-      "sentiment": "positive",
-      "emotion_score": 0.7,
-      "importance": 0.75,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "電腦",
-        "工作回憶",
-        "兒子建宏",
-        "父子"
-      ],
-      "reason": "長者與兒子共同回憶電腦工程師時代，父子情感連結深厚",
-      "source": "voice",
-      "id": "w001_s07",
-      "date": "2026-04-20",
-      "time": "14:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說當年台灣剛開始有個人電腦，他去上課，第一次摸到鍵盤就覺得這東西以後一定很重要，果然被他說中了",
-      "sentiment": "positive",
-      "emotion_score": 0.6,
-      "importance": 0.75,
-      "memory_type": "long",
-      "persona_id": "granddaughter",
-      "topic_tags": [
-        "電腦",
-        "工作回憶",
-        "台灣科技",
-        "年輕往事"
-      ],
-      "reason": "長者分享早年台灣電腦產業的親身經歷，帶有自豪感",
-      "source": "voice",
-      "id": "w001_s08",
-      "date": "2026-04-25",
-      "time": "16:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說了：我懷念和我老婆憶起唱歌跳舞",
-      "sentiment": "negative",
-      "importance": 0.85,
-      "memory_type": "long",
-      "topic_tags": [
-        "懷念",
-        "妻子",
-        "音樂"
-      ],
-      "reason": "長者表達對妻子的深切思念，回憶共同唱歌的時光",
-      "source": "voice",
-      "id": "7deeb8e9",
-      "date": "2026-04-28",
-      "time": "15:30:00",
       "acknowledged": true,
       "acknowledged_at": "2026-06-09 00:36:52"
     },
@@ -326,41 +1183,6 @@
       "acknowledged_at": "2026-06-09 00:36:52"
     },
     {
-      "event": "說了：我女兒叫小玲，她在台北當護士",
-      "sentiment": "neutral",
-      "importance": 0.9,
-      "memory_type": "long",
-      "topic_tags": [
-        "家人",
-        "女兒小玲"
-      ],
-      "reason": "長者陳述女兒姓名與職業，重要家庭背景資訊",
-      "source": "voice",
-      "id": "a025caae",
-      "date": "2026-05-11",
-      "time": "10:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說了：我好懷念年輕時住苗栗老家",
-      "sentiment": "negative",
-      "importance": 0.8,
-      "memory_type": "long",
-      "topic_tags": [
-        "懷念",
-        "苗栗",
-        "老家"
-      ],
-      "reason": "長者表達對苗栗老家的思念",
-      "source": "voice",
-      "id": "e8f7de73",
-      "date": "2026-05-11",
-      "time": "10:15:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
       "event": "孫女安安傳了大學宿舍的照片，說她房間很整齊，他說看著安安長大，心裡說不出的欣慰",
       "sentiment": "positive",
       "emotion_score": 0.7,
@@ -378,25 +1200,6 @@
       "id": "w001_s11",
       "date": "2026-05-13",
       "time": "20:30:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說天氣轉涼後腰部舊傷隱隱作痛，不太想動，但每天早上還是撐著出門走一圈，說躺著更不好",
-      "sentiment": "negative",
-      "emotion_score": -0.5,
-      "importance": 0.7,
-      "memory_type": "short",
-      "topic_tags": [
-        "健康",
-        "腰痛",
-        "怕冷"
-      ],
-      "reason": "長者天冷後舊傷復發，需照護人員持續關注健康",
-      "source": "voice",
-      "id": "w001_s12",
-      "date": "2026-05-16",
-      "time": "09:00:00",
       "acknowledged": true,
       "acknowledged_at": "2026-06-09 00:36:52"
     },
@@ -420,46 +1223,6 @@
       "acknowledged_at": "2026-06-09 00:36:52"
     },
     {
-      "event": "說最近睡眠不太好，躺下去就想事情，有時候想妻子，有時候想以前在工廠的往事，睡睡醒醒",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.75,
-      "memory_type": "long",
-      "topic_tags": [
-        "健康",
-        "睡眠",
-        "懷念",
-        "妻子"
-      ],
-      "reason": "長者睡眠困難且伴隨思念情緒，需持續關注身心狀況",
-      "source": "voice",
-      "id": "w001_s14",
-      "date": "2026-05-22",
-      "time": "21:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "在電視上看到一台老款重機，說和他年輕時騎的款式很像，說那個年代騎重機是很豪氣的事",
-      "sentiment": "positive",
-      "emotion_score": 0.5,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "重機",
-        "年輕回憶",
-        "妻子"
-      ],
-      "reason": "電視畫面引發長者對年輕騎重機的回憶",
-      "source": "voice",
-      "id": "w001_s15",
-      "date": "2026-05-26",
-      "time": "20:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
       "event": "說公園下棋的老友老張說要搬去高雄跟子女住了，以後少了一個下棋的夥伴，說有點捨不得",
       "sentiment": "negative",
       "emotion_score": -0.4,
@@ -479,243 +1242,6 @@
       "time": "17:30:00",
       "acknowledged": true,
       "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說天氣還是有點涼，腰又在痛，但不想讓小玲和建宏擔心，所以沒有告訴他們，說說了他們也只是擔心",
-      "sentiment": "negative",
-      "emotion_score": -0.5,
-      "importance": 0.8,
-      "memory_type": "long",
-      "topic_tags": [
-        "健康",
-        "腰痛",
-        "隱忍",
-        "不想讓家人擔心"
-      ],
-      "reason": "長者主動隱忍不適不告知家人，照護人員需主動關注",
-      "source": "voice",
-      "id": "w001_s17",
-      "date": "2026-06-02",
-      "time": "10:00:00",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:36:52"
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 05:36:20",
-      "id": "38a751e9",
-      "date": "2026-06-09",
-      "time": "05:36:20",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 05:36:32",
-      "id": "8c30ab32",
-      "date": "2026-06-09",
-      "time": "05:36:32",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 05:37:31",
-      "id": "500e9ade",
-      "date": "2026-06-09",
-      "time": "05:37:31",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口突然很痛，呼吸也很困難。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 05:37:42",
-      "id": "7af649e4",
-      "date": "2026-06-09",
-      "time": "05:37:42",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:41:45",
-      "id": "ee62e0e2",
-      "date": "2026-06-09",
-      "time": "08:41:45",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:44:00",
-      "id": "31733a36",
-      "date": "2026-06-09",
-      "time": "08:44:00",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:44:13",
-      "id": "24611dea",
-      "date": "2026-06-09",
-      "time": "08:44:13",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:45:12",
-      "id": "c47e3da5",
-      "date": "2026-06-09",
-      "time": "08:45:12",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口突然很痛，呼吸也很困難。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:45:24",
-      "id": "378a066a",
-      "date": "2026-06-09",
-      "time": "08:45:24",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:30",
-      "id": "fc26d8fc",
-      "date": "2026-06-09",
-      "time": "08:59:30",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:46",
-      "id": "a48583ff",
-      "date": "2026-06-09",
-      "time": "08:59:46",
-      "acknowledged": false
-    },
-    {
-      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
-      "sentiment": "negative",
-      "emotion_score": -0.8,
-      "importance": 1.0,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "趨勢警報",
-        "需要關注"
-      ],
-      "reason": "長者持續情緒低落，建議照護人員關心。",
-      "source": "trend_analysis",
-      "spoken_at": "2026-06-09 08:59:49",
-      "id": "d41d0f79",
-      "date": "2026-06-09",
-      "time": "08:59:49",
-      "acknowledged": false
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -754,96 +1280,6 @@
       "acknowledged": false
     },
     {
-      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:52",
-      "id": "789bdfdc",
-      "date": "2026-06-09",
-      "time": "08:59:52",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:53",
-      "id": "e47166a3",
-      "date": "2026-06-09",
-      "time": "08:59:53",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:56",
-      "id": "db29a2e3",
-      "date": "2026-06-09",
-      "time": "08:59:56",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口突然很痛，呼吸也很困難。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:57",
-      "id": "d7306b7c",
-      "date": "2026-06-09",
-      "time": "08:59:57",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:59:59",
-      "id": "62d2826a",
-      "date": "2026-06-09",
-      "time": "08:59:59",
-      "acknowledged": false
-    },
-    {
       "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
       "sentiment": "positive",
       "emotion_score": 0.6,
@@ -859,42 +1295,6 @@
       "id": "d3e348d6",
       "date": "2026-06-09",
       "time": "09:04:29",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:04:33",
-      "id": "e9733723",
-      "date": "2026-06-09",
-      "time": "09:04:33",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:04:39",
-      "id": "ca667ed2",
-      "date": "2026-06-09",
-      "time": "09:04:39",
       "acknowledged": false
     },
     {
@@ -934,96 +1334,6 @@
       "acknowledged": false
     },
     {
-      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:04:53",
-      "id": "db60a5dc",
-      "date": "2026-06-09",
-      "time": "09:04:53",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:04:56",
-      "id": "84cc40bf",
-      "date": "2026-06-09",
-      "time": "09:04:56",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:04:58",
-      "id": "053819f6",
-      "date": "2026-06-09",
-      "time": "09:04:58",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口突然很痛，呼吸也很困難。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:05:08",
-      "id": "ae07a4a8",
-      "date": "2026-06-09",
-      "time": "09:05:08",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:05:11",
-      "id": "fe469253",
-      "date": "2026-06-09",
-      "time": "09:05:11",
-      "acknowledged": false
-    },
-    {
       "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
       "sentiment": "positive",
       "emotion_score": 0.6,
@@ -1039,42 +1349,6 @@
       "id": "b9cb83fb",
       "date": "2026-06-09",
       "time": "09:08:42",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:08:44",
-      "id": "d5b3da8b",
-      "date": "2026-06-09",
-      "time": "09:08:44",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:08:52",
-      "id": "34d9a4cd",
-      "date": "2026-06-09",
-      "time": "09:08:52",
       "acknowledged": false
     },
     {
@@ -1114,132 +1388,6 @@
       "acknowledged": false
     },
     {
-      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:08:57",
-      "id": "09d8a30c",
-      "date": "2026-06-09",
-      "time": "09:08:57",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:08:59",
-      "id": "56697e17",
-      "date": "2026-06-09",
-      "time": "09:08:59",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:09:01",
-      "id": "1ced02ec",
-      "date": "2026-06-09",
-      "time": "09:09:01",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口突然很痛，呼吸也很困難。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:09:03",
-      "id": "f820d1b8",
-      "date": "2026-06-09",
-      "time": "09:09:03",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:09:05",
-      "id": "b92fa9b6",
-      "date": "2026-06-09",
-      "time": "09:09:05",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:17:59",
-      "id": "13d249c9",
-      "date": "2026-06-09",
-      "time": "09:17:59",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:18:01",
-      "id": "ff54a85b",
-      "date": "2026-06-09",
-      "time": "09:18:01",
-      "acknowledged": false
-    },
-    {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
       "sentiment": "negative",
       "emotion_score": -0.6,
@@ -1258,25 +1406,6 @@
       "acknowledged": false
     },
     {
-      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
-      "sentiment": "negative",
-      "emotion_score": -0.8,
-      "importance": 1.0,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "趨勢警報",
-        "需要關注"
-      ],
-      "reason": "長者持續情緒低落，建議照護人員關心。",
-      "source": "trend_analysis",
-      "spoken_at": "2026-06-09 09:18:05",
-      "id": "e4b9fffe",
-      "date": "2026-06-09",
-      "time": "09:18:05",
-      "acknowledged": false
-    },
-    {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
       "sentiment": "negative",
       "emotion_score": -0.6,
@@ -1292,96 +1421,6 @@
       "id": "6a599296",
       "date": "2026-06-09",
       "time": "09:18:04",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:18:06",
-      "id": "8f15ed6b",
-      "date": "2026-06-09",
-      "time": "09:18:06",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:18:08",
-      "id": "1d9a0fa9",
-      "date": "2026-06-09",
-      "time": "09:18:08",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:18:09",
-      "id": "f912ab68",
-      "date": "2026-06-09",
-      "time": "09:18:09",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口突然很痛，呼吸也很困難。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:18:11",
-      "id": "5fe2ae10",
-      "date": "2026-06-09",
-      "time": "09:18:11",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:18:13",
-      "id": "d96f3edf",
-      "date": "2026-06-09",
-      "time": "09:18:13",
       "acknowledged": false
     },
     {
@@ -1421,39 +1460,111 @@
       "acknowledged": false
     },
     {
-      "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
-      "sentiment": "positive",
-      "emotion_score": 0.6,
-      "importance": 0.7,
-      "memory_type": "long",
+      "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
       "persona_id": "son",
       "topic_tags": [
         "情緒"
       ],
       "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-09 09:20:26",
-      "id": "1b9fab4b",
+      "spoken_at": "2026-06-09 09:26:10",
+      "id": "da21fda9",
       "date": "2026-06-09",
-      "time": "09:20:26",
+      "time": "09:26:10",
       "acknowledged": false
     },
     {
-      "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
+      "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
       "persona_id": "son",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "明確安全日常語句，使用快速路徑",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-09 09:20:38",
-      "id": "c4759a0a",
+      "spoken_at": "2026-06-09 09:26:11",
+      "id": "44733f95",
       "date": "2026-06-09",
-      "time": "09:20:38",
+      "time": "09:26:11",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:52:22",
+      "id": "d1ebdf3f",
+      "date": "2026-06-09",
+      "time": "10:52:22",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:55:59",
+      "id": "01abd9be",
+      "date": "2026-06-09",
+      "time": "10:55:59",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:58:40",
+      "id": "ef658ebe",
+      "date": "2026-06-09",
+      "time": "10:58:40",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:16:51",
+      "id": "84acedde",
+      "date": "2026-06-09",
+      "time": "11:16:51",
       "acknowledged": false
     }
   ],

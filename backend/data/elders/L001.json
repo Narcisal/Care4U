@@ -149,521 +149,6 @@
   "active_persona": "ai",
   "recent_events": [
     {
-      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:48:50",
-      "id": "669a35aa",
-      "date": "2026-06-09",
-      "time": "08:48:50",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:49:48",
-      "id": "d712c834",
-      "date": "2026-06-09",
-      "time": "08:49:48",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:50:01",
-      "id": "29d53447",
-      "date": "2026-06-09",
-      "time": "08:50:01",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我突然喘不過氣，頭也暈得快要昏倒了。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 08:50:11",
-      "id": "1414d91d",
-      "date": "2026-06-09",
-      "time": "08:50:11",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:01:57",
-      "id": "87c5afa9",
-      "date": "2026-06-09",
-      "time": "09:01:57",
-      "acknowledged": false
-    },
-    {
-      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
-      "sentiment": "negative",
-      "emotion_score": -0.8,
-      "importance": 1.0,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "趨勢警報",
-        "需要關注"
-      ],
-      "reason": "長者持續情緒低落，建議照護人員關心。",
-      "source": "trend_analysis",
-      "spoken_at": "2026-06-09 09:02:07",
-      "id": "26815f69",
-      "date": "2026-06-09",
-      "time": "09:02:07",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛才整理舊布料，又想起以前替大家做衣服的日子。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:21:28",
-      "id": "11a648d9",
-      "date": "2026-06-09",
-      "time": "09:21:28",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:02:35",
-      "id": "7efa3b72",
-      "date": "2026-06-09",
-      "time": "09:02:35",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:02:46",
-      "id": "ecc4a30e",
-      "date": "2026-06-09",
-      "time": "09:02:46",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我突然喘不過氣，頭也暈得快要昏倒了。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:02:51",
-      "id": "f2ffa077",
-      "date": "2026-06-09",
-      "time": "09:02:51",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:06:07",
-      "id": "e21264d7",
-      "date": "2026-06-09",
-      "time": "09:06:07",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:19:21",
-      "id": "b47201a6",
-      "date": "2026-06-09",
-      "time": "09:19:21",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:06:20",
-      "id": "6913e866",
-      "date": "2026-06-09",
-      "time": "09:06:20",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:09:52",
-      "id": "f308e411",
-      "date": "2026-06-09",
-      "time": "09:09:52",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛才走到門口時腳步不穩，扶著牆才慢慢走回來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:09:56",
-      "id": "61c17de9",
-      "date": "2026-06-09",
-      "time": "09:09:56",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:10:02",
-      "id": "f0efb48d",
-      "date": "2026-06-09",
-      "time": "09:10:02",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:10:04",
-      "id": "5229c1ef",
-      "date": "2026-06-09",
-      "time": "09:10:04",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:19:07",
-      "id": "c1ce9ea3",
-      "date": "2026-06-09",
-      "time": "09:19:07",
-      "acknowledged": false
-    },
-    {
-      "event": "雅婷小時候常看媽媽林月琴用縫紉機改衣服，知道媽媽最愛聽鳳飛飛的老歌。",
-      "sentiment": "positive",
-      "emotion_score": 0.7,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "daughter",
-      "topic_tags": [
-        "雅婷",
-        "女兒",
-        "縫紉機",
-        "鳳飛飛",
-        "老歌"
-      ],
-      "reason": "Phase 10 記憶召回測試所需的既有家庭共同記憶。",
-      "source": "phase10_seed",
-      "spoken_at": "2026-06-08 10:00:00",
-      "id": "phase10-l001-yating",
-      "date": "2026-06-08",
-      "time": "10:00:00"
-    },
-    {
-      "event": "阿哲小時候阿嬤常幫他縫書包，也會帶他去傳統市場買紅豆餅。",
-      "sentiment": "positive",
-      "emotion_score": 0.8,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "grandson",
-      "topic_tags": [
-        "阿哲",
-        "孫子",
-        "縫書包",
-        "傳統市場",
-        "紅豆餅"
-      ],
-      "reason": "Phase 10 記憶召回測試所需的既有家庭共同記憶。",
-      "source": "phase10_seed",
-      "spoken_at": "2026-06-08 10:01:00",
-      "id": "phase10-l001-azhe",
-      "date": "2026-06-08",
-      "time": "10:01:00"
-    },
-    {
-      "event": "志宏小時候常陪媽媽到傳統市場買菜；阿清以前買了一台縫紉機給月琴，兩人一起經營裁縫店。",
-      "sentiment": "positive",
-      "emotion_score": 0.8,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "志宏",
-        "兒子",
-        "阿清",
-        "傳統市場",
-        "縫紉機",
-        "裁縫店"
-      ],
-      "reason": "Phase 10 記憶召回測試所需的既有家庭共同記憶。",
-      "source": "phase10_seed",
-      "spoken_at": "2026-06-08 10:02:00",
-      "id": "phase10-l001-zhihong",
-      "date": "2026-06-08",
-      "time": "10:02:00"
-    },
-    {
-      "event": "說了：我以前很會做旗袍，客人都說穿起來很合身。",
-      "sentiment": "positive",
-      "emotion_score": 0.7,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "人生經歷",
-        "裁縫"
-      ],
-      "reason": "長者回憶重要職涯與成就，適合作為長期記憶。",
-      "source": "seed",
-      "spoken_at": "2026-05-20 10:15:00",
-      "id": "lq001001",
-      "date": "2026-05-20",
-      "time": "10:15:00"
-    },
-    {
-      "event": "說了：晚上有時候會覺得心慌，怕忘記女兒什麼時候來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒",
-        "照護提醒"
-      ],
-      "reason": "長者夜間焦慮且與家人探訪相關，需要照護者注意。",
-      "source": "seed",
-      "spoken_at": "2026-05-22 19:40:00",
-      "id": "lq001002",
-      "date": "2026-05-22",
-      "time": "19:40:00"
-    },
-    {
-      "event": "說了：阿清以前總會陪我聽一片雲，現在聽到還是會想念他。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:21:34",
-      "id": "159f8768",
-      "date": "2026-06-09",
-      "time": "09:21:34",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我今天有點孤單，想念以前的裁縫店",
-      "sentiment": "negative",
-      "emotion_score": -0.5,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "孤單思念情緒，涉及長者職業歷史。",
-      "source": "voice",
-      "spoken_at": "2026-05-25 21:25:32",
-      "id": "4dce2922",
-      "date": "2026-05-25",
-      "time": "21:25:32"
-    },
-    {
-      "event": "說了：我頭很暈快跌倒了",
-      "sentiment": "negative",
-      "emotion_score": -0.9,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "長者頭暈快跌倒，屬生理異狀與安全事件。",
-      "source": "voice",
-      "spoken_at": "2026-05-25 21:25:32",
-      "id": "5307a8df",
-      "date": "2026-05-25",
-      "time": "21:25:32",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:37:03"
-    },
-    {
-      "event": "說了：我頭很暈快跌倒了",
-      "sentiment": "negative",
-      "emotion_score": -0.8,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "偵測到身體不適",
-      "source": "voice",
-      "spoken_at": "2026-05-25 21:26:49",
-      "id": "636a55ba",
-      "date": "2026-05-25",
-      "time": "21:26:49",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:37:02"
-    },
-    {
-      "event": "說了：你記得我以前那台縫紉機嗎？那是你爸買給我的。",
-      "sentiment": "positive",
-      "emotion_score": 0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "回憶配偶贈禮，語氣溫馨，提及重要家人與回憶。",
-      "source": "voice",
-      "spoken_at": "2026-06-08 07:57:44",
-      "id": "aa45d1de",
-      "date": "2026-06-08",
-      "time": "07:57:44"
-    },
-    {
       "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
       "sentiment": "negative",
       "emotion_score": -1.0,
@@ -683,57 +168,40 @@
       "acknowledged": false
     },
     {
-      "event": "說了：我的血壓藥放在哪裡？我剛找了一下找不到。",
+      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
       "sentiment": "negative",
-      "emotion_score": -0.7,
-      "importance": 0.9,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "血壓藥找不到，影響生理健康，屬緊急安全事件。",
-      "source": "voice",
-      "spoken_at": "2026-06-08 07:58:07",
-      "id": "aa8a6afa",
-      "date": "2026-06-08",
-      "time": "07:58:07",
-      "acknowledged": true,
-      "acknowledged_at": "2026-06-09 00:37:02"
-    },
-    {
-      "event": "說了：晚上睡不著，心裡一直想東想西，有點害怕。",
-      "sentiment": "negative",
-      "emotion_score": -0.5,
+      "emotion_score": -0.6,
       "importance": 0.7,
       "memory_type": "long",
-      "persona_id": "son",
+      "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "睡不著、想東想西、害怕，顯示焦慮不安。",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-08 07:58:27",
-      "id": "6328ca8f",
-      "date": "2026-06-08",
-      "time": "07:58:27"
+      "spoken_at": "2026-06-09 09:26:49",
+      "id": "a4593bac",
+      "date": "2026-06-09",
+      "time": "09:26:49",
+      "acknowledged": false
     },
     {
-      "event": "說了：你多久沒來看我了？我很想你。",
-      "sentiment": "negative",
-      "emotion_score": -0.55,
-      "importance": 0.75,
+      "event": "說了：剛才整理舊布料，又想起以前替大家做衣服的日子。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
       "memory_type": "long",
-      "persona_id": "son",
+      "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "表達思念與孤單，反映對關係的重視與情感需求。",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-08 07:58:47",
-      "id": "19946aa6",
-      "date": "2026-06-08",
-      "time": "07:58:47"
+      "spoken_at": "2026-06-09 11:08:04",
+      "id": "0a64ca73",
+      "date": "2026-06-09",
+      "time": "11:08:04",
+      "acknowledged": false
     },
     {
       "event": "說了：我以前唱歌唱得很好的，你記得嗎？媽媽年輕的時候很愛唱鳳飛飛。",
@@ -813,46 +281,22 @@
       "acknowledged": false
     },
     {
-      "event": "說了：佳穎上次來放鳳飛飛給我聽，我們兩個一起跟著哼，她說阿嬤唱歌很好聽，我笑了很久。",
-      "sentiment": "positive",
-      "emotion_score": 0.8,
+      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
       "importance": 0.8,
       "memory_type": "long",
-      "persona_id": "granddaughter",
+      "persona_id": "ai",
       "topic_tags": [
-        "佳穎",
-        "孫女",
-        "老歌",
-        "鳳飛飛",
-        "家人"
+        "安全警報"
       ],
-      "reason": "與孫女的溫馨互動，音樂帶來快樂。",
-      "source": "seed",
-      "spoken_at": "2026-06-03 16:00:00",
-      "id": "lq-jaying-song",
-      "date": "2026-06-03",
-      "time": "16:00:00"
-    },
-    {
-      "event": "說了：市場的紅豆餅要趁熱吃，冷掉就沒那個香味了，以前我和阿哲每次去都要買兩個。",
-      "sentiment": "positive",
-      "emotion_score": 0.7,
-      "importance": 0.75,
-      "memory_type": "long",
-      "persona_id": "grandson",
-      "topic_tags": [
-        "阿哲",
-        "孫子",
-        "傳統市場",
-        "紅豆餅",
-        "食物"
-      ],
-      "reason": "食物記憶與孫子連結，生活細節豐富情感。",
-      "source": "seed",
-      "spoken_at": "2026-06-04 10:30:00",
-      "id": "lq-market-redbean",
-      "date": "2026-06-04",
-      "time": "10:30:00"
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:27:00",
+      "id": "5b426dbe",
+      "date": "2026-06-09",
+      "time": "09:27:00",
+      "acknowledged": false
     },
     {
       "event": "說了：志宏，你工作忙不忙？不要太累，要記得吃飯。",
@@ -872,21 +316,22 @@
       "time": "07:59:17"
     },
     {
-      "event": "說了：志宏，你記得我以前那台縫紉機嗎？那是你爸買給我的。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
+      "event": "說了：阿清以前總會陪我聽一片雲，現在聽到還是會想念他。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
       "importance": 0.7,
       "memory_type": "long",
-      "persona_id": "son",
+      "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "分析失敗，使用預設值",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-08 16:51:38",
-      "id": "17af1361",
-      "date": "2026-06-08",
-      "time": "16:51:38"
+      "spoken_at": "2026-06-09 11:08:08",
+      "id": "6268707a",
+      "date": "2026-06-09",
+      "time": "11:08:08",
+      "acknowledged": false
     },
     {
       "event": "說了：我以前唱歌唱得很好的，最愛唱鳳飛飛。",
@@ -906,23 +351,6 @@
       "time": "16:52:00"
     },
     {
-      "event": "說了：我今天想起以前帶你去市場買菜，你那時候很愛吃紅豆餅。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-08 16:52:10",
-      "id": "83ddf7f1",
-      "date": "2026-06-08",
-      "time": "16:52:10"
-    },
-    {
       "event": "說了：你剛才說的那首歌我也喜歡。",
       "sentiment": "neutral",
       "emotion_score": 0.0,
@@ -938,42 +366,6 @@
       "id": "346d0a4d",
       "date": "2026-06-09",
       "time": "03:32:55",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：昨天女兒帶孫子來看我，很開心。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.7,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "明確安全日常語句，使用快速路徑",
-      "source": "voice",
-      "spoken_at": "2026-06-09 03:32:57",
-      "id": "cdd5afb7",
-      "date": "2026-06-09",
-      "time": "03:32:57",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：我突然喘不過氣，頭也暈得快要昏倒了。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "安全警報"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:19:23",
-      "id": "b62f652a",
-      "date": "2026-06-09",
-      "time": "09:19:23",
       "acknowledged": false
     },
     {
@@ -1031,21 +423,21 @@
       "acknowledged": false
     },
     {
-      "event": "說了：我頭很暈快跌倒了。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
+      "event": "說了：以前每天替人做衣服，現在閒下來反而不習慣。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
       "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "分析失敗，使用預設值",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-09 03:33:52",
-      "id": "d128d28a",
+      "spoken_at": "2026-06-09 11:18:07",
+      "id": "b9599482",
       "date": "2026-06-09",
-      "time": "03:33:52",
+      "time": "11:18:07",
       "acknowledged": false
     },
     {
@@ -1067,24 +459,6 @@
       "acknowledged": false
     },
     {
-      "event": "說了：我跌倒了，爬不起來。",
-      "sentiment": "neutral",
-      "emotion_score": 0.0,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 03:34:01",
-      "id": "a98274fc",
-      "date": "2026-06-09",
-      "time": "03:34:01",
-      "acknowledged": false
-    },
-    {
       "event": "說了：救命，我一個人在家跌倒了。",
       "sentiment": "neutral",
       "emotion_score": 0.0,
@@ -1103,7 +477,7 @@
       "acknowledged": false
     },
     {
-      "event": "說了：你記得我以前做裁縫的事嗎？",
+      "event": "說了：剛才整理舊布料，又想起以前替大家做衣服的日子。",
       "sentiment": "neutral",
       "emotion_score": 0.0,
       "importance": 0.7,
@@ -1112,30 +486,12 @@
       "topic_tags": [
         "情緒"
       ],
-      "reason": "分析失敗，使用預設值",
-      "source": "voice",
-      "spoken_at": "2026-06-09 03:35:32",
-      "id": "51da9adb",
-      "date": "2026-06-09",
-      "time": "03:35:32",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：剛才走到門口時腳步不穩，扶著牆才慢慢走回來。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.8,
-      "memory_type": "long",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
       "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-09 09:19:14",
-      "id": "bef60874",
+      "spoken_at": "2026-06-09 11:03:02",
+      "id": "baea56bb",
       "date": "2026-06-09",
-      "time": "09:19:14",
+      "time": "11:03:02",
       "acknowledged": false
     },
     {
@@ -1155,6 +511,407 @@
       "date": "2026-06-09",
       "time": "03:36:22",
       "acknowledged": false
+    },
+    {
+      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 08:50:01",
+      "id": "29d53447",
+      "date": "2026-06-09",
+      "time": "08:50:01",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才走到門口時腳步不穩，扶著牆才慢慢走回來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:12",
+      "id": "f352e3f7",
+      "date": "2026-06-09",
+      "time": "11:18:12",
+      "acknowledged": false
+    },
+    {
+      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "長者持續情緒低落，建議照護人員關心。",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-09 09:02:07",
+      "id": "26815f69",
+      "date": "2026-06-09",
+      "time": "09:02:07",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才整理舊布料，又想起以前替大家做衣服的日子。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:15:27",
+      "id": "6a46fc97",
+      "date": "2026-06-09",
+      "time": "11:15:27",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我一直想不起雅婷說哪天來，記性好像又差了一點。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:14",
+      "id": "c671a8b2",
+      "date": "2026-06-09",
+      "time": "11:18:14",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:02:46",
+      "id": "ecc4a30e",
+      "date": "2026-06-09",
+      "time": "09:02:46",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我突然喘不過氣，頭也暈得快要昏倒了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:02:51",
+      "id": "f2ffa077",
+      "date": "2026-06-09",
+      "time": "09:02:51",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才差點在房裡絆倒，幸好扶住桌子，現在能自己坐好。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:17",
+      "id": "b814eb99",
+      "date": "2026-06-09",
+      "time": "11:18:17",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:21",
+      "id": "b47201a6",
+      "date": "2026-06-09",
+      "time": "09:19:21",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:06:20",
+      "id": "6913e866",
+      "date": "2026-06-09",
+      "time": "09:06:20",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:19",
+      "id": "fd8fd918",
+      "date": "2026-06-09",
+      "time": "11:18:19",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：阿清以前總會陪我聽一片雲，現在聽到還是會想念他。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:15:36",
+      "id": "9b6822f5",
+      "date": "2026-06-09",
+      "time": "11:15:36",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:04",
+      "id": "5229c1ef",
+      "date": "2026-06-09",
+      "time": "09:10:04",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:22",
+      "id": "7837eb6c",
+      "date": "2026-06-09",
+      "time": "11:18:22",
+      "acknowledged": false
+    },
+    {
+      "event": "雅婷小時候常看媽媽林月琴用縫紉機改衣服，知道媽媽最愛聽鳳飛飛的老歌。",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "雅婷",
+        "女兒",
+        "縫紉機",
+        "鳳飛飛",
+        "老歌"
+      ],
+      "reason": "Phase 10 記憶召回測試所需的既有家庭共同記憶。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-08 10:00:00",
+      "id": "phase10-l001-yating",
+      "date": "2026-06-08",
+      "time": "10:00:00"
+    },
+    {
+      "event": "說了：剛才整理舊布料，又想起以前替大家做衣服的日子。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:54:40",
+      "id": "2f039556",
+      "date": "2026-06-09",
+      "time": "10:54:40",
+      "acknowledged": false
+    },
+    {
+      "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "sentiment": "negative",
+      "emotion_score": -1.0,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-09 11:18:26",
+      "id": "630af22a",
+      "date": "2026-06-09",
+      "time": "11:18:26",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：晚上有時候會覺得心慌，怕忘記女兒什麼時候來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒",
+        "照護提醒"
+      ],
+      "reason": "長者夜間焦慮且與家人探訪相關，需要照護者注意。",
+      "source": "seed",
+      "spoken_at": "2026-05-22 19:40:00",
+      "id": "lq001002",
+      "date": "2026-05-22",
+      "time": "19:40:00"
+    },
+    {
+      "event": "說了：阿清以前總會陪我聽一片雲，現在聽到還是會想念他。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:21:34",
+      "id": "159f8768",
+      "date": "2026-06-09",
+      "time": "09:21:34",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我突然喘不過氣，頭也暈得快要昏倒了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:24",
+      "id": "c372979e",
+      "date": "2026-06-09",
+      "time": "11:18:24",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我頭很暈快跌倒了",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "偵測到身體不適",
+      "source": "voice",
+      "spoken_at": "2026-05-25 21:26:49",
+      "id": "636a55ba",
+      "date": "2026-05-25",
+      "time": "21:26:49",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:37:02"
+    },
+    {
+      "event": "說了：你記得我以前那台縫紉機嗎？那是你爸買給我的。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "回憶配偶贈禮，語氣溫馨，提及重要家人與回憶。",
+      "source": "voice",
+      "spoken_at": "2026-06-08 07:57:44",
+      "id": "aa45d1de",
+      "date": "2026-06-08",
+      "time": "07:57:44"
     },
     {
       "event": "說了：我今天有點孤單，想念以前的裁縫店",
@@ -1601,6 +1358,240 @@
       "id": "eafc7e53",
       "date": "2026-06-09",
       "time": "09:21:38",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：早市的紅豆餅香香的，改天想再買一個。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:26:45",
+      "id": "e3ffeb43",
+      "date": "2026-06-09",
+      "time": "09:26:45",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志宏和雅婷最近都忙，我一個人在家有點孤單。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:26:48",
+      "id": "9b15d03a",
+      "date": "2026-06-09",
+      "time": "09:26:48",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：阿哲他們回去後屋子空空的，我心裡悶悶的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:26:51",
+      "id": "f3337151",
+      "date": "2026-06-09",
+      "time": "09:26:51",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我一直想不起雅婷說哪天來，記性好像又差了一點。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:26:55",
+      "id": "2d2557be",
+      "date": "2026-06-09",
+      "time": "09:26:55",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才差點在房裡絆倒，幸好扶住桌子，現在能自己坐好。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:26:57",
+      "id": "0f6f6b07",
+      "date": "2026-06-09",
+      "time": "09:26:57",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志宏和雅婷週末要帶孩子回來，我想先縫幾個小袋子送給他們。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 10:54:53",
+      "id": "27bbacda",
+      "date": "2026-06-09",
+      "time": "10:54:53",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志宏和雅婷週末要帶孩子回來，我想先縫幾個小袋子送給他們。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:03:05",
+      "id": "e65cd8c2",
+      "date": "2026-06-09",
+      "time": "11:03:05",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志宏和雅婷週末要帶孩子回來，我想先縫幾個小袋子送給他們。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:08:12",
+      "id": "432ae4c6",
+      "date": "2026-06-09",
+      "time": "11:08:12",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志宏和雅婷週末要帶孩子回來，我想先縫幾個小袋子送給他們。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:15:40",
+      "id": "61c4d2d8",
+      "date": "2026-06-09",
+      "time": "11:15:40",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：早市的紅豆餅香香的，改天想再買一個。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:17:59",
+      "id": "146daf02",
+      "date": "2026-06-09",
+      "time": "11:17:59",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才聽到那首老歌，又想起阿清了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:02",
+      "id": "8dc27c3a",
+      "date": "2026-06-09",
+      "time": "11:18:02",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志宏和雅婷最近都忙，我一個人在家有點孤單。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:04",
+      "id": "cbeaab55",
+      "date": "2026-06-09",
+      "time": "11:18:04",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：阿哲他們回去後屋子空空的，我心裡悶悶的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 11:18:09",
+      "id": "853a84d5",
+      "date": "2026-06-09",
+      "time": "11:18:09",
       "acknowledged": false
     }
   ],
