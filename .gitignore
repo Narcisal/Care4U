@@ -122,7 +122,6 @@ backend/data/elders/*_conv.json
 # One-off phase scripts and seed tools (not part of core codebase)
 # ------------------------------------------------------------------
 
-scripts/
 backend/tools/phase10_*.py
 backend/tools/phase7_live_collect.py
 backend/tools/seed_*.py
