@@ -153,6 +153,88 @@ async function sendMessage() {
     await processAndRespond(message, "normal");
 }
 
+// ── 逐句串流 TTS ─────────────────────────────────────────────────────────────
+
+/** 立刻發 TTS 請求，回傳 Promise<Blob>（不阻塞，後台並行下載） */
+function fetchTTSBlob(text) {
+    return elderFetch("/api/elder/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: elderBody({ text, emotion: "normal", persona_id: SELECTED_PERSONA })
+    }).then(r => r.ok ? r.blob() : null).catch(() => null);
+}
+
+/** 從 buffer 抽取所有「句尾符號結尾」的完整句子，回傳 [sentences, remaining] */
+function extractSentences(buffer) {
+    const sentences = [];
+    let remaining = buffer;
+    let m;
+    while ((m = /^([^。！？]*[。！？])/.exec(remaining)) !== null) {
+        const s = m[1].trim();
+        if (s.length > 2) sentences.push(s);
+        remaining = remaining.slice(m[1].length);
+    }
+    return [sentences, remaining];
+}
+
+/** 播放單個 Blob，resolve 後才繼續下一句 */
+function playAudioBlob(blob) {
+    return new Promise(resolve => {
+        if (!blob) { resolve(); return; }
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+        audio.play().catch(resolve);
+    });
+}
+
+/**
+ * 逐句 TTS 佇列
+ * push(chunk) → 每收到一段文字就抽句子並立即送 TTS（非同步，不等回應）
+ * flush()     → stream 結束後把剩餘碎片也送出
+ * playAll()   → 依序播放（fetch 已並行進行，播放時大多已備妥）
+ */
+class StreamingTTSQueue {
+    constructor() {
+        this._pending = [];  // Array of Promise<Blob>
+        this._buf = "";
+    }
+    push(chunk) {
+        this._buf += chunk;
+        const [sentences, remaining] = extractSentences(this._buf);
+        this._buf = remaining;
+        for (const s of sentences) this._pending.push(fetchTTSBlob(s));
+    }
+    flush() {
+        const s = this._buf.trim();
+        if (s.length > 2) this._pending.push(fetchTTSBlob(s));
+        this._buf = "";
+    }
+    async playAll() {
+        const portrait = document.getElementById("persona-portrait");
+        const ring1    = document.getElementById("speaking-ring-1");
+        const ring2    = document.getElementById("speaking-ring-2");
+        const lbl      = document.getElementById("status-label");
+        const pname    = document.getElementById("persona-portrait-name");
+        // 開始說話動畫
+        if (portrait) portrait.classList.add("speaking");
+        if (ring1) ring1.classList.add("active");
+        if (ring2) ring2.classList.add("active");
+        if (lbl && pname) { lbl.textContent = `${pname.textContent} 正在回你`; lbl.className = "status-label speaking"; }
+        // 依序播放每一句（fetch 已提前並行執行）
+        for (const p of this._pending) await playAudioBlob(await p);
+        // 結束動畫
+        if (portrait) portrait.classList.remove("speaking");
+        if (ring1) ring1.classList.remove("active");
+        if (ring2) ring2.classList.remove("active");
+        if (lbl && pname) { lbl.textContent = "可以慢慢說，我在聽"; lbl.className = "status-label listening"; }
+    }
+    get isEmpty() { return this._pending.length === 0; }
+}
+
+// ── 主對話流程 ──────────────────────────────────────────────────────────────
+
 async function processAndRespond(message, speedEmotion = "normal") {
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
@@ -160,6 +242,7 @@ async function processAndRespond(message, speedEmotion = "normal") {
 
     const thinkingId = addThinking();
     try {
+        const ttsQueue = new StreamingTTSQueue();
         const res = await elderFetch("/api/chat?stream=true", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -171,7 +254,7 @@ async function processAndRespond(message, speedEmotion = "normal") {
             })
         });
         if (!res.ok) throw new Error("chat");
-        const data = await readChatResponse(res, thinkingId);
+        const data = await readChatResponse(res, thinkingId, ttsQueue);
         removeThinking(thinkingId);
         if (!data._streamed) {
             addMessage("ai", data.message);
@@ -214,7 +297,14 @@ async function processAndRespond(message, speedEmotion = "normal") {
         const [emoji, text] = emotionMap[data.emotion] || ["😐", "正常"];
         updateEmotionStatus(emoji, text);
 
-        await speakText(data.message, data.emotion || "normal");
+        // 串流 TTS：queue 已在收 chunk 時提前送出請求，依序播放即可
+        ttsQueue.flush();
+        if (!ttsQueue.isEmpty) {
+            await ttsQueue.playAll();
+        } else {
+            // fallback：無句尾符號（極短回應）
+            await speakText(data.message, data.emotion || "normal");
+        }
 
     } catch (e) {
         removeThinking(thinkingId);
@@ -226,7 +316,7 @@ async function processAndRespond(message, speedEmotion = "normal") {
     }
 }
 
-async function readChatResponse(response, thinkingId) {
+async function readChatResponse(response, thinkingId, ttsQueue = null) {
     const contentType = response.headers.get("content-type") || "";
     if (!contentType.includes("text/event-stream") || !response.body) {
         return response.json();
@@ -259,6 +349,8 @@ async function readChatResponse(response, thinkingId) {
         bubble.textContent = fullText;
         const container = document.getElementById("chat-container");
         if (container) container.scrollTop = container.scrollHeight;
+        // 逐句提前送 TTS（不等回應，與後續 chunk 並行下載）
+        if (ttsQueue) ttsQueue.push(chunk);
     };
 
     while (true) {
