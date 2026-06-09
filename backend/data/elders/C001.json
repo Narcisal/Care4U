@@ -44,12 +44,12 @@
         "提醒膝蓋不要久站",
         "問花有沒有澆水"
       ],
-      "tone": "像貼心的兒子，語氣溫和沉穩，會把關心說得具體。",
+      "tone": "像貼心的兒子，語氣溫和沉穩，會把關心說得具體，不會讓媽媽覺得被嘮叨。",
       "avatar_path": "son_bg.png",
       "is_deceased": false,
-      "shared_memories": "以前媽媽教他寫字，也常在廚房教他煮家常菜。",
-      "current_status": "住在高雄，每週固定打電話。",
-      "forbidden_topics": ""
+      "shared_memories": "以前媽媽在廚房教他煮家常菜，也教他在作業本上把字寫工整。長大後每次回家，還是那鍋滷肉的味道讓他最安心。",
+      "current_status": "住在高雄，工作穩定，每週固定打電話，重要節日一定回家陪媽媽。",
+      "forbidden_topics": "不讓媽媽擔心工作壓力和健康的事。"
     },
     "granddaughter": {
       "name": "小雨",
@@ -67,11 +67,11 @@
         "稱讚阿嬤煮的菜",
         "請阿嬤講以前教書的故事"
       ],
-      "tone": "像年輕孫女，親暱、輕快，會用簡單句子陪阿嬤聊天。",
+      "tone": "像年輕孫女，親暱、輕快，會用簡單句子陪阿嬤聊天，讓阿嬤說多一點。",
       "avatar_path": "granddaughter_bg.png",
       "is_deceased": false,
-      "shared_memories": "小時候常吃阿嬤煮的滷肉，也陪阿嬤去花市買盆栽。",
-      "current_status": "念大學，常傳照片給阿嬤看。",
+      "shared_memories": "小時候最愛吃阿嬤的滷肉，一碗接一碗。也陪阿嬤去花市，幫忙提盆栽。記得阿嬤的陽台每次都香香的。",
+      "current_status": "念大學中，常傳照片和學校的事給阿嬤看，假日有空就回來陪阿嬤吃飯。",
       "forbidden_topics": ""
     },
     "neighbor_sister": {
@@ -88,67 +88,510 @@
       ],
       "habits": [
         "聊菜市場近況",
-        "提醒天氣變化"
+        "提醒天氣變化",
+        "互相交換花苗"
       ],
-      "tone": "像多年老鄰居，語氣自然熟悉，帶一點台灣國語的溫暖感。",
+      "tone": "像多年老鄰居，語氣自然熟悉，帶一點台灣國語的溫暖感，聊起來輕鬆無拘束。",
       "avatar_path": "elder_female_bg.png",
       "is_deceased": false,
-      "shared_memories": "以前兩人常一起去市場買菜，也會互相交換種花心得。",
-      "current_status": "住在附近，常關心秀英的膝蓋狀況。",
+      "shared_memories": "認識幾十年了，以前一起去市場買菜是習慣。兩個人都愛種花，常互相交換花苗，也分享栽種心得。",
+      "current_status": "住在附近，常關心秀英的膝蓋，偶爾一起去市場或在門口聊聊。",
       "forbidden_topics": ""
     }
   },
   "active_persona": "ai",
   "recent_events": [
     {
-      "event": "說了：不錯﹔",
+      "event": "說陽台的茉莉花開了好幾朵，一早去看很開心，說聞起來香香的，整個早上心情都跟著好",
       "sentiment": "positive",
-      "emotion_score": -0.7,
-      "importance": 0.2,
+      "emotion_score": 0.8,
+      "importance": 0.6,
       "memory_type": "short",
+      "persona_id": "neighbor_sister",
+      "topic_tags": [
+        "種花",
+        "陽台",
+        "茉莉花",
+        "開心"
+      ],
+      "reason": "長者分享種花喜悅，反映日常生活樂趣",
+      "source": "voice",
+      "id": "c001_s01",
+      "date": "2026-03-14",
+      "time": "09:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說上周去花市買了兩盆蘭花回來，放在窗邊照陽光，說花要有光才會漂亮，現在每天都去看",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.65,
+      "memory_type": "short",
+      "persona_id": "granddaughter",
+      "topic_tags": [
+        "種花",
+        "蘭花",
+        "花市",
+        "日常"
+      ],
+      "reason": "長者熱衷種花活動，情緒積極正向",
+      "source": "voice",
+      "id": "c001_s02",
+      "date": "2026-03-21",
+      "time": "10:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說今天燉了一鍋滷肉，用老滷汁，聞到那個味道就想起以前孩子們圍著吃飯的日子，說有點感慨",
+      "sentiment": "positive",
+      "emotion_score": 0.5,
+      "importance": 0.75,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "煮菜",
+        "滷肉",
+        "懷念",
+        "家人",
+        "老滷汁"
+      ],
+      "reason": "烹飪引發對家庭舊時的懷念，情感豐富",
+      "source": "voice",
+      "id": "c001_s03",
+      "date": "2026-03-28",
+      "time": "11:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "和美月姐一起去市場，買了新鮮豆腐和絲瓜，說絲瓜清炒最好吃，兩個人站在攤位聊了半小時才離開",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.6,
+      "memory_type": "short",
+      "persona_id": "neighbor_sister",
+      "topic_tags": [
+        "市場",
+        "美月姐",
+        "社交",
+        "煮菜",
+        "清淡"
+      ],
+      "reason": "長者與老鄰居社交互動，有助身心健康",
+      "source": "voice",
+      "id": "c001_s04",
+      "date": "2026-04-03",
+      "time": "08:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說在看一部新的台灣連續劇，演員演得很自然，每天晚上追劇，說這樣睡前最放鬆",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "granddaughter",
+      "topic_tags": [
+        "台灣劇",
+        "娛樂",
+        "日常",
+        "放鬆"
+      ],
+      "reason": "長者有規律的娛樂活動，情緒平穩正向",
+      "source": "voice",
+      "id": "c001_s05",
+      "date": "2026-04-08",
+      "time": "21:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "兒子志明打電話說要帶她去高雄過節，她說不想走遠膝蓋不方便，但聽到兒子聲音心裡還是很開心",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "short",
+      "persona_id": "son",
+      "topic_tags": [
+        "家人",
+        "兒子志明",
+        "電話",
+        "膝蓋",
+        "開心"
+      ],
+      "reason": "兒子關心，長者心情愉快，但膝蓋問題影響行動",
+      "source": "voice",
+      "id": "c001_s06",
+      "date": "2026-04-14",
+      "time": "19:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說想起以前教書的日子，班上有個孩子學寫字學得慢但很認真，有一天忽然就寫得很漂亮了，說那種時刻是當老師最開心的事",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "granddaughter",
+      "topic_tags": [
+        "教書回憶",
+        "國小老師",
+        "學生",
+        "成就感"
+      ],
+      "reason": "長者回憶教書往事，帶有職業自豪與情感",
+      "source": "voice",
+      "id": "c001_s07",
+      "date": "2026-04-20",
+      "time": "15:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說膝蓋最近走遠一點就痛，爬樓梯更是要慢慢來，說不服老也沒辦法，有點悶",
+      "sentiment": "negative",
+      "emotion_score": -0.5,
+      "importance": 0.7,
+      "memory_type": "short",
+      "topic_tags": [
+        "健康",
+        "膝蓋退化",
+        "行動不便"
+      ],
+      "reason": "長者膝蓋退化影響行動，需照護人員持續關注",
+      "source": "voice",
+      "id": "c001_s08",
+      "date": "2026-04-25",
+      "time": "10:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "美月姐來串門子，帶來一株吊蘭說好養，兩個人聊到下午三點才回去，說好久沒這樣聊天了，開心",
+      "sentiment": "positive",
+      "emotion_score": 0.8,
+      "importance": 0.65,
+      "memory_type": "short",
+      "persona_id": "neighbor_sister",
+      "topic_tags": [
+        "美月姐",
+        "社交",
+        "種花",
+        "吊蘭",
+        "開心"
+      ],
+      "reason": "老鄰居串門聊天，社交互動良好，情緒明顯愉悅",
+      "source": "voice",
+      "id": "c001_s09",
+      "date": "2026-04-30",
+      "time": "15:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "孫女小雨上週末回來，一進門就說要吃阿嬤的滷肉，吃了兩碗，說看孫女吃得開心比自己吃還滿足",
+      "sentiment": "positive",
+      "emotion_score": 0.9,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "granddaughter",
+      "topic_tags": [
+        "孫女小雨",
+        "家人",
+        "滷肉",
+        "煮菜",
+        "開心"
+      ],
+      "reason": "孫女來訪並讚美料理，家庭連結強烈，長者情緒高昂",
+      "source": "voice",
+      "id": "c001_s10",
+      "date": "2026-05-03",
+      "time": "12:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說天氣太熱了，電扇開著還是覺得悶，不想出門，整天在家澆花、看劇，說這樣的一天也還好",
+      "sentiment": "neutral",
+      "emotion_score": 0.1,
+      "importance": 0.4,
+      "memory_type": "short",
+      "topic_tags": [
+        "怕熱",
+        "天氣",
+        "日常",
+        "種花",
+        "台灣劇"
+      ],
+      "reason": "長者因天熱減少外出，日常活動適應尚可",
+      "source": "voice",
+      "id": "c001_s11",
+      "date": "2026-05-09",
+      "time": "14:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說志明每次打電話都問膝蓋的事，說他從小就細心，當年在班上最乖的就是自己兒子，說每次想到都會笑",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.75,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "兒子志明",
+        "家人",
+        "教書回憶",
+        "親情"
+      ],
+      "reason": "長者提及兒子的回憶與現在關心，情感連結深厚",
+      "source": "voice",
+      "id": "c001_s12",
+      "date": "2026-05-15",
+      "time": "20:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說今天吃了冬瓜排骨湯配白飯，說清清淡淡的最舒服，不喜歡太油太鹹，說吃完整個人輕鬆了",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.4,
+      "memory_type": "short",
+      "topic_tags": [
+        "飲食",
+        "清淡",
+        "煮菜",
+        "日常"
+      ],
+      "reason": "長者飲食偏好清淡，進食滿意，情緒平穩",
+      "source": "voice",
+      "id": "c001_s13",
+      "date": "2026-05-19",
+      "time": "12:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說退休已經十幾年了，還是偶爾夢到自己在教室批改作業，醒來才想起已經退休了，說有點奇怪但不難過",
+      "sentiment": "neutral",
+      "emotion_score": 0.2,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "教書回憶",
+        "退休",
+        "夢境"
+      ],
+      "reason": "長者退休後仍時常夢見教書歲月，身份認同與職業回憶的連結",
+      "source": "voice",
+      "id": "c001_s14",
+      "date": "2026-05-22",
+      "time": "09:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說小雨傳了一張和大學同學的合照，照片裡孫女笑得很開心，她說看著小雨長大，心裡踏實",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.65,
+      "memory_type": "short",
+      "persona_id": "granddaughter",
+      "topic_tags": [
+        "孫女小雨",
+        "家人",
+        "大學",
+        "欣慰"
+      ],
+      "reason": "孫女傳照片，長者對孫女成長感到欣慰",
+      "source": "voice",
+      "id": "c001_s15",
+      "date": "2026-05-25",
+      "time": "21:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說最近膝蓋吃了藥好一點，但還是不能久站，去市場只能慢慢走，說不想讓志明擔心所以沒提",
+      "sentiment": "negative",
+      "emotion_score": -0.4,
+      "importance": 0.75,
+      "memory_type": "long",
+      "topic_tags": [
+        "健康",
+        "膝蓋退化",
+        "隱忍",
+        "不想讓家人擔心"
+      ],
+      "reason": "長者隱忍膝蓋不適不告知兒子，照護需主動關注",
+      "source": "voice",
+      "id": "c001_s16",
+      "date": "2026-05-28",
+      "time": "10:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "和美月姐去逛市場，買了一袋新鮮蔬菜和一株新的草花，說兩個人邊走邊說說笑笑，膝蓋走多了有點痛但值得",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.65,
+      "memory_type": "short",
+      "persona_id": "neighbor_sister",
+      "topic_tags": [
+        "市場",
+        "美月姐",
+        "社交",
+        "種花",
+        "健康"
+      ],
+      "reason": "長者克服膝蓋不適外出社交，情緒正向，值得鼓勵",
+      "source": "voice",
+      "id": "c001_s17",
+      "date": "2026-06-01",
+      "time": "09:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說最近胃口不太好，只想吃清淡的，煮了白粥配醬瓜，說這樣最好消化，也不喜歡吃太多",
+      "sentiment": "negative",
+      "emotion_score": -0.3,
+      "importance": 0.55,
+      "memory_type": "short",
+      "topic_tags": [
+        "飲食",
+        "清淡",
+        "胃口不好",
+        "健康"
+      ],
+      "reason": "長者胃口偏差，需留意營養攝取狀況",
+      "source": "voice",
+      "id": "c001_s18",
+      "date": "2026-06-03",
+      "time": "12:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說看的台灣劇有個場景很像以前教書的教室，一個媽媽教孩子寫字，讓她看著看著出了神，說有點想念那段時光",
+      "sentiment": "negative",
+      "emotion_score": -0.3,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "台灣劇",
+        "教書回憶",
+        "懷念",
+        "國小老師"
+      ],
+      "reason": "台灣劇勾起長者對教書歲月的懷念，情感複雜但平和",
+      "source": "voice",
+      "id": "c001_s19",
+      "date": "2026-06-05",
+      "time": "21:30:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說早上給陽台所有盆栽都澆了水，說這件事做完才算真正開始一天，說花都養得很好，心情跟著好",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.55,
+      "memory_type": "short",
+      "persona_id": "granddaughter",
+      "topic_tags": [
+        "種花",
+        "陽台",
+        "日常",
+        "開心"
+      ],
+      "reason": "長者有規律的日常照護盆栽習慣，情緒穩定正向",
+      "source": "voice",
+      "id": "c001_s20",
+      "date": "2026-06-07",
+      "time": "08:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-09 00:36:52"
+    },
+    {
+      "event": "說了：想到以前教過的學生，心裡有點感慨。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "表達滿意或認可。",
+      "reason": "分析失敗，使用預設值",
       "source": "voice",
-      "spoken_at": "2026-05-17 21:01:57",
-      "id": "03e5850f",
-      "date": "2026-05-17",
-      "time": "21:01:57"
+      "spoken_at": "2026-06-09 08:46:20",
+      "id": "064f4e42",
+      "date": "2026-06-09",
+      "time": "08:46:20",
+      "acknowledged": false
     },
     {
-      "event": "說了：我頭很暈快跌倒了",
-      "sentiment": "negative",
-      "emotion_score": -0.8,
+      "event": "說了：胸口突然緊緊的，喘不過氣來。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
       "importance": 0.8,
       "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
-        "安全警報"
+        "情緒"
       ],
-      "reason": "偵測到身體不適",
+      "reason": "分析失敗，使用預設值",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:28",
-      "id": "98244f33",
-      "date": "2026-06-03",
-      "time": "03:39:28"
+      "spoken_at": "2026-06-09 08:47:40",
+      "id": "41b3a273",
+      "date": "2026-06-09",
+      "time": "08:47:40",
+      "acknowledged": false
     },
     {
-      "event": "說了：我胸口很痛，喘不過氣",
+      "event": "說了：想到以前教過的學生，心裡有點感慨。",
       "sentiment": "negative",
-      "emotion_score": -0.8,
-      "importance": 0.8,
+      "emotion_score": -0.6,
+      "importance": 0.7,
       "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
-        "安全警報"
+        "情緒"
       ],
-      "reason": "偵測到身體不適",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:28",
-      "id": "d91664e3",
-      "date": "2026-06-03",
-      "time": "03:39:28"
+      "spoken_at": "2026-06-09 09:00:26",
+      "id": "2853a889",
+      "date": "2026-06-09",
+      "time": "09:00:26",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志明這陣子很忙，我有幾天沒聽到他的聲音了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:00:37",
+      "id": "bda0874b",
+      "date": "2026-06-09",
+      "time": "09:00:37",
+      "acknowledged": false
     },
     {
       "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
@@ -163,47 +606,140 @@
       ],
       "reason": "長者持續情緒低落，建議照護人員關心。",
       "source": "trend_analysis",
-      "spoken_at": "2026-06-03 03:39:28",
-      "id": "967a3e49",
-      "date": "2026-06-03",
-      "time": "03:39:28"
+      "spoken_at": "2026-06-09 09:01:00",
+      "id": "f227239d",
+      "date": "2026-06-09",
+      "time": "09:01:00",
+      "acknowledged": false
     },
     {
-      "event": "說了：我今天很孤單，有點不開心",
+      "event": "說了：小雨回去以後家裡很安靜，我有點寂寞。",
       "sentiment": "negative",
       "emotion_score": -0.6,
-      "importance": 0.6,
+      "importance": 0.5,
       "memory_type": "short",
       "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "偵測到低落情緒",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:28",
-      "id": "1510e465",
-      "date": "2026-06-03",
-      "time": "03:39:28"
+      "spoken_at": "2026-06-09 09:00:48",
+      "id": "89a94aec",
+      "date": "2026-06-09",
+      "time": "09:00:48",
+      "acknowledged": false
     },
     {
-      "event": "說了：今天晚餐很好吃，我很開心",
+      "event": "說了：右膝今天腫腫的，走到廚房就覺得痠。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:01:03",
+      "id": "c0d0e0c7",
+      "date": "2026-06-09",
+      "time": "09:01:03",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才膝蓋忽然軟了一下，幸好扶著椅子沒有倒下。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:01:20",
+      "id": "d352bce7",
+      "date": "2026-06-09",
+      "time": "09:01:20",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我在浴室滑倒了，膝蓋痛得沒辦法站起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:01:25",
+      "id": "cf02f708",
+      "date": "2026-06-09",
+      "time": "09:01:25",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然緊緊的，喘不過氣來。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:01:28",
+      "id": "dee135f5",
+      "date": "2026-06-09",
+      "time": "09:01:28",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：手被菜刀割得很深，血一直止不住。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:01:41",
+      "id": "c5ae8a35",
+      "date": "2026-06-09",
+      "time": "09:01:41",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚那齣台灣連續劇很好看，我還想接著看。",
       "sentiment": "positive",
       "emotion_score": 0.6,
-      "importance": 0.4,
+      "importance": 0.3,
       "memory_type": "short",
       "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "偵測到正向情緒",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:28",
-      "id": "3769ed84",
-      "date": "2026-06-03",
-      "time": "03:39:28"
+      "spoken_at": "2026-06-09 09:05:16",
+      "id": "39898a3f",
+      "date": "2026-06-09",
+      "time": "09:05:16",
+      "acknowledged": false
     },
     {
-      "event": "說了：我想念以前的家和老朋友",
+      "event": "說了：想到以前教過的學生，心裡有點感慨。",
       "sentiment": "negative",
       "emotion_score": -0.6,
       "importance": 0.7,
@@ -212,29 +748,409 @@
       "topic_tags": [
         "情緒"
       ],
-      "reason": "偵測到低落情緒",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:28",
-      "id": "fd935f27",
-      "date": "2026-06-03",
-      "time": "03:39:28"
+      "spoken_at": "2026-06-09 09:05:17",
+      "id": "fc58a9fd",
+      "date": "2026-06-09",
+      "time": "09:05:17",
+      "acknowledged": false
     },
     {
-      "event": "說了：我頭很暈快跌倒了",
+      "event": "說了：志明這陣子很忙，我有幾天沒聽到他的聲音了。",
       "sentiment": "negative",
-      "emotion_score": -0.8,
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:20",
+      "id": "417ed5e1",
+      "date": "2026-06-09",
+      "time": "09:05:20",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：右膝今天腫腫的，走到廚房就覺得痠。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:37",
+      "id": "f0fea55b",
+      "date": "2026-06-09",
+      "time": "09:05:37",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：這兩天胃口很差，吃幾口就不想吃了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:50",
+      "id": "f0e9d1f5",
+      "date": "2026-06-09",
+      "time": "09:05:50",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才膝蓋忽然軟了一下，幸好扶著椅子沒有倒下。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:51",
+      "id": "e603df2e",
+      "date": "2026-06-09",
+      "time": "09:05:51",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我在浴室滑倒了，膝蓋痛得沒辦法站起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
       "importance": 0.8,
       "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
         "安全警報"
       ],
-      "reason": "偵測到身體不適",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:30",
-      "id": "d7d078f1",
-      "date": "2026-06-03",
-      "time": "03:39:30"
+      "spoken_at": "2026-06-09 09:05:55",
+      "id": "486bbfa0",
+      "date": "2026-06-09",
+      "time": "09:05:55",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然緊緊的，喘不過氣來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:56",
+      "id": "f881b884",
+      "date": "2026-06-09",
+      "time": "09:05:56",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：手被菜刀割得很深，血一直止不住。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:05:58",
+      "id": "6ee79f50",
+      "date": "2026-06-09",
+      "time": "09:05:58",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚那齣台灣連續劇很好看，我還想接著看。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:08",
+      "id": "6a92830d",
+      "date": "2026-06-09",
+      "time": "09:09:08",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想到以前教過的學生，心裡有點感慨。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:13",
+      "id": "32330b00",
+      "date": "2026-06-09",
+      "time": "09:09:13",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志明這陣子很忙，我有幾天沒聽到他的聲音了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:15",
+      "id": "08680cd0",
+      "date": "2026-06-09",
+      "time": "09:09:15",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：右膝今天腫腫的，走到廚房就覺得痠。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:29",
+      "id": "8ebaf86b",
+      "date": "2026-06-09",
+      "time": "09:09:29",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：這兩天胃口很差，吃幾口就不想吃了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:30",
+      "id": "f55f4318",
+      "date": "2026-06-09",
+      "time": "09:09:30",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才膝蓋忽然軟了一下，幸好扶著椅子沒有倒下。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:38",
+      "id": "17746fa9",
+      "date": "2026-06-09",
+      "time": "09:09:38",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我在浴室滑倒了，膝蓋痛得沒辦法站起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:40",
+      "id": "ee43ef3b",
+      "date": "2026-06-09",
+      "time": "09:09:40",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然緊緊的，喘不過氣來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:42",
+      "id": "b9d4747e",
+      "date": "2026-06-09",
+      "time": "09:09:42",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：手被菜刀割得很深，血一直止不住。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:09:44",
+      "id": "139ea122",
+      "date": "2026-06-09",
+      "time": "09:09:44",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：昨晚那齣台灣連續劇很好看，我還想接著看。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:17",
+      "id": "7bb503ff",
+      "date": "2026-06-09",
+      "time": "09:18:17",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想到以前教過的學生，心裡有點感慨。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:19",
+      "id": "91ebd264",
+      "date": "2026-06-09",
+      "time": "09:18:19",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志明這陣子很忙，我有幾天沒聽到他的聲音了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:21",
+      "id": "4b76422b",
+      "date": "2026-06-09",
+      "time": "09:18:21",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：右膝今天腫腫的，走到廚房就覺得痠。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:42",
+      "id": "97068709",
+      "date": "2026-06-09",
+      "time": "09:18:42",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：這兩天胃口很差，吃幾口就不想吃了。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:47",
+      "id": "2664813d",
+      "date": "2026-06-09",
+      "time": "09:18:47",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才膝蓋忽然軟了一下，幸好扶著椅子沒有倒下。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:53",
+      "id": "4b5d2a3a",
+      "date": "2026-06-09",
+      "time": "09:18:53",
+      "acknowledged": false
     },
     {
       "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
@@ -249,86 +1165,138 @@
       ],
       "reason": "長者持續情緒低落，建議照護人員關心。",
       "source": "trend_analysis",
-      "spoken_at": "2026-06-03 03:39:30",
-      "id": "9f8b3855",
-      "date": "2026-06-03",
-      "time": "03:39:30"
+      "spoken_at": "2026-06-09 09:18:56",
+      "id": "5c405de0",
+      "date": "2026-06-09",
+      "time": "09:18:56",
+      "acknowledged": false
     },
     {
-      "event": "說了：我胸口很痛，喘不過氣",
+      "event": "說了：我在浴室滑倒了，膝蓋痛得沒辦法站起來。",
       "sentiment": "negative",
-      "emotion_score": -0.8,
+      "emotion_score": -0.6,
       "importance": 0.8,
       "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
         "安全警報"
       ],
-      "reason": "偵測到身體不適",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:30",
-      "id": "d0871b83",
-      "date": "2026-06-03",
-      "time": "03:39:30"
+      "spoken_at": "2026-06-09 09:18:55",
+      "id": "b09c588a",
+      "date": "2026-06-09",
+      "time": "09:18:55",
+      "acknowledged": false
     },
     {
-      "event": "說了：我今天很孤單，有點不開心",
+      "event": "說了：胸口突然緊緊的，喘不過氣來。",
       "sentiment": "negative",
       "emotion_score": -0.6,
-      "importance": 0.6,
-      "memory_type": "short",
+      "importance": 0.8,
+      "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
-        "情緒"
+        "安全警報"
       ],
-      "reason": "偵測到低落情緒",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:30",
-      "id": "977e5b09",
-      "date": "2026-06-03",
-      "time": "03:39:30"
+      "spoken_at": "2026-06-09 09:18:57",
+      "id": "0d776a40",
+      "date": "2026-06-09",
+      "time": "09:18:57",
+      "acknowledged": false
     },
     {
-      "event": "說了：今天晚餐很好吃，我很開心",
+      "event": "說了：手被菜刀割得很深，血一直止不住。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:18:59",
+      "id": "2511141f",
+      "date": "2026-06-09",
+      "time": "09:18:59",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：小雨上次回來吃了兩碗滷肉，我心情很好。",
       "sentiment": "positive",
       "emotion_score": 0.6,
-      "importance": 0.4,
+      "importance": 0.3,
       "memory_type": "short",
       "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "偵測到正向情緒",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:30",
-      "id": "da93bb8f",
-      "date": "2026-06-03",
-      "time": "03:39:30"
+      "spoken_at": "2026-06-09 09:20:53",
+      "id": "86be0f94",
+      "date": "2026-06-09",
+      "time": "09:20:53",
+      "acknowledged": false
     },
     {
-      "event": "說了：我想念以前的家和老朋友",
+      "event": "說了：今天膝蓋有點痠，我先坐著替盆栽剪葉子。",
       "sentiment": "negative",
       "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:21:00",
+      "id": "b69636ca",
+      "date": "2026-06-09",
+      "time": "09:21:00",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：以前當老師時，看到學生終於把字寫好，我總是特別高興。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
       "importance": 0.7,
       "memory_type": "long",
       "persona_id": "ai",
       "topic_tags": [
         "情緒"
       ],
-      "reason": "偵測到低落情緒",
+      "reason": "Gemini 安全與情緒分類",
       "source": "voice",
-      "spoken_at": "2026-06-03 03:39:30",
-      "id": "dda25a86",
-      "date": "2026-06-03",
-      "time": "03:39:30"
+      "spoken_at": "2026-06-09 09:21:03",
+      "id": "415cb81e",
+      "date": "2026-06-09",
+      "time": "09:21:03",
+      "acknowledged": false
     }
   ],
   "memory_summary": {
-    "content": "陳秀英 近期主要提到「說了：我想念以前的家和老朋友」，情緒狀態為 negative，建議照護者持續觀察。",
-    "updated_at": "2026-06-03 03:39:30",
-    "based_on_events": 10
+    "content": "陳秀英近期生活以陽台種花和煮菜為重心，與老鄰居美月姐仍保持良好互動，定期一起逛市場。兒子志明每週電話關心，孫女小雨偶爾回來吃滷肉。膝蓋退化持續影響行動，長者傾向隱忍不告知家人。常回憶教書歲月，情感豐富。",
+    "updated_at": "2026-06-09 00:00:00",
+    "based_on_events": 20
   },
-  "elder_biography": {},
+  "elder_biography": {
+    "content": "陳秀英在國小當了三十多年的老師，退休之後，日子反而過得比教書時還忙。陽台上的一排盆栽是她的小小王國，從茉莉、蘭花到吊蘭，每一盆都有她的心思在裡頭。每天早上起來第一件事是去看花，陽光好的時候還要一一澆水照料，說這比備課還耗心力，但做起來心情好。\n\n煮菜是她另一個拿手本領。那鍋傳承了幾十年老滷汁的滷肉，兒子志明和孫女小雨每次回來都要吃，她說滷汁越老越香，是家裡的味道。退休後她口味越來越清淡，最愛冬瓜湯、蒸魚、白粥配醬瓜，不吃辣，說吃清淡才舒服。\n\n膝蓋退化後，逛市場的腳步慢了，但停不下來。老鄰居美月姐常來敲門說一起去，她還是跟著去，兩個人邊走邊聊，說說菜市場的新鮮事，帶回各自喜歡的菜和新花苗。兒子志明住在高雄，每週固定打電話，開口先問膝蓋好不好；孫女小雨念大學，常傳照片，她說每張都存起來了。\n\n夏天怕熱，電扇恨不得二十四小時開著。每晚追一集台灣劇，是她最喜歡的睡前儀式。陳秀英說，花養得好、菜煮得香、孩子有打電話來，這一天就夠了。",
+    "updated_at": "2026-06-09 00:00:00",
+    "sources": [],
+    "manually_edited": true
+  },
   "biography_usage_count": 0,
-  "family_notes": []
+  "family_notes": [
+    {
+      "note": "媽媽膝蓋退化，不喜歡爬樓梯，但會為了去市場強撐，請注意關心她的行動狀況",
+      "date": "2026-05-17",
+      "added_by": "兒子志明"
+    }
+  ]
 }

@@ -12,9 +12,9 @@ import secrets
 import threading
 import time
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Path as ApiPath, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.security import (
     HTTPAuthorizationCredentials,
     HTTPBasic,
@@ -22,7 +22,10 @@ from fastapi.security import (
     HTTPBearer,
 )
 from fastapi.staticfiles import StaticFiles
+from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, field_validator
+
+load_dotenv(override=True)
 
 from backend.agents.decision import Decision, clear_agent, flush_agent_conversations
 from backend.services.tts_service import TTSService
@@ -47,17 +50,69 @@ from backend.utils.validators import (
 )
 
 CARE4U_DEMO_MODE = os.getenv("CARE4U_DEMO_MODE", "true").lower() == "true"
-_allowed_elder_ids_raw = os.getenv(
-    "ALLOWED_ELDER_IDS",
-    "W001,C001,L001",
-)
-ALLOWED_ELDER_IDS = tuple(
-    validate_elder_id(value.strip())
-    for value in _allowed_elder_ids_raw.split(",")
-    if value.strip()
-)
+
+# ── 長者 ID 管理：優先掃目錄，.env 可做 override ─────────────────────
+_ELDERS_DATA_DIR = Path(__file__).parent / "data" / "elders"
+
+# 百家姓拼音首字母對照（常見台灣姓氏）
+_SURNAME_INITIAL: dict[str, str] = {
+    "王": "W", "吳": "W", "魏": "W", "翁": "W", "溫": "W",
+    "陳": "C", "蔡": "C", "曹": "C", "蔣": "C", "崔": "C",
+    "林": "L", "李": "L", "劉": "L", "廖": "L", "賴": "L", "呂": "L", "羅": "L",
+    "張": "Z", "鄭": "Z", "趙": "Z", "周": "Z", "朱": "Z", "莊": "Z", "曾": "Z",
+    "黃": "H", "洪": "H", "何": "H", "韓": "H",
+    "楊": "Y", "葉": "Y", "游": "Y", "余": "Y",
+    "許": "X", "謝": "X", "蕭": "X", "徐": "X", "薛": "X",
+    "郭": "G", "高": "G", "龔": "G",
+    "江": "J", "蔣": "J",
+    "邱": "Q",
+    "蘇": "S", "宋": "S", "沈": "S",
+    "馬": "M", "孟": "M",
+    "彭": "P",
+    "唐": "T",
+    "范": "F", "方": "F", "傅": "F",
+    "鍾": "Z", "鄒": "Z",
+    "盧": "L", "柯": "K",
+}
+
+def _discover_elder_ids() -> set[str]:
+    """掃描 data/elders/*.json 取得有效長者 ID；.env 的 ALLOWED_ELDER_IDS 合併進來。"""
+    ids: set[str] = set()
+    if _ELDERS_DATA_DIR.exists():
+        for p in _ELDERS_DATA_DIR.glob("*.json"):
+            stem = p.stem
+            if "_conv" not in stem:
+                try:
+                    ids.add(validate_elder_id(stem))
+                except ValueError:
+                    pass
+    # .env override（向下相容）
+    env_val = os.getenv("ALLOWED_ELDER_IDS", "").strip()
+    if env_val:
+        for v in env_val.split(","):
+            v = v.strip()
+            if v:
+                try:
+                    ids.add(validate_elder_id(v))
+                except ValueError:
+                    pass
+    return ids
+
+def generate_elder_id(surname: str) -> str:
+    """根據姓氏產生下一個可用的長者 ID（如 W002）。"""
+    initial = _SURNAME_INITIAL.get(surname[0] if surname else "", "E")
+    existing = _discover_elder_ids()
+    same_prefix = [
+        int(eid[1:]) for eid in existing
+        if len(eid) == 4 and eid[0] == initial and eid[1:].isdigit()
+    ]
+    next_num = (max(same_prefix) + 1) if same_prefix else 1
+    return f"{initial}{next_num:03d}"
+
+# 模組層級可變 set（可在 runtime 新增）
+ALLOWED_ELDER_IDS: set[str] = _discover_elder_ids()
 if not ALLOWED_ELDER_IDS:
-    raise RuntimeError("ALLOWED_ELDER_IDS 至少需要一個有效長者 ID")
+    raise RuntimeError("找不到任何長者資料，請確認 data/elders/ 目錄或 ALLOWED_ELDER_IDS 設定")
 
 
 @asynccontextmanager
@@ -66,6 +121,11 @@ async def lifespan(_: FastAPI):
         f"STT worker pool 延遲初始化：size={STT_POOL_SIZE}, "
         f"model={STT_MODEL_SIZE}, device={STT_DEVICE}"
     )
+    _db_enabled_val = os.getenv("DB_ENABLED", "false")
+    print(f"[startup] DB_ENABLED={_db_enabled_val!r}  CARE4U_DEMO_MODE={os.getenv('CARE4U_DEMO_MODE','?')!r}")
+    if _db_enabled_val.lower() == "true":
+        from backend.memory.vector_store import _init_pool
+        _init_pool()
     yield
     flush_agent_conversations()
     close_db_pool()
@@ -227,12 +287,14 @@ class ValidatedRequest(BaseModel):
 
 
 class ChatRequest(ValidatedRequest):
+    elder_id: str
     message: str
     speed_emotion: str = "normal"
     session_id: str = "default"
     persona_id: Optional[str] = None
 
 class GreetRequest(ValidatedRequest):
+    elder_id: str
     session_id: str = "default"
     persona_id: Optional[str] = None
 
@@ -252,6 +314,12 @@ class ElderProfileUpdate(ValidatedRequest):
     sensitivity: str
     diet: str
     cognitive_status: str = "normal"
+    active_persona: Optional[str] = None
+
+    @field_validator("active_persona")
+    @classmethod
+    def validate_active_persona(cls, value: Optional[str]) -> Optional[str]:
+        return validate_persona_id(value) if value else value
 
 class BackgroundCandidateRequest(ValidatedRequest):
     elder_id: str
@@ -265,6 +333,31 @@ class BiographyUpdateRequest(ValidatedRequest):
     elder_id: str
     biography: str
     sources: Optional[list] = None
+
+class CreateElderRequest(BaseModel):
+    """新增長者請求。elder_id 若留空則自動產生。"""
+    name: str
+    gender: str = "male"
+    birth_year: Optional[int] = None
+    hometown: str = ""
+    cognitive_status: str = "normal"
+    job: str = ""
+    hobbies: list = []
+    family_members: list = []   # [{"relation": "兒子", "name": "志明"}, ...]
+    hints: str = ""             # admin 手填的關鍵人生事件
+    biography: str = ""         # 最終確認的傳記（可空，之後再填）
+    elder_id: str = ""          # 留空則自動產生
+
+class BiographyPreviewRequest(BaseModel):
+    """新長者傳記預覽請求（不需要已存在的 elder_id）。"""
+    name: str
+    gender: str = "male"
+    birth_year: Optional[int] = None
+    hometown: str = ""
+    job: str = ""
+    hobbies: list = []
+    family_members: list = []
+    hints: str = ""
 
 class PersonaAddRequest(ValidatedRequest):
     elder_id: str
@@ -453,6 +546,15 @@ def require_elder_token(
     return identity
 
 
+def _require_allowed_elder(elder_id: str) -> str:
+    if elder_id is None:
+        raise HTTPException(status_code=422, detail="缺少 elder_id")
+    valid_elder_id = validate_elder_id(elder_id)
+    if valid_elder_id not in ALLOWED_ELDER_IDS:
+        raise HTTPException(status_code=403, detail="此長者不在允許名單")
+    return valid_elder_id
+
+
 def _session_key(elder_id: str, session_id: str = "default", persona_id: str = None) -> str:
     valid_elder_id = validate_elder_id(elder_id)
     valid_session_id = validate_session_id(session_id or "default")
@@ -585,13 +687,279 @@ def get_system_mode(request: Request):
 def list_allowed_elders(_: dict = Depends(require_caregiver)):
     memory = VectorMemoryStore()
     elders = []
-    for elder_id in ALLOWED_ELDER_IDS:
+    for elder_id in sorted(ALLOWED_ELDER_IDS):
         profile = memory.get_profile(elder_id) or {}
         elders.append({
             "elder_id": elder_id,
             "name": profile.get("name") or elder_id,
         })
     return {"elders": elders}
+
+
+def preview_elder_id(name: str = Query(...), _: dict = Depends(require_caregiver)):
+    """預覽根據姓名自動產生的 elder_id（不實際建立）。"""
+    if not name or not name.strip():
+        raise HTTPException(status_code=422, detail="姓名不得為空")
+    elder_id = generate_elder_id(name.strip())
+    return {"elder_id": elder_id, "name": name.strip()}
+
+
+def create_elder(req: CreateElderRequest, _: dict = Depends(require_caregiver)):
+    """新增一位長者：建立 JSON 檔並更新記憶體中的 ALLOWED_ELDER_IDS。"""
+    global ALLOWED_ELDER_IDS
+
+    name = (req.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="姓名不得為空")
+
+    # 決定 elder_id
+    if req.elder_id and req.elder_id.strip():
+        try:
+            elder_id = validate_elder_id(req.elder_id.strip())
+        except ValueError:
+            raise HTTPException(status_code=422, detail="elder_id 格式不合法（只允許英數字、- 和 _）")
+    else:
+        elder_id = generate_elder_id(name)
+
+    # 檢查是否已存在
+    target_path = _ELDERS_DATA_DIR / f"{elder_id}.json"
+    if target_path.exists():
+        raise HTTPException(status_code=409, detail=f"elder_id {elder_id} 已存在")
+
+    # 組建 personas：預設 AI 助理
+    default_honorific = "爺爺" if req.gender == "male" else "奶奶"
+    personas: dict = {
+        "ai": {
+            "name": "AI 助理",
+            "voice_engine": "edge",
+            "voice_path": None,
+            "honorific": default_honorific,
+            "tone": f"像耐心的照護助理，親切溫和地陪伴{name}{default_honorific}。",
+            "avatar_path": "ai_assistant_nobg.png",
+            "is_deceased": False,
+        }
+    }
+    for m in (req.family_members or []):
+        relation = (m.get("relation") or "").strip()
+        member_name = (m.get("name") or "").strip()
+        if not relation or not member_name:
+            continue
+        pid = f"family_{len(personas)}"
+        personas[pid] = {
+            "name": member_name,
+            "relation": relation,
+            "voice_engine": "edge",
+            "voice_path": None,
+            "honorific": default_honorific,
+            "language": "mandarin",
+            "personality": [],
+            "habits": [],
+            "tone": f"你是{name}的{relation}{member_name}，語氣親切自然。",
+            "avatar_path": "ai_assistant_nobg.png",
+            "is_deceased": False,
+            "shared_memories": "",
+            "current_status": "",
+            "forbidden_topics": "",
+        }
+
+    # 組建傳記欄位
+    biography_content = (req.biography or "").strip()
+    biography_dict = {
+        "content": biography_content,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "sources": ["admin_created"],
+        "manually_edited": bool(biography_content),
+    }
+
+    # 組建完整 profile
+    profile: dict = {
+        "elder_id": elder_id,
+        "name": name,
+        "gender": req.gender,
+        "cognitive_status": req.cognitive_status,
+        "persona": {
+            "former_job": req.job or "",
+            "tone_preference": "",
+            "hobbies": req.hobbies or [],
+        },
+        "health_notes": {
+            "sensitivity": [],
+            "diet": "",
+        },
+        "personas": personas,
+        "active_persona": "ai",
+        "recent_events": [],
+        "memory_summary": {"content": "", "updated_at": "", "based_on_events": 0},
+        "elder_biography": biography_dict,
+        "biography_usage_count": 0,
+        "family_notes": [],
+    }
+    if req.birth_year:
+        profile["birth_year"] = req.birth_year
+    if req.hometown:
+        profile["hometown"] = req.hometown
+
+    # 寫入 JSON
+    _ELDERS_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        target_path.write_text(
+            json.dumps(profile, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"寫入長者資料失敗：{e}")
+
+    # 更新記憶體中的允許清單（立即生效，不需重啟）
+    ALLOWED_ELDER_IDS.add(elder_id)
+
+    return {
+        "success": True,
+        "elder_id": elder_id,
+        "name": name,
+        "message": f"長者 {name}（{elder_id}）建立成功",
+    }
+
+
+def biography_preview_new(req: BiographyPreviewRequest, _: dict = Depends(require_caregiver)):
+    """為尚未建檔的新長者生成傳記草稿（Tavily 只搜時代文化脈絡）。"""
+    name = (req.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="姓名不得為空")
+
+    search = SearchService()
+    biography = search.generate_biography_for_new_elder(
+        name=name,
+        gender=req.gender,
+        birth_year=req.birth_year,
+        hometown=req.hometown or "",
+        job=req.job or "",
+        hobbies=req.hobbies or [],
+        family_members=req.family_members or [],
+        hints=req.hints or "",
+    )
+    if not biography or len(biography) < 30:
+        raise HTTPException(status_code=500, detail="傳記草稿生成失敗，請稍後再試")
+
+    return {
+        "success": True,
+        "biography": biography,
+        "message": "傳記草稿已生成，請確認內容後再儲存。",
+    }
+
+
+def _event_datetime_value(event: dict) -> str:
+    return f"{event.get('date', '')} {event.get('time', '')}".strip()
+
+
+def _event_level(event: dict) -> int:
+    level = event.get("escalation_level")
+    if isinstance(level, int):
+        return level
+    tags = set(event.get("topic_tags") or [])
+    text = event.get("event", "")
+    if "緊急警報" in tags or "胸痛" in text or "呼吸困難" in text:
+        return 3
+    if "安全警報" in tags or "趨勢警報" in tags or "跌倒" in text or "頭暈" in text:
+        return 2
+    if event.get("sentiment") == "negative" or "情緒" in tags:
+        return 1
+    return 0
+
+
+def get_admin_dashboard(_: dict = Depends(require_caregiver)):
+    memory = VectorMemoryStore()
+    today = datetime.now().strftime("%Y-%m-%d")
+    elders = []
+    alerts = []
+    conversations = []
+    today_conversation_count = 0
+
+    for elder_id in ALLOWED_ELDER_IDS:
+        profile = memory.get_profile(elder_id) or {}
+        elder_name = profile.get("name") or elder_id
+        events = profile.get("recent_events") or []
+        today_events = [event for event in events if event.get("date") == today]
+        today_conversation_count += len(today_events)
+
+        alert_count = 0
+        for event in events:
+            level = _event_level(event)
+            if level >= 2:
+                alert_count += 1
+                alerts.append({
+                    "elder_id": elder_id,
+                    "elder_name": elder_name,
+                    "level": level,
+                    "time": event.get("time") or "",
+                    "date": event.get("date") or "",
+                    "content": event.get("event") or event.get("reason") or "",
+                    "reason": event.get("reason") or "",
+                })
+
+        elders.append({
+            "elder_id": elder_id,
+            "name": elder_name,
+            "today_events": len(today_events),
+            "alert_count": alert_count,
+            "important_count": len([
+                event for event in events
+                if float(event.get("importance") or 0) >= 0.7
+            ]),
+        })
+
+        for key, decision in decisions.items():
+            if not key.startswith(f"{elder_id}:"):
+                continue
+            history = [
+                item for item in decision.get_history()
+                if item.get("role") in {"user", "model"} and item.get("content")
+            ]
+            if not history:
+                continue
+            latest = history[-1]
+            conversations.append({
+                "elder_id": elder_id,
+                "elder_name": elder_name,
+                "session_id": key.split(":", 1)[1],
+                "speaker": "長者" if latest.get("role") == "user" else "AI",
+                "summary": latest.get("content", "")[:80],
+                "message_count": len(history),
+            })
+
+    alerts.sort(
+        key=lambda item: (item.get("date") or "", item.get("time") or ""),
+        reverse=True,
+    )
+    events_sorted = sorted(
+        (
+            {
+                "elder_id": elder_id,
+                "elder_name": (memory.get_profile(elder_id) or {}).get("name") or elder_id,
+                "time": event.get("time") or "",
+                "date": event.get("date") or "",
+                "content": event.get("event") or "",
+                "level": _event_level(event),
+            }
+            for elder_id in ALLOWED_ELDER_IDS
+            for event in ((memory.get_profile(elder_id) or {}).get("recent_events") or [])
+        ),
+        key=lambda item: (item["date"], item["time"]),
+        reverse=True,
+    )
+    recent_conversations = conversations[:5] or [
+        item for item in events_sorted
+        if item.get("content")
+    ][:5]
+
+    return {
+        "date": today,
+        "elder_count": len(elders),
+        "today_conversation_count": today_conversation_count,
+        "pending_alert_count": len(alerts),
+        "recent_alerts": alerts[:5],
+        "recent_conversations": recent_conversations[:5],
+        "elders": elders,
+    }
 
 
 def create_elder_pin(
@@ -709,13 +1077,11 @@ async def _run_background_health(
         })
 
 
-def greet(
-    req: GreetRequest,
-    identity: ElderIdentity = Depends(require_elder_token),
-):
+def greet(req: GreetRequest):
     try:
+        elder_id = _require_allowed_elder(req.elder_id)
         return get_decision(
-            identity.elder_id,
+            elder_id,
             req.session_id,
             req.persona_id,
         ).greet()
@@ -723,17 +1089,80 @@ def greet(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def chat(
-    req: ChatRequest,
-    identity: ElderIdentity = Depends(require_elder_token),
-):
+def _next_stream_event(iterator):
     try:
+        return True, next(iterator)
+    except StopIteration:
+        return False, None
+
+
+async def chat(req: ChatRequest, stream: bool = Query(False)):
+    try:
+        elder_id = _require_allowed_elder(req.elder_id)
         _evict_stale_sessions()
         decision = get_decision(
-            identity.elder_id,
+            elder_id,
             req.session_id,
             req.persona_id,
         )
+        if stream:
+            async def event_stream():
+                async with decision._lock:
+                    iterator = decision.stream_chat(
+                        req.message,
+                        req.speed_emotion,
+                    )
+                    loop = asyncio.get_running_loop()
+                    while True:
+                        has_event, event = await loop.run_in_executor(
+                            None,
+                            _next_stream_event,
+                            iterator,
+                        )
+                        if not has_event:
+                            break
+                        if event.get("type") == "done":
+                            event["done"] = True
+                            event.pop("type", None)
+                            event["background_task_id"] = None
+                            if event.get("escalation_level", 0) < 2:
+                                task_id = _reserve_background_result(elder_id)
+                                if task_id:
+                                    asyncio.create_task(
+                                        _run_background_image(
+                                            task_id,
+                                            decision,
+                                            req.message,
+                                        )
+                                    )
+                                    asyncio.create_task(
+                                        _run_background_health(
+                                            task_id,
+                                            decision,
+                                            req.message,
+                                        )
+                                    )
+                                    event["background_task_id"] = task_id
+                        else:
+                            event = {
+                                "chunk": event.get("chunk", ""),
+                                "done": False,
+                            }
+                        yield (
+                            "data: "
+                            + json.dumps(event, ensure_ascii=False)
+                            + "\n\n"
+                        )
+
+            return StreamingResponse(
+                event_stream(),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "X-Accel-Buffering": "no",
+                },
+            )
+
         async with decision._lock:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
@@ -744,7 +1173,7 @@ async def chat(
             )
         result["background_task_id"] = None
         if result.get("escalation_level", 0) < 2:
-            task_id = _reserve_background_result(identity.token)
+            task_id = _reserve_background_result(elder_id)
             if task_id:
                 asyncio.create_task(
                     _run_background_image(task_id, decision, req.message)
@@ -760,13 +1189,13 @@ async def chat(
 
 def _consume_background_result(
     task_id: str,
-    owner_token: str | None = None,
+    owner_key: str | None = None,
 ):
     with chat_background_results_lock:
         result = chat_background_results.get(task_id)
         if result is None:
             raise HTTPException(status_code=404, detail="找不到背景任務")
-        if owner_token is not None and result.get("_owner_token") != owner_token:
+        if owner_key is not None and result.get("_owner_token") != owner_key:
             raise HTTPException(status_code=404, detail="找不到背景任務")
         all_done = _background_all_done(result)
         response = {
@@ -914,9 +1343,9 @@ async def text_to_speech(
 
 async def elder_text_to_speech(
     req: TTSRequest,
-    identity: ElderIdentity = Depends(require_elder_token),
 ):
-    return await _synthesize_speech(req, identity.elder_id)
+    elder_id = _require_allowed_elder(req.elder_id)
+    return await _synthesize_speech(req, elder_id)
 
 
 async def set_stt_language(req: LanguageRequest):
@@ -965,15 +1394,69 @@ def get_profile(elder_id: str, _: dict = Depends(require_admin)):
 
 
 def get_history(elder_id: str, _: dict = Depends(require_caregiver)):
+    # Prefer live in-memory history (active session).
     key = next((k for k in decisions if k.startswith(f"{elder_id}:")), None)
-    if not key:
-        return {"history": []}
-    return {"history": decisions[key].get_history()}
+    if key:
+        return {"history": decisions[key].get_history()}
+    # Fallback: read persisted conversation from JSON so admin can see history
+    # even when no elder session is currently active.
+    try:
+        memory = VectorMemoryStore()
+        profile = memory.get_profile(elder_id)
+        # Try all known personas in priority order: active_persona first, then "ai".
+        personas_to_try: list[str] = []
+        active = profile.get("active_persona") if profile else None
+        if active:
+            personas_to_try.append(active)
+        if "ai" not in personas_to_try:
+            personas_to_try.append("ai")
+        for pid in personas_to_try:
+            hist = memory.load_conversation(elder_id, pid)
+            if hist:
+                return {"history": hist}
+    except Exception as e:
+        print(f"get_history fallback 失敗：{e}")
+    return {"history": []}
 
 
 def get_safety(elder_id: str, _: dict = Depends(require_caregiver)):
     try:
         return get_decision(elder_id).get_safety_status()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def acknowledge_safety_event(
+    elder_id: str,
+    index: int = ApiPath(..., ge=0),
+    _: dict = Depends(require_caregiver),
+):
+    try:
+        memory = VectorMemoryStore()
+        if not memory.acknowledge_event_at(elder_id, index):
+            raise HTTPException(status_code=404, detail="安全事件不存在")
+        _reset_elder_state(elder_id)
+        return {"success": True, "elder_id": elder_id, "index": index}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class AcknowledgeByTagRequest(ValidatedRequest):
+    tag: str
+
+
+def acknowledge_safety_events_by_tag(
+    elder_id: str,
+    req: AcknowledgeByTagRequest,
+    _: dict = Depends(require_caregiver),
+):
+    try:
+        memory = VectorMemoryStore()
+        count = memory.acknowledge_events_by_tag(elder_id, req.tag)
+        _reset_elder_state(elder_id)
+        return {"success": True, "elder_id": elder_id, "tag": req.tag, "acknowledged_count": count}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1002,9 +1485,14 @@ async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregi
         })
         if not updated:
             raise RuntimeError("長者資料儲存失敗")
+        if req.active_persona:
+            if not memory.set_active_persona(req.elder_id, req.active_persona):
+                raise HTTPException(status_code=400, detail="預設陪伴者不存在")
         _reset_elder_state(req.elder_id)
         return {"success": True, "message": f"{req.name} 的資料已儲存"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1390,18 +1878,20 @@ def delete_family_note(req: FamilyNoteDeleteRequest, _: dict = Depends(require_c
 
 
 def get_elder_profile(
-    identity: ElderIdentity = Depends(require_elder_token),
+    elder_id: str = Query(...),
 ):
-    profile = VectorMemoryStore().get_profile(identity.elder_id)
+    elder_id = _require_allowed_elder(elder_id)
+    profile = VectorMemoryStore().get_profile(elder_id)
     if not profile or not profile.get("name"):
         raise HTTPException(status_code=404, detail="找不到長者資料")
     return profile
 
 
 def get_elder_personas(
-    identity: ElderIdentity = Depends(require_elder_token),
+    elder_id: str = Query(...),
 ):
-    profile = VectorMemoryStore().get_profile(identity.elder_id)
+    elder_id = _require_allowed_elder(elder_id)
+    profile = VectorMemoryStore().get_profile(elder_id)
     if not profile:
         raise HTTPException(status_code=404, detail="找不到長者資料")
     return {
@@ -1412,9 +1902,10 @@ def get_elder_personas(
 
 def get_elder_background_result(
     task_id: str,
-    identity: ElderIdentity = Depends(require_elder_token),
+    elder_id: str = Query(...),
 ):
-    return _consume_background_result(task_id, identity.token)
+    elder_id = _require_allowed_elder(elder_id)
+    return _consume_background_result(task_id, elder_id)
 
 
 from backend.routers.admin import build_router as build_admin_router
@@ -1442,11 +1933,14 @@ app.include_router(
             "get_profile": get_profile,
             "get_history": get_history,
             "get_safety": get_safety,
+            "acknowledge_safety_event": acknowledge_safety_event,
+            "acknowledge_safety_events_by_tag": acknowledge_safety_events_by_tag,
             "get_agent_logs": get_agent_logs,
             "save_profile": save_profile,
             "save_biography": save_biography,
             "background_candidates": background_candidates,
             "biography_draft": biography_draft,
+            "biography_preview_new": biography_preview_new,
             "add_family_note": add_family_note,
             "delete_family_note": delete_family_note,
         }
@@ -1469,6 +1963,7 @@ app.include_router(
         {
             "admin_page": admin_page,
             "admin_me": admin_me,
+            "get_admin_dashboard": get_admin_dashboard,
             "list_sessions": list_sessions,
             "clear_sessions": clear_sessions,
             "evaluate_rag": evaluate_rag,
@@ -1491,6 +1986,8 @@ app.include_router(
         {
             "get_system_mode": get_system_mode,
             "list_allowed_elders": list_allowed_elders,
+            "preview_elder_id": preview_elder_id,
+            "create_elder": create_elder,
             "create_elder_pin": create_elder_pin,
             "revoke_elder_session": revoke_elder_session,
             "elder_login": elder_login,

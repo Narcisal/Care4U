@@ -8,6 +8,8 @@ def build_router(handlers: Mapping[str, Callable]) -> APIRouter:
     routes = [
         ("GET", "/api/system/mode", "get_system_mode"),
         ("GET", "/api/admin/elders", "list_allowed_elders"),
+        ("GET", "/api/admin/elders/preview-id", "preview_elder_id"),
+        ("POST", "/api/admin/elders", "create_elder"),
         ("POST", "/api/admin/elder-pin", "create_elder_pin"),
         (
             "POST",

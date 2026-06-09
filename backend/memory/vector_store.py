@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from .memory_manager import BiographyUpdateResult, MemoryManager
 from .json_store import JsonMemoryStore
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Module-level connection pool — shared across all VectorMemoryStore instances.
 _db_pool: psycopg2.pool.ThreadedConnectionPool | None = None
@@ -179,6 +179,12 @@ class VectorMemoryStore(MemoryManager):
     def get_recent_events(self, elder_id: str, limit: int = 5) -> list:
         return self._json.get_recent_events(elder_id, limit)
 
+    def acknowledge_event_at(self, elder_id: str, index: int) -> bool:
+        return self._json.acknowledge_event_at(elder_id, index)
+
+    def acknowledge_events_by_tag(self, elder_id: str, tag: str) -> int:
+        return self._json.acknowledge_events_by_tag(elder_id, tag)
+
     # ------------------------------------------------------------------
     # Dual-write: JSON + PostgreSQL
     # ------------------------------------------------------------------
@@ -336,7 +342,14 @@ class VectorMemoryStore(MemoryManager):
                         """,
                         params,
                     )
-                    return [dict(row) for row in cursor.fetchall()]
+                    rows = [dict(row) for row in cursor.fetchall()]
+                # If PostgreSQL returned nothing (e.g. embeddings not yet stored),
+                # fall back to JSON keyword search so RAG still works.
+                if not rows and query_text:
+                    return self._json.search_similar_memories(
+                        elder_id, query_text, limit=limit, persona_id=persona_id
+                    )
+                return rows
             except Exception as e:
                 print(f"向量搜尋失敗：{e}")
                 return self._json.search_similar_memories(

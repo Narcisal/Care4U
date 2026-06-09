@@ -1,10 +1,8 @@
+import os
 from datetime import datetime
-from dotenv import load_dotenv
 from backend.services.llm_service import LLMService
 from backend.memory.vector_store import VectorMemoryStore
 from backend.services.embedding_service import EmbeddingService
-
-load_dotenv()
 
 
 class MagicAI:
@@ -20,7 +18,7 @@ class MagicAI:
         self.elder_id = elder_id
         self.persona_id = persona_id
         self._persona_key = persona_id or "ai"
-        self.llm = LLMService()
+        self.llm = LLMService(os.getenv("MAGIC_MODEL", "gemini-2.5-pro"))
         self.memory = VectorMemoryStore()
         self.embedding = EmbeddingService()
         self.profile = self.memory.get_profile(elder_id)
@@ -71,14 +69,20 @@ class MagicAI:
         honorific = active_persona.get("honorific", self._get_honorific())
         greeting = f"{name}{honorific}，{time_greeting}！今天感覺怎麼樣呀？"
 
-        self.conversation_history.append({"role": "model", "content": greeting})
+        now = datetime.now()
+        self.conversation_history.append({
+            "role": "model",
+            "content": greeting,
+            "date": now.strftime("%Y-%m-%d"),
+            "time": now.strftime("%H:%M:%S"),
+        })
         return greeting
 
     def chat(self, user_message: str) -> str:
         active_id = self.persona_id or self.profile.get("active_persona", "ai")
         active_persona = self._get_active_persona()
 
-        recent_messages = self.conversation_history[-6:]
+        recent_messages = self.conversation_history[-4:]
 
         similar_memories = []
         try:
@@ -104,9 +108,13 @@ class MagicAI:
         except Exception as e:
             print(f"向量搜尋失敗（不影響對話）：{e}")
 
-        important_memories = self.memory.get_important_memories(
-            self.elder_id, importance_threshold=0.7, limit=8, persona_id=active_id
-        )
+        _SAFETY_TAGS = {"安全警報", "趨勢警報"}
+        important_memories = [
+            m for m in self.memory.get_important_memories(
+                self.elder_id, importance_threshold=0.7, limit=12, persona_id=active_id
+            )
+            if not _SAFETY_TAGS.intersection(m.get("topic_tags") or [])
+        ][:8]
 
         response = self.llm.chat(
             profile=self.profile,
@@ -118,8 +126,73 @@ class MagicAI:
             active_persona=active_persona,
         )
 
-        self.conversation_history.append({"role": "user", "content": user_message})
-        self.conversation_history.append({"role": "model", "content": response})
+        self._record_response(user_message, response, len(similar_memories))
+
+        return response
+
+    def stream_chat(self, user_message: str):
+        active_id = self.persona_id or self.profile.get("active_persona", "ai")
+        active_persona = self._get_active_persona()
+        recent_messages = self.conversation_history[-4:]
+
+        similar_memories = []
+        try:
+            query_embedding = self.embedding.embed(user_message)
+            similar_memories = self.memory.search_similar_memories(
+                self.elder_id,
+                query_embedding or [],
+                limit=5,
+                persona_id=active_id,
+                query_text=user_message,
+            )
+        except Exception as e:
+            print(f"向量搜尋失敗（不影響對話）：{e}")
+
+        _SAFETY_TAGS = {"安全警報", "趨勢警報"}
+        important_memories = [
+            m for m in self.memory.get_important_memories(
+                self.elder_id, importance_threshold=0.7, limit=12, persona_id=active_id
+            )
+            if not _SAFETY_TAGS.intersection(m.get("topic_tags") or [])
+        ][:8]
+
+        chunks = []
+        for chunk in self.llm.stream_chat(
+            profile=self.profile,
+            conversation_history=self.conversation_history,
+            user_message=user_message,
+            recent_messages=recent_messages,
+            important_memories=important_memories,
+            similar_memories=similar_memories,
+            active_persona=active_persona,
+        ):
+            if chunk:
+                chunks.append(chunk)
+                yield chunk
+
+        response = "".join(chunks)
+        if response:
+            self._record_response(
+                user_message,
+                response,
+                len(similar_memories),
+            )
+
+    def _record_response(
+        self,
+        user_message: str,
+        response: str,
+        rag_hits: int,
+    ):
+        now = datetime.now()
+        ts = {"date": now.strftime("%Y-%m-%d"), "time": now.strftime("%H:%M:%S")}
+        self.conversation_history.append({"role": "user", "content": user_message, **ts})
+        self.conversation_history.append({
+            "role": "model",
+            "content": response,
+            "_rag_hits": rag_hits,
+            **ts,
+        })
 
         if len(self.conversation_history) > 50:
             self.conversation_history = self.conversation_history[-50:]
@@ -130,15 +203,15 @@ class MagicAI:
             self._reset_biography_usage()
             try:
                 self.memory.save_conversation(
-                    self.elder_id, self.conversation_history, self._persona_key
+                    self.elder_id,
+                    self.conversation_history,
+                    self._persona_key,
                 )
             except Exception as e:
                 print(f"對話歷史儲存失敗（不影響對話）：{e}")
 
         if self._chat_count % 10 == 0:
             self._summarize_memories()
-
-        return response
 
     def _summarize_memories(self):
         try:

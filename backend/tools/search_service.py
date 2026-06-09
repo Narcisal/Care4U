@@ -153,72 +153,180 @@ class SearchService:
             return "需要確認"
         return "不確定"
 
+    def search_cultural_context(
+        self,
+        birth_year: int | None,
+        hometown: str,
+        job: str,
+    ) -> str:
+        """搜尋職業/年代/地方的文化脈絡（不搜本人姓名，避免身份混淆）。
+        回傳整合後的脈絡文字；若 Tavily 不可用則回傳空字串。
+        """
+        if not self.client:
+            return ""
+        queries = []
+        if birth_year:
+            decade = (birth_year // 10) * 10
+            if job:
+                queries.append(f"台灣{decade}年代 {job} 工作生活文化")
+            if hometown:
+                queries.append(f"{hometown} {decade}年代 地方生活文化")
+        if job:
+            queries.append(f"台灣 {job} 傳統職業文化 生活")
+
+        seen, snippets = set(), []
+        for query in queries[:3]:          # 最多 3 個 query
+            try:
+                resp = self.client.search(
+                    query=query,
+                    search_depth="basic",
+                    max_results=2,
+                    include_answer=True,
+                )
+            except Exception as e:
+                print(f"文化脈絡搜尋失敗：{query} / {e}")
+                continue
+            answer = (resp.get("answer") or "").strip()
+            if answer and answer not in seen:
+                seen.add(answer)
+                snippets.append(f"[{query}]\n{answer[:300]}")
+            for r in resp.get("results", []):
+                content = (r.get("content") or "").strip()[:200]
+                if content and content not in seen:
+                    seen.add(content)
+                    snippets.append(content)
+                if len(snippets) >= 6:
+                    break
+            if len(snippets) >= 6:
+                break
+
+        return "\n\n".join(snippets)
+
     def generate_biography(self, name: str, gender: str, job: str,
                             hobbies, personas: dict, health: dict,
                             raw_summary: str = "") -> str:
+        """為已存在的長者（有完整 profile）生成傳記草稿。"""
+        family_members = [
+            {"relation": p.get("relation", ""), "name": p.get("name", "")}
+            for pid, p in (personas or {}).items()
+            if pid != "ai" and p.get("relation")
+        ]
+        return self._generate_biography_core(
+            name=name,
+            gender=gender,
+            job=job,
+            hobbies=hobbies if isinstance(hobbies, list) else [],
+            family_members=family_members,
+            birth_year=None,
+            hometown="",
+            hints="",
+            cultural_context=raw_summary,
+        ) or self._fallback_biography(name, job, hobbies, personas)
+
+    def generate_biography_for_new_elder(
+        self,
+        name: str,
+        gender: str,
+        birth_year: int | None,
+        hometown: str,
+        job: str,
+        hobbies: list,
+        family_members: list,   # [{"relation": "兒子", "name": "志明"}, ...]
+        hints: str,             # admin 手填的關鍵事件 hint
+    ) -> str:
+        """為尚未建檔的新長者生成傳記草稿（Tavily 只搜文化脈絡）。"""
+        cultural_context = self.search_cultural_context(birth_year, hometown, job)
+        result = self._generate_biography_core(
+            name=name, gender=gender, job=job, hobbies=hobbies,
+            family_members=family_members, birth_year=birth_year,
+            hometown=hometown, hints=hints, cultural_context=cultural_context,
+        )
+        return result or self._fallback_biography(
+            name, job, hobbies,
+            {m["relation"]: {"relation": m["relation"], "name": m["name"]} for m in family_members},
+        )
+
+    def _generate_biography_core(
+        self,
+        name: str,
+        gender: str,
+        job: str,
+        hobbies: list,
+        family_members: list,
+        birth_year: int | None,
+        hometown: str,
+        hints: str,
+        cultural_context: str,
+    ) -> str:
         try:
             from google import genai
             from google.genai import types
 
             client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-            family_str = ", ".join([
-                f"{p.get('relation', '')}：{p.get('name', '')}"
-                for pid, p in personas.items()
-                if pid != 'ai' and p.get('relation')
-            ]) if personas else "無"
-            health_str = f"生理敏感: {health.get('sensitivity', '無')}, 飲食: {health.get('diet', '無')}" if isinstance(health, dict) else str(health)
-            hobbies_str = ", ".join(hobbies) if isinstance(hobbies, list) else str(hobbies)
             gender_text = "男性長者" if gender == "male" else "女性長者"
+            hobbies_str = "、".join(hobbies) if hobbies else "（未填寫）"
+            family_str = "、".join(
+                f"{m.get('relation', '')}：{m.get('name', '')}"
+                for m in family_members if m.get("relation")
+            ) or "（未填寫）"
+            birth_str = f"{birth_year} 年生" if birth_year else "（未填寫）"
+            hometown_str = hometown or "（未填寫）"
 
-            prompt = f"""你是一個長照系統的資深個案照護規劃員。請為長者 {name} 撰寫一篇結構自然的生平背景介紹文章，供後續陪伴 AI 助理掌握長者的生命脈絡。
+            facts_block = f"""- 姓名：{name}
+- 性別：{gender_text}
+- 出生年：{birth_str}
+- 家鄉：{hometown_str}
+- 曾任職業：{job or "（未填寫）"}
+- 興趣愛好：{hobbies_str}
+- 家人關係：{family_str}
+- 關鍵人生事件（admin 填寫）：{hints.strip() if hints and hints.strip() else "（未填寫）"}"""
 
-    【長者基本資料 — 核心已知事實】
-    - 姓名：{name}
-    - 性別：{gender_text}
-    - 曾任職業：{job}
-    - 興趣愛好：{hobbies_str}
-    - 家人關係：{family_str}
-    - 健康狀態：{health_str}
-    （此長者目前為老年人）
+            cultural_block = cultural_context.strip() if cultural_context and cultural_context.strip() \
+                else "（無搜尋結果）"
 
-    【網路搜尋公開資料（可能包含同名同姓的雜訊）】
-    {raw_summary if raw_summary else "（無網路搜尋資料）"}
+            prompt = f"""你是一位長照系統的生命故事撰寫人，為 AI 陪伴助理建立長者的生平背景。
 
-    【執行邏輯】
-    步驟一：網路資料審查
-    若有網路搜尋資料，請嚴格核對是否為這位長者（比對職業領域、年齡時代、家人關係）：
-    - 身份吻合 → 整合核心成就進生平
-    - 身份不吻合或無資料 → 完全忽略網路資料，進入步驟二
+═══════════════════════════════
+【Layer 1 — 已知事實（唯一可作為個人細節的來源）】
+{facts_block}
+═══════════════════════════════
+【Layer 2 — 時代文化背景（Tavily 搜尋結果，僅供描寫「時代氛圍」用）】
+{cultural_block}
+═══════════════════════════════
 
-    步驟二：文章生成
-    運用確定可信的資料撰寫溫暖自然的生平：
-    - 第三人稱，語氣像老友溫暖介紹這位長輩
-    - 描述職業背景、興趣、家庭結構
-    - 資料豐富就寫詳細，純基本資料就精簡寫
-    - 寧可短，絕對不捏造未提及的細節
-    - 健康資料僅供背景理解，不寫進生平文章
+【撰寫規則 — 必須嚴格遵守】
+1. 個人事實只能來自 Layer 1，不得自行添加任何：
+   具體事件、人名、地點、年份、對話、意外、獎項、疾病
+2. Layer 2 只能用來描述「時代氛圍、職業環境、地方文化」，
+   絕對不能將其中的具體事件套用到這位長者身上
+3. Layer 1 中標記「（未填寫）」的欄位，請完全略過，不做推測
+4. 若某段生命歷程不確定，使用模糊表達：
+   ✓「在台灣戰後的年代成長」
+   ✗「1952 年在台南長大」（年份是推測）
+5. 寧可寫短、寫模糊，絕不杜撰
 
-    只回傳生平文章本體，禁止包含標題、前言或多餘說明。"""
+【輸出格式】
+- 第三人稱，600 字以內
+- 段落：① 成長背景 ② 職業歷程 ③ 家庭關係 ④ 退休與現況
+- 只輸出文章本體，不加標題或說明"""
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=os.getenv("MAGIC_MODEL", "gemini-2.5-flash"),
                 contents=prompt,
                 config=types.GenerateContentConfig(
-                    temperature=0.2,
-                    max_output_tokens=800,
-                )
+                    temperature=0.15,
+                    max_output_tokens=900,
+                ),
             )
-
             biography = response.text.strip()
             if self._is_weak_biography(biography):
-                biography = self._fallback_biography(name, job, hobbies, personas)
-            print(f"生平文章生成完成：{name}")
+                return ""
+            print(f"傳記生成完成：{name}（{len(biography)} 字）")
             return biography
-
         except Exception as e:
-            print(f"生平文章生成失敗：{e}")
-            return self._fallback_biography(name, job, hobbies, personas)
+            print(f"傳記生成失敗：{e}")
+            return ""
 
     def _is_weak_biography(self, biography: str) -> bool:
         if not biography or len(biography.strip()) < 80:

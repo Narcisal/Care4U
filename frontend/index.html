@@ -54,78 +54,6 @@
             box-shadow: 0 5px 18px rgba(44, 36, 32, 0.12);
         }
 
-        .pin-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            background: rgba(44, 36, 32, 0.55);
-            backdrop-filter: blur(8px);
-        }
-
-        .pin-card {
-            width: min(430px, 100%);
-            padding: 34px;
-            border-radius: 26px;
-            background: var(--warm-white);
-            box-shadow: 0 24px 70px rgba(44, 36, 32, 0.28);
-            text-align: center;
-        }
-
-        .pin-title {
-            font-size: 30px;
-            margin-bottom: 8px;
-        }
-
-        .pin-hint {
-            color: var(--text-mid);
-            font-size: 17px;
-            margin-bottom: 22px;
-        }
-
-        .pin-display {
-            min-height: 62px;
-            padding: 10px 14px;
-            margin-bottom: 18px;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            background: var(--cream);
-            font: 700 34px/1.2 system-ui, sans-serif;
-            letter-spacing: 12px;
-        }
-
-        .pin-keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .pin-keypad button {
-            min-height: 58px;
-            border: 1.5px solid var(--border);
-            border-radius: 13px;
-            background: white;
-            color: var(--text-dark);
-            font: 700 22px inherit;
-            cursor: pointer;
-        }
-
-        .pin-keypad .pin-submit {
-            background: var(--orange);
-            color: white;
-            border-color: var(--orange);
-        }
-
-        .pin-error {
-            min-height: 24px;
-            margin-top: 14px;
-            color: var(--red);
-            font-size: 15px;
-        }
-
         .demo-controls label {
             font-size: 16px;
             font-weight: 700;
@@ -823,29 +751,6 @@
 </head>
 <body>
 
-<div id="pin-overlay" class="pin-overlay">
-    <div class="pin-card">
-        <div class="pin-title">輸入陪伴 PIN</div>
-        <div class="pin-hint">請輸入照護人員提供的 6 位數字</div>
-        <div id="pin-display" class="pin-display" aria-live="polite">••••••</div>
-        <div class="pin-keypad">
-            <button type="button" onclick="appendPin('1')">1</button>
-            <button type="button" onclick="appendPin('2')">2</button>
-            <button type="button" onclick="appendPin('3')">3</button>
-            <button type="button" onclick="appendPin('4')">4</button>
-            <button type="button" onclick="appendPin('5')">5</button>
-            <button type="button" onclick="appendPin('6')">6</button>
-            <button type="button" onclick="appendPin('7')">7</button>
-            <button type="button" onclick="appendPin('8')">8</button>
-            <button type="button" onclick="appendPin('9')">9</button>
-            <button type="button" onclick="clearPin()">清除</button>
-            <button type="button" onclick="appendPin('0')">0</button>
-            <button type="button" class="pin-submit" onclick="submitElderPin()">進入</button>
-        </div>
-        <div id="pin-error" class="pin-error"></div>
-    </div>
-</div>
-
 <nav class="demo-controls" aria-label="Demo 導覽">
     <label for="elder-switch-select">目前長者</label>
     <select id="elder-switch-select" onchange="switchElder(this.value)" aria-label="切換長者">
@@ -938,6 +843,6 @@
     </div>
 </div>
 
-<script src="/static/app.js?v=28"></script>
+<script src="/static/app.js?v=30"></script>
 </body>
 </html>

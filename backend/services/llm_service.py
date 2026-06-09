@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import threading
 import time
@@ -7,7 +8,7 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 _client = None
 LLM_TIMEOUT_MS = int(os.getenv("LLM_TIMEOUT_MS", "15000"))
@@ -18,6 +19,11 @@ _llm_semaphore = threading.BoundedSemaphore(LLM_MAX_CONCURRENT)
 def _generate_content(client, **kwargs):
     with _llm_semaphore:
         return client.models.generate_content(**kwargs)
+
+
+def _generate_content_stream(client, **kwargs):
+    with _llm_semaphore:
+        yield from client.models.generate_content_stream(**kwargs)
 
 
 def _get_client():
@@ -343,61 +349,23 @@ class LLMService:
         if client is None:
             return _fallback_emotion(message)
 
-        prompt = f"""你是一個長照系統的情緒與語意分析模組，專門分析台灣長輩的對話內容。
-請分析以下長者說的話，評估其情緒狀態與該訊息對長輩生平的重要程度。
-
-長者說的話：「{message}」
-
-請嚴格以 JSON 格式回答，禁止輸出任何 Markdown 標籤或前後贅詞：
+        prompt = f"""分析台灣長者訊息的安全等級與情緒。
+只輸出 JSON，不加 Markdown 或說明：
 {{
-  "emotion": "urgent 或 comfort 或 happy 或 normal",
-  "emotion_score": 數字（Float，範圍 -1.0 到 1.0，不可加引號）,
-  "importance": 數字（Float，範圍 0.0 到 1.0，不可加引號）,
-  "reason": "20個繁體中文字元以內的判斷依據"
+  "escalation_level": 0,
+  "emotion": "normal",
+  "sentiment": "neutral",
+  "is_urgent": false
 }}
-
-【emotion 分類標準】
-- urgent：提及任何生理異狀（身體不適、疼痛、跌倒、頭暈、胸痛、呼吸困難、求救）
-- comfort：情緒低落、難過、孤單、思念、委屈、憂鬱
-- happy：開心、高興、感謝、分享好事、說笑
-- normal：平靜、日常閒聊、無特殊情緒
-
-【emotion_score 判斷標準（獨立判斷，不綁定 emotion 分類）】
-- 1.0：非常開心、感謝、興奮分享好消息
-- 0.5 至 0.9：心情不錯、輕鬆愉快
-- 0.1 至 0.4：略為正向、平靜帶輕鬆
-- 0.0：完全中性、無情緒色彩
-- -0.1 至 -0.3：輕微疲憊、有點不舒服
-- -0.4 至 -0.6：難過、孤單、思念、輕微身體不適
-- -0.7 至 -0.8：非常難過、深度憂鬱、明顯身體不適
-- -0.9 至 -1.0：緊急、劇烈不適、求救
-
-【importance 判斷標準（衡量對了解這位長者有多重要）】
-- 0.7 至 1.0：提及家人姓名關係、個人強烈偏好或厭惡、職業歷史、人生重大回憶、安全事件（跌倒/胸痛等）
-- 0.4 至 0.6：近期發生的日常事件、重複出現的話題、身體輕微不適
-- 0.1 至 0.3：無實質內容的回應（嗯嗯、是喔）、純粹談論天氣或時間
-
-【特別注意：台灣長輩的客套掩飾】
-台灣長輩常因不想麻煩他人而隱瞞不適，說話模式常是「先說不舒服，再說沒關係」。
-例如：「胸口是有點悶啦，不過沒關係，老了都這樣，不要麻煩護理師了。」
-→ 這句話的 emotion 必須判定為 urgent，不能因為「沒關係」而降級。
-只要語意中提及任何生理異狀，無論後半句多委婉，emotion 一律判定為 urgent。
-
-【台灣本土用語對照】
-以下詞彙須正確辨識語意，不可只看字面：
-生理危險訊號（→ urgent）：
-- 心肝頭綁綁、胸口悶、胸口緊 → 胸痛類
-- 頭犁犁、頭殼昏、頭很重 → 頭暈類
-- 破病、身體歹勢、腳軟 → 生病不適類
-
-心理低落訊號（→ comfort）：
-- 心酸酸、心裡毛毛的、悶悶不樂 → 難過憂鬱
-- 想東想西、睡不著 → 焦慮不安
-
-【重要提醒】
-- 請深入理解語意，不可只抓關鍵字
-- emotion_score 和 importance 必須是數字（Float），絕對不可加引號
-- reason 說明 emotion 和 importance 的判斷依據，20個繁體中文字元以內"""
+規則：
+- 3：跌倒、昏倒、胸痛、呼吸困難、流血、求救等立即危險。
+- 2：頭暈、站不穩、劇烈疼痛、視線模糊等需照護者處理。
+- 1：孤單、難過、焦慮或輕微不適。
+- 0：一般日常對話。
+- emotion 只能是 urgent、comfort、happy、normal。
+- sentiment 只能是 positive、negative、neutral。
+- 提到不適後再說「沒關係」仍依不適程度判定。
+訊息：{message}"""
 
         response = None
         for attempt in range(3):
@@ -411,40 +379,67 @@ class LLMService:
                     )],
                     config=types.GenerateContentConfig(
                         temperature=0.0,
-                        max_output_tokens=8000,
+                        max_output_tokens=200,
                         response_mime_type="application/json",
+                        thinking_config=types.ThinkingConfig(thinking_budget=0),
                         http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
                     ),
                 )
 
-                result = json.loads(response.text.strip())
-                result.setdefault("importance", 0.3)
-                result.setdefault("emotion_score", 0.0)
-                result.setdefault("emotion", "normal")
+                raw_text = response.text.strip()
 
-                result["is_urgent"] = result.get("emotion") == "urgent"
-                result["sentiment"] = (
-                    "positive" if result.get("emotion_score", 0) > 0.1
-                    else "negative" if result.get("emotion_score", 0) < -0.1
-                    else "neutral"
+                # Primary parse
+                try:
+                    result = json.loads(raw_text)
+                except json.JSONDecodeError:
+                    # Regex fallback: extract first {...} block from response
+                    m = re.search(r"\{[^{}]+\}", raw_text, re.DOTALL)
+                    if m:
+                        result = json.loads(m.group(0))
+                    else:
+                        raise ValueError(f"無法從回傳中取得 JSON：{raw_text[:80]}")
+
+                result.setdefault("emotion", "normal")
+                result.setdefault("sentiment", "neutral")
+                result.setdefault("is_urgent", result["emotion"] == "urgent")
+                result["escalation_level"] = min(
+                    3,
+                    max(0, int(result.get("escalation_level", 0))),
                 )
-                result["memory_type"] = "long" if result.get("importance", 0) >= 0.7 else "short"
+                result["importance"] = (
+                    0.8 if result["escalation_level"] >= 2 else 0.5
+                    if result["escalation_level"] == 1 else 0.3
+                )
+                result["emotion_score"] = (
+                    0.6 if result["sentiment"] == "positive" else -0.6
+                    if result["sentiment"] == "negative" else 0.0
+                )
+                result["memory_type"] = (
+                    "long" if result["importance"] >= 0.7 else "short"
+                )
                 result["should_record"] = (
-                    result.get("emotion") in ["urgent", "comfort", "happy"]
-                    or result.get("importance", 0) >= 0.5
+                    result["escalation_level"] >= 1
+                    or result["emotion"] in ["comfort", "happy"]
                 )
+                result.setdefault("reason", "Gemini 安全與情緒分類")
 
                 print(f"情緒分析結果：emotion={result['emotion']}, importance={result['importance']}")
                 return result
 
             except Exception as e:
-                if "503" in str(e) and attempt < 2:
-                    print(f"Gemini 過載，2秒後重試（第 {attempt + 1} 次）...")
-                    time.sleep(2)
+                should_retry = (
+                    "503" in str(e)
+                    or "overloaded" in str(e).lower()
+                    or isinstance(e, (json.JSONDecodeError, ValueError))
+                )
+                if should_retry and attempt < 2:
+                    wait = 2 * (attempt + 1)
+                    print(f"情緒分析重試（第 {attempt + 1} 次，等 {wait}s）：{str(e)[:60]}")
+                    time.sleep(wait)
                     response = None
                     continue
                 raw = response.text if response is not None else "無回應"
-                print(f"情緒分析失敗，原始回傳：{raw}\n錯誤：{e}")
+                print(f"情緒分析失敗，原始回傳：{raw[:80]}\n錯誤：{e}")
                 return {
                     "emotion": "normal",
                     "sentiment": "neutral",
@@ -489,12 +484,17 @@ class LLMService:
                 active_persona=active_persona,
             )
 
+            history_source = (
+                recent_messages
+                if recent_messages is not None
+                else conversation_history
+            )
             history = [
                 types.Content(
                     role="user" if msg["role"] == "user" else "model",
                     parts=[types.Part(text=msg["content"])],
                 )
-                for msg in conversation_history
+                for msg in history_source
             ]
             history.append(
                 types.Content(role="user", parts=[types.Part(text=user_message)])
@@ -516,6 +516,82 @@ class LLMService:
         except Exception as e:
             print(f"LLM 錯誤：{e}")
             return "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"
+
+    def stream_chat(
+        self,
+        profile: dict,
+        conversation_history: list,
+        user_message: str,
+        recent_messages: list = None,
+        important_memories: list = None,
+        similar_memories: list = None,
+        active_persona: dict = None,
+    ):
+        client = _get_client()
+        if client is None:
+            yield self.chat(
+                profile=profile,
+                conversation_history=conversation_history,
+                user_message=user_message,
+                recent_messages=recent_messages,
+                important_memories=important_memories,
+                similar_memories=similar_memories,
+                active_persona=active_persona,
+            )
+            return
+
+        system_prompt = self.build_system_prompt(
+            profile,
+            recent_messages=recent_messages,
+            important_memories=important_memories,
+            similar_memories=similar_memories,
+            active_persona=active_persona,
+        )
+        history_source = (
+            recent_messages
+            if recent_messages is not None
+            else conversation_history
+        )
+        history = [
+            types.Content(
+                role="user" if msg["role"] == "user" else "model",
+                parts=[types.Part(text=msg["content"])],
+            )
+            for msg in history_source
+        ]
+        history.append(
+            types.Content(role="user", parts=[types.Part(text=user_message)])
+        )
+
+        yielded = False
+        try:
+            for response in _generate_content_stream(
+                client,
+                model=self.model_name,
+                contents=history,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.9,
+                    max_output_tokens=2000,
+                    http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
+                ),
+            ):
+                text = response.text or ""
+                if text:
+                    yielded = True
+                    yield text
+        except Exception as e:
+            print(f"LLM 串流錯誤：{e}")
+            fallback = self.chat(
+                profile=profile,
+                conversation_history=conversation_history,
+                user_message=user_message,
+                recent_messages=recent_messages,
+                important_memories=important_memories,
+                similar_memories=similar_memories,
+                active_persona=active_persona,
+            )
+            yield fallback if not yielded else f"\n\n{fallback}"
 
     # ------------------------------------------------------------------
     # Public: background generation helpers

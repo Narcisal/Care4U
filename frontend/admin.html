@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -9,33 +9,113 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
-            --paper: #FAFAF8;
+            --color-primary: #2F7D68;
+            --color-primary-light: #40916c;
+            --color-accent: #2d6a4f;
+            --color-danger: #c0392b;
+            --color-warning: #e67e22;
+            --color-safe: #27ae60;
+            --color-surface: #f8f9fa;
+            --color-sidebar-bg: #EEF3F0;
+            --color-border: #dee2e6;
+            --paper: var(--color-surface);
             --surface: #FFFFFF;
             --surface-soft: #F2F5F3;
-            --line: #D8DDD9;
+            --line: var(--color-border);
             --ink: #26312D;
             --muted: #6F7C78;
-            --care: #2F7D68;
+            --care: var(--color-primary);
             --care-soft: #E4F3EE;
             --decision: #2F5F8F;
             --decision-soft: #E6F0FA;
-            --alert: #B54141;
+            --alert: var(--color-danger);
             --alert-soft: #FCEAEA;
             --memory: #8A6F2A;
             --memory-soft: #FFF6D8;
             --accent: #C17F5A;
+
+            /* Shared palette aliases for legacy inline styles and JS-rendered states. */
+            --palette-15304f: #15304F;
+            --palette-1a5276: #1A5276;
+            --palette-1a6499: #1A6499;
+            --palette-1e3a5f: #1E3A5F;
+            --palette-1e7a4b: #1E7A4B;
+            --palette-26312d: #26312D;
+            --palette-27ae60: #27AE60;
+            --palette-2d5282: #2D5282;
+            --palette-2d6a4f: #2D6A4F;
+            --palette-2f5f8f: #2F5F8F;
+            --palette-3d3530: #3D3530;
+            --palette-4a90e2: #4A90E2;
+            --palette-5b9bd5: #5B9BD5;
+            --palette-6b5e58: #6B5E58;
+            --palette-6f7c78: #6F7C78;
+            --palette-7b9e87: #7B9E87;
+            --palette-7d6608: #7D6608;
+            --palette-7f8c8d: #7F8C8D;
+            --palette-8a6f2a: #8A6F2A;
+            --palette-8e44ad: #8E44AD;
+            --palette-922b21: #922B21;
+            --palette-9a5c00: #9A5C00;
+            --palette-9b8e87: #9B8E87;
+            --palette-bdc3c7: #BDC3C7;
+            --palette-bfd6c8: #BFD6C8;
+            --palette-bfd6d6: #BFD6D6;
+            --palette-c0392b: #C0392B;
+            --palette-c17b7b: #C17B7B;
+            --palette-c17f5a: #C17F5A;
+            --palette-c94c4c: #C94C4C;
+            --palette-c9a8e0: #C9A8E0;
+            --palette-d32f2f: #D32F2F;
+            --palette-d6cec7: #D6CEC7;
+            --palette-d6ece4: #D6ECE4;
+            --palette-dee2e6: #DEE2E6;
+            --palette-e4f3ee: #E4F3EE;
+            --palette-e67e22: #E67E22;
+            --palette-e6f0fa: #E6F0FA;
+            --palette-e74c3c: #E74C3C;
+            --palette-e7b7b7: #E7B7B7;
+            --palette-e8d48a: #E8D48A;
+            --palette-e8f5ec: #E8F5EC;
+            --palette-e8f5ef: #E8F5EF;
+            --palette-eaf2fb: #EAF2FB;
+            --palette-eaf4ee: #EAF4EE;
+            --palette-ebf5fb: #EBF5FB;
+            --palette-eef3f8: #EEF3F8;
+            --palette-eef5fd: #EEF5FD;
+            --palette-f0a500: #F0A500;
+            --palette-f0ebe5: #F0EBE5;
+            --palette-f2f5f3: #F2F5F3;
+            --palette-f39c12: #F39C12;
+            --palette-f4ecf7: #F4ECF7;
+            --palette-f6f8fa: #F6F8FA;
+            --palette-f7f3ee: #F7F3EE;
+            --palette-f8f9fa: #F8F9FA;
+            --palette-f8fafc: #F8FAFC;
+            --palette-fbfcfd: #FBFCFD;
+            --palette-fceaea: #FCEAEA;
+            --palette-fdecea: #FDECEA;
+            --palette-fef0f0: #FEF0F0;
+            --palette-fef3e2: #FEF3E2;
+            --palette-fef3e8: #FEF3E8;
+            --palette-fef8ec: #FEF8EC;
+            --palette-fef9e7: #FEF9E7;
+            --palette-fff6d8: #FFF6D8;
+            --palette-ffffff: #FFFFFF;
         }
-        body { font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; background-color: var(--paper); color: var(--ink); }
+        body { font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif; background-color: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.6; }
         .btn-primary { background-color: var(--care); color: white; transition: background-color 0.2s; }
-        .btn-primary:hover { background-color: #A86844; }
-        #sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 260px; background: #EEF3F0; border-right: 1px solid var(--line); z-index: 50; transform: translateX(-100%); transition: transform 0.3s ease; }
+        .btn-primary:hover { background-color: var(--color-primary-light); }
+        .btn-secondary { background: white; color: var(--color-primary); border: 1px solid var(--color-primary); }
+        .btn-secondary:hover { background: var(--palette-eef3f8); }
+        #sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 260px; background: var(--color-sidebar-bg); border-right: 1px solid var(--line); z-index: 50; transform: translateX(-100%); transition: transform 0.3s ease; color: var(--ink); }
         #sidebar.open { transform: translateX(0); }
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 40; display: none; }
         #overlay.open { display: block; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s, color 0.2s; font-size: 16px; color: var(--ink); margin: 4px 10px; }
-        .nav-item:hover { background: #DDE8E3; }
-        .nav-item.active { background: var(--care); color: white; }
-        .nav-item span:first-child { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 19px !important; line-height: 1; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px 11px 13px; border-left: 3px solid transparent; border-radius: 0 8px 8px 0; cursor: pointer; transition: background 0.2s, color 0.2s; font-size: 14px; color: var(--ink); margin: 2px 10px 2px 0; }
+        .nav-item:hover { background: #DDE8E3; color: var(--ink); }
+        .nav-item.active { background: var(--care); border-left-color: transparent; color: white; font-weight: 700; }
+        .nav-item span:first-child { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .nav-item.active span:first-child { background: transparent; }
         .sidebar-footer {
             position: absolute;
@@ -61,7 +141,7 @@
             justify-content: space-between;
             gap: 10px;
             font-size: 13px;
-            color: var(--muted);
+            color: var(--ink);
             margin: 7px 0;
         }
         .status-pill {
@@ -96,45 +176,73 @@
             gap: 8px;
             min-height: 44px;
             border-radius: 8px;
-            border: 1px solid #BFD6C8;
+            border: 1px solid var(--palette-bfd6c8);
             background: var(--care-soft);
             color: var(--care);
             font-size: 14px;
             font-weight: 700;
             text-decoration: none;
         }
-        .sidebar-client-link:hover { background: #D6ECE4; }
+        .sidebar-client-link:hover { background: var(--palette-d6ece4); }
         .card { background: var(--surface); border-radius: 8px; border: 1px solid var(--line); padding: 22px; box-shadow: 0 1px 2px rgba(38,49,45,0.04); }
-        input, select { width: 100%; padding: 14px 16px; height: 50px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: var(--surface-soft); color: var(--ink); box-sizing: border-box; font-family: 'Microsoft JhengHei', sans-serif; line-height: 1.5; }
+        input, select { width: 100%; padding: 14px 16px; height: 50px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; background: var(--surface-soft); color: var(--ink); box-sizing: border-box; font-family: 'Microsoft JhengHei', sans-serif; line-height: 1.5; }
         label { font-size: 14px; color: var(--muted); display: block; margin-bottom: 8px; margin-top: 4px; }
         .agent-card { background: var(--surface); border-radius: 8px; border: 1px solid var(--line); padding: 20px; }
-        .agent-dot { width: 10px; height: 10px; border-radius: 50%; background: #27AE60; display: inline-block; margin-right: 8px; animation: pulse-dot 2s infinite; }
-        .agent-dot.inactive { background: #BDC3C7; animation: none; }
+        .agent-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--palette-27ae60); display: inline-block; margin-right: 8px; animation: pulse-dot 2s infinite; }
+        .agent-dot.inactive { background: var(--palette-bdc3c7); animation: none; }
         @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        .log-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #F0EBE5; font-size: 14px; }
-        .log-time { color: #9B8E87; min-width: 60px; font-family: monospace; }
+        .log-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--palette-f0ebe5); font-size: 14px; }
+        .log-time { color: var(--palette-9b8e87); min-width: 60px; font-family: monospace; }
         .log-agent { min-width: 80px; font-weight: 500; }
-        .log-agent.MagicAI { color: #C17F5A; }
-        .log-agent.iSafe { color: #4A90E2; }
-        .log-agent.Decision { color: #7B9E87; }
+        .log-agent.MagicAI { color: var(--palette-c17f5a); }
+        .log-agent.iSafe { color: var(--palette-4a90e2); }
+        .log-agent.Decision { color: var(--palette-7b9e87); }
         .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
-        .badge-high { background: var(--alert-soft); color: #922B21; }
+        .badge-high { background: var(--alert-soft); color: var(--palette-922b21); }
         .badge-low { background: var(--care-soft); color: var(--care); }
-        .coming-soon { background: #F0EBE5; border-radius: 12px; padding: 32px; text-align: center; color: #9B8E87; font-size: 15px; border: 2px dashed #D6CEC7; }
+        /* 安全等級語義 badge */
+        .badge-safe    { background: var(--palette-e8f5ef); color: var(--palette-1e7a4b); }
+        .badge-emotion { background: var(--palette-eaf2fb); color: var(--palette-1a6499); }
+        .badge-warn    { background: var(--palette-fef3e2); color: var(--palette-9a5c00); }
+        .badge-danger  { background: var(--palette-fceaea); color: var(--palette-922b21); animation: pulse-badge 1.6s infinite; }
+        @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:.6} }
+        /* Sidebar 分組標題 */
+        .nav-group-label {
+            font-size: 11px; font-weight: 600; letter-spacing: .06em;
+            color: var(--muted); padding: 14px 20px 4px;
+            text-transform: uppercase;
+        }
+        .profile-tabs { display:flex; gap:0; flex-wrap:wrap; margin-bottom:18px; border-bottom:2px solid var(--line); }
+        .profile-tab { padding:8px 18px; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; background:none; color:var(--muted); font-size:15px; cursor:pointer; font-family:inherit; font-weight:normal; }
+        .profile-tab.active { color:var(--care); font-weight:700; border-bottom:2px solid var(--care); }
+        .profile-tab-panel.hidden { display:none !important; }
+        .filter-row { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; margin-bottom:12px; }
+        .work-table { width:100%; border-collapse:collapse; font-size:14px; }
+        .work-table th { text-align:left; color:var(--muted); font-size:12px; padding:9px 10px; border-bottom:1px solid var(--line); background:var(--palette-f6f8fa); }
+        .work-table td { padding:10px; border-bottom:1px solid var(--line); vertical-align:top; }
+        .work-table tr.data-row { cursor:pointer; }
+        .work-table tr.data-row:hover { background:var(--palette-f8fafc); }
+        .accordion-detail { display:none; background:var(--palette-fbfcfd); color:var(--ink); line-height:1.7; }
+        .accordion-detail.open { display:table-row; }
+        .summary-strip { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:14px; }
+        .summary-metric { border:1px solid var(--line); border-radius:8px; background:white; padding:14px 16px; }
+        .summary-metric .label { font-size:12px; color:var(--muted); margin-bottom:6px; }
+        .summary-metric .value { font-size:24px; color:var(--color-primary); font-weight:800; }
+        .coming-soon { background: var(--palette-f0ebe5); border-radius: 12px; padding: 32px; text-align: center; color: var(--palette-9b8e87); font-size: 15px; border: 2px dashed var(--palette-d6cec7); }
         .tag-option {
             display: flex; align-items: center; gap: 6px;
             padding: 8px 14px; border-radius: 20px;
-            border: 2px solid #D6CEC7; background: white;
-            font-size: 15px; cursor: pointer; color: #3D3530;
+            border: 2px solid var(--palette-d6cec7); background: white;
+            font-size: 15px; cursor: pointer; color: var(--palette-3d3530);
             transition: all 0.2s;
         }
         .tag-option:has(input:checked) {
-            border-color: #C17F5A; background: #FEF3E8; color: #C17F5A;
+            border-color: var(--palette-c17f5a); background: var(--palette-fef3e8); color: var(--palette-c17f5a);
         }
         .tag-option input { display: none; }
         .care-callout {
             background: linear-gradient(135deg, var(--decision-soft), var(--care-soft));
-            border: 1px solid #BFD6D6;
+            border: 1px solid var(--palette-bfd6d6);
             border-radius: 8px;
             padding: 16px 18px;
             color: var(--ink);
@@ -178,38 +286,48 @@
            box-shadow:0 8px 30px rgba(38,49,45,0.16);font-size:14px;line-height:1.6;">
 </div>
 
+<!-- 緊急警報橫幅：有未確認安全警報時顯示於所有頁面頂部 -->
+<div id="emergency-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:2000;
+    background:#c62828;color:white;padding:11px 20px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;">
+        🚨 <span id="emergency-banner-text">緊急警報</span>
+    </div>
+    <button onclick="navigateTo('isafe')"
+        style="padding:6px 16px;border-radius:8px;border:2px solid white;
+            background:transparent;color:white;font-size:14px;font-weight:700;
+            cursor:pointer;font-family:inherit;white-space:nowrap;">
+        立即查看
+    </button>
+</div>
+
 <div id="sidebar">
-    <div style="padding: 24px 20px 16px; border-bottom: 1px solid #D6CEC7;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="font-size: 22px; font-weight: 700; color: var(--care);">CU</div>
-            <div>
-                <div style="font-size: 17px; font-weight: 500;">照護工作台</div>
-                <div style="font-size: 12px; color: #7F8C8D;">照護人員後台</div>
-            </div>
-        </div>
+    <div style="padding: 20px 20px 14px; border-bottom: 1px solid #D6CEC7;">
+        <div style="font-size: 15px; font-weight: 700; color: var(--care); letter-spacing: 0.03em;">Care4U</div>
+        <div style="font-size: 12px; color: #9B8E87; margin-top: 2px;">照護作業系統</div>
     </div>
     <div style="padding: 12px 0;">
-        <div style="font-size: 12px; color: #9B8E87; padding: 8px 20px;">管理功能</div>
+        <div class="nav-group-label">長者管理</div>
         <div class="nav-item active" id="nav-profile" onclick="navigateTo('profile')">
-            <span>👤</span><span>長者資料建檔</span>
+            <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg></span><span>長者資料建檔</span>
         </div>
         <div class="nav-item" id="nav-persona" onclick="navigateTo('persona')">
-            <span>🎭</span><span>陪伴者管理</span>
+            <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg></span><span>陪伴者設定</span>
         </div>
+        <div class="nav-group-label">對話與記憶</div>
         <div class="nav-item" id="nav-dashboard" onclick="navigateTo('dashboard')">
-            <span>📋</span><span>對話紀錄後台</span>
-        </div>
-        <div class="nav-item" id="nav-isafe" onclick="navigateTo('isafe')">
-            <span>🛡️</span><span>安全觀察</span>
-        </div>
-        <div class="nav-item" id="nav-agents" onclick="navigateTo('agents')">
-            <span>🔗</span><span>系統處理紀錄</span>
+            <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg></span><span>對話紀錄</span>
         </div>
         <div class="nav-item" id="nav-memory" onclick="navigateTo('memory')">
-            <span>🧠</span><span>記憶檢索測試</span>
+            <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg></span><span>記憶狀況</span>
         </div>
-        <div class="nav-item" id="nav-stt" onclick="navigateTo('stt')">
-            <span>🎙️</span><span>語音驗證</span>
+        <div class="nav-group-label">安全觀察</div>
+        <div class="nav-item" id="nav-isafe" onclick="navigateTo('isafe')">
+            <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg></span><span>安全警示</span><span id="nav-isafe-dot" style="display:none;margin-left:auto;width:8px;height:8px;border-radius:50%;background:#e53935;flex-shrink:0;"></span>
+        </div>
+        <div class="nav-group-label">系統</div>
+        <div class="nav-item" id="nav-agents" onclick="navigateTo('agents')">
+            <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z"/></svg></span><span>操作紀錄</span>
         </div>
     </div>
     <div class="sidebar-footer">
@@ -233,19 +351,16 @@
             </div>
             <div class="role-note" id="admin-role-note">正在確認目前後台權限。</div>
         </div>
-        <a class="sidebar-client-link" href="/">
-            <span>開啟長者端</span>
-        </a>
     </div>
 </div>
 
 <!-- 頂部標題列 -->
-<div style="background-color: #FFFFFF; border-bottom: 1px solid var(--line);" class="p-4 flex-shrink-0">
+<div style="background-color: var(--palette-ffffff); border-bottom: 1px solid var(--line);" class="p-4 flex-shrink-0">
     <div class="max-w-5xl mx-auto flex items-center gap-3">
-        <button onclick="openSidebar()" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; color: #3D3530; font-size: 24px;">☰</button>
-        <div style="font-size: 28px; color: var(--care);">✚</div>
+        <button onclick="openSidebar()" style="background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; color: var(--palette-3d3530); font-size: 24px;">☰</button>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22" style="color:var(--care);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
         <div>
-            <h1 class="font-bold" style="font-size: 24px; color: var(--ink);" id="page-title">長者資料建檔</h1>
+            <h1 class="font-bold" style="font-size: 20px; color: var(--ink);" id="page-title">長者資料建檔</h1>
             <p style="font-size: 14px; color: var(--muted);" id="page-subtitle">管理長者個人資料</p>
         </div>
     </div>
@@ -258,12 +373,25 @@
         <div class="card">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
                 <h2 style="font-size: 20px; font-weight: 500;">長者資料建檔</h2>
-                <select id="elder-select" onchange="loadElderData(this.value)" style="width: auto; padding: 8px 12px; font-size: 15px; height: auto;">
-                    <option value="W001">王大明</option>
-                    <option value="C001">陳秀英</option>
-                    <option value="L001">林月琴</option>
-                </select>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <select id="elder-select" onchange="loadElderData(this.value)" style="width: auto; padding: 8px 12px; font-size: 15px; height: auto;">
+                        <option value="W001">王大明</option>
+                        <option value="C001">陳秀英</option>
+                        <option value="L001">林月琴</option>
+                    </select>
+                    <button type="button" onclick="openAddElderModal()"
+                        style="padding: 8px 14px; font-size: 14px; background: var(--care); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        + 新增長者
+                    </button>
+                </div>
             </div>
+            <div class="profile-tabs">
+                <button type="button" class="profile-tab active" data-profile-tab="basic" onclick="switchProfileTab('basic')">基本資料</button>
+                <button type="button" class="profile-tab" data-profile-tab="health" onclick="switchProfileTab('health')">健康資訊</button>
+                <button type="button" class="profile-tab" data-profile-tab="companions" onclick="switchProfileTab('companions')">陪伴者設定</button>
+                <button type="button" class="profile-tab" data-profile-tab="memory" onclick="switchProfileTab('memory')">記憶事件</button>
+            </div>
+            <div class="profile-tab-panel" data-profile-panel="basic">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div><label>姓名</label><input id="field-name" type="text" placeholder="王大明"></div>
                 <div><label>性別</label><select id="field-gender"><option value="male">男</option><option value="female">女</option></select></div>
@@ -277,255 +405,239 @@
                 </div>
                 <div><label>曾任職業</label><input id="field-job" type="text" placeholder="國中數學老師"></div>
                 <div><label>說話偏好</label><input id="field-tone" type="text" placeholder="尊敬且親切"></div>
-                <div style="grid-column: 1 / -1;"><label>興趣愛好 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋"></div>
-                <div><label>身體敏感 <span style="color: #BDC3C7;">（用「、」分隔）</span></label><input id="field-sensitivity" type="text" placeholder="怕冷、腰部舊傷"></div>
-                <div><label>飲食習慣</label><input id="field-diet" type="text" placeholder="喜歡熱豆漿，不吃苦瓜"></div>
-            </div><!-- 關閉 grid -->
-            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: #D6CEC7; color: #3D3530; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">重新載入</button>
-                <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit;">儲存資料</button>
-            </div>
-                            <!-- 語言模式切換 -->
-                <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
-                    <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
-                        語音辨識語言設定
-                    </div>
+                <div style="grid-column: 1 / -1;">
+                    <label>預設陪伴者 <span style="color: var(--palette-bdc3c7);">（下次長者開啟對話時生效）</span></label>
+                    <select id="field-active-persona" style="height: 52px;">
+                        <option value="ai">AI 助理</option>
+                    </select>
+                </div>
+                <div style="grid-column: 1 / -1;"><label>興趣愛好 <span style="color: var(--palette-bdc3c7);">（用「、」分隔）</span></label><input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋"></div>
+                <!-- 語音辨識語言設定（只在基本資料 tab 顯示） -->
+                <div style="grid-column: 1 / -1; padding: 14px 16px; background: var(--palette-f7f3ee); border-radius: 12px; border: 1px solid var(--palette-d6cec7);">
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 10px;">語音辨識語言設定</div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="setLanguage('zh')" id="btn-lang-zh"
-                            style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #C17F5A;
-                                background: #C17F5A; color: white; font-size: 16px;
+                            style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--palette-c17f5a);
+                                background: var(--palette-c17f5a); color: white; font-size: 16px;
                                 cursor: pointer; font-family: inherit;">
                             華語模式
                         </button>
                         <button onclick="setLanguage('tai')" id="btn-lang-tai"
-                            style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #D6CEC7;
-                                background: white; color: #3D3530; font-size: 16px;
+                            style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--palette-d6cec7);
+                                background: white; color: var(--palette-3d3530); font-size: 16px;
                                 cursor: pointer; font-family: inherit;">
                             台語模式
                         </button>
                     </div>
-                    <div id="lang-status" style="text-align: center; margin-top: 8px; font-size: 13px; color: #7F8C8D;">
+                    <div id="lang-status" style="text-align: center; margin-top: 8px; font-size: 13px; color: var(--palette-7f8c8d);">
                         目前：華語模式
                     </div>
                 </div>
-            <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
             </div>
-    <!-- 家人提供資訊 -->
-<div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
-    <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
-        家人提供的資訊
-        <span style="font-size: 12px;">（照護人員與家人面談後填寫）</span>
-    </div>
-    <div id="family-notes-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;"></div>
-    <div style="display: flex; gap: 10px;">
-        <input id="new-family-note" type="text"
-            placeholder="例如：女兒說爸爸年輕時很愛唱歌，常在教會唱詩歌"
-            style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
-        <button onclick="addFamilyNote()"
-            style="padding: 10px 20px; border-radius: 10px; border: none;
-                   background: #7B9E87; color: white; font-size: 15px;
-                   cursor: pointer; font-family: inherit; white-space: nowrap;">
-            新增
-        </button>
-    </div>
-</div>
-    <!-- 公開資料輔助建檔 -->
-    <div style="margin-top: 12px; padding: 16px; background: #F7F3EE; border-radius: 12px; border: 1px solid #D6CEC7;">
-        <div style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
-            公開資料輔助建檔
-            <span style="font-size: 12px;">（系統自動產生搜尋線索，照護人員確認來源後才生成生平草稿）</span>
-        </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input id="search-keywords" type="text" placeholder="補充線索，可留空，如：任職機構、著作、社團"
-                style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
-            <button onclick="findBackgroundCandidates()"
-                style="padding: 10px 20px; border-radius: 10px; border: none; background: #4A90E2; color: white; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap;">
-                自動尋找公開資料
-            </button>
-        </div>
-        <div id="search-result" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px;"></div>
-        <div id="search-query-list" style="display:none;margin-top:10px;font-size:13px;color:#7F8C8D;line-height:1.8;"></div>
-        <div id="candidate-source-list" style="display:none;margin-top:12px;flex-direction:column;gap:10px;"></div>
-        <button id="draft-biography-btn" onclick="generateBiographyDraft()"
-            style="display:none;margin-top:12px;padding:10px 20px;border-radius:10px;border:none;background:#7B9E87;color:white;font-size:15px;cursor:pointer;font-family:inherit;">
-            根據確認來源產生生平草稿
-        </button>
-
-        <!-- 生平資料顯示與編輯 -->
-        <div id="biography-section" style="margin-top: 16px; display: none;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-size: 14px; font-weight: 500; color: #3D3530;">長者生平資料</span>
-                <button onclick="toggleBiographyEdit()"
-                    id="bio-edit-btn"
-                    style="padding: 4px 12px; border-radius: 8px; border: 1px solid #D6CEC7;
-                        background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">
-                    編輯
+            </div>
+            <!-- 健康資訊 tab -->
+            <div class="profile-tab-panel hidden" data-profile-panel="health">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div><label>身體敏感 <span style="color: var(--palette-bdc3c7);">（用「、」分隔）</span></label><input id="field-sensitivity" type="text" placeholder="怕冷、腰部舊傷"></div>
+                <div><label>飲食習慣</label><input id="field-diet" type="text" placeholder="喜歡熱豆漿，不吃苦瓜"></div>
+            </div>
+            </div>
+            <!-- 陪伴者設定 tab -->
+            <div class="profile-tab-panel hidden" data-profile-panel="companions" style="padding: 16px; background: var(--palette-f7f3ee); border-radius: 12px; border: 1px solid var(--palette-d6cec7);">
+                <div style="font-size: 14px; color: var(--palette-7f8c8d); margin-bottom: 10px;">
+                    家人提供的資訊
+                    <span style="font-size: 12px;">（照護人員與家人面談後填寫）</span>
+                </div>
+                <div id="family-notes-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <input id="new-family-note" type="text"
+                        placeholder="例如：女兒說爸爸年輕時很愛唱歌，常在教會唱詩歌"
+                        style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
+                    <button onclick="addFamilyNote()"
+                        style="padding: 10px 20px; border-radius: 10px; border: none;
+                               background: var(--palette-7b9e87); color: white; font-size: 15px;
+                               cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        新增
+                    </button>
+                </div>
+            </div>
+            <!-- 記憶事件 tab -->
+            <div class="profile-tab-panel hidden" data-profile-panel="memory" style="padding: 16px; background: var(--palette-f7f3ee); border-radius: 12px; border: 1px solid var(--palette-d6cec7);">
+                <div style="font-size: 14px; color: var(--palette-7f8c8d); margin-bottom: 10px;">
+                    公開資料輔助建檔
+                    <span style="font-size: 12px;">（系統自動產生搜尋線索，照護人員確認來源後才生成生平草稿）</span>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input id="search-keywords" type="text" placeholder="補充線索，可留空，如：任職機構、著作、社團"
+                        style="flex: 1; padding: 10px 14px; height: 44px; font-size: 15px;">
+                    <button onclick="findBackgroundCandidates()"
+                        style="padding: 10px 20px; border-radius: 10px; border: none; background: var(--palette-4a90e2); color: white; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap;">
+                        自動尋找公開資料
+                    </button>
+                </div>
+                <div id="search-result" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; font-size: 14px;"></div>
+                <div id="search-query-list" style="display:none;margin-top:10px;font-size:13px;color:var(--palette-7f8c8d);line-height:1.8;"></div>
+                <div id="candidate-source-list" style="display:none;margin-top:12px;flex-direction:column;gap:10px;"></div>
+                <button id="draft-biography-btn" onclick="generateBiographyDraft()"
+                    style="display:none;margin-top:12px;padding:10px 20px;border-radius:10px;border:none;background:var(--palette-7b9e87);color:white;font-size:15px;cursor:pointer;font-family:inherit;">
+                    根據確認來源產生生平草稿
                 </button>
+                <!-- 生平資料顯示與編輯 -->
+                <div id="biography-section" style="margin-top: 16px; display: none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 14px; font-weight: 500; color: var(--palette-3d3530);">長者生平資料</span>
+                        <button onclick="toggleBiographyEdit()" id="bio-edit-btn"
+                            style="padding: 4px 12px; border-radius: 8px; border: 1px solid var(--palette-d6cec7);
+                                background: var(--palette-f7f3ee); font-size: 13px; cursor: pointer; font-family: inherit;">
+                            編輯
+                        </button>
+                    </div>
+                    <div id="biography-display"
+                        style="padding: 12px; background: white; border-radius: 10px;
+                                font-size: 14px; color: var(--palette-3d3530); line-height: 1.8;">
+                    </div>
+                    <textarea id="biography-edit"
+                        style="display: none; width: 100%; padding: 12px; border: 1px solid var(--palette-d6cec7);
+                            border-radius: 10px; font-size: 14px; background: white;
+                            color: var(--palette-3d3530); font-family: inherit; line-height: 1.8;
+                            resize: vertical; min-height: 120px; box-sizing: border-box;">
+                    </textarea>
+                    <button id="bio-save-btn" onclick="saveBiography()"
+                        style="display: none; margin-top: 8px; padding: 10px 20px; border-radius: 10px;
+                            border: none; background: var(--palette-c17f5a); color: white; font-size: 14px;
+                            cursor: pointer; font-family: inherit;">
+                        儲存生平資料
+                    </button>
+                </div>
             </div>
-            <div id="biography-display"
-                style="padding: 12px; background: white; border-radius: 10px;
-                        font-size: 14px; color: #3D3530; line-height: 1.8;">
+            <!-- 全表單操作按鈕（固定在卡片底部，所有 tab 共用） -->
+            <div style="border-top: 1px solid var(--line); padding-top: 16px; margin-top: 20px; display: flex; gap: 12px;">
+                <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: var(--palette-d6cec7); color: var(--palette-3d3530); border: none; border-radius: 12px; cursor: pointer; font-family: inherit;">重新載入</button>
+                <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit;">儲存資料</button>
             </div>
-            <textarea id="biography-edit"
-                style="display: none; width: 100%; padding: 12px; border: 1px solid #D6CEC7;
-                    border-radius: 10px; font-size: 14px; background: white;
-                    color: #3D3530; font-family: inherit; line-height: 1.8;
-                    resize: vertical; min-height: 120px; box-sizing: border-box;">
-            </textarea>
-            <button id="bio-save-btn" onclick="saveBiography()"
-                style="display: none; margin-top: 8px; padding: 10px 20px; border-radius: 10px;
-                    border: none; background: #C17F5A; color: white; font-size: 14px;
-                    cursor: pointer; font-family: inherit;">
-                儲存生平資料
-            </button>
+            <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
         </div>
-
-    </div>
     </div>
 
     <!-- 對話紀錄後台 -->
     <div id="page-dashboard" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
 
-        <div class="care-callout" style="margin-bottom: 16px;">
-            <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">照護展示重點</div>
-            <div style="font-size: 14px; color: var(--muted); line-height: 1.7;">
-                先確認三位長者與陪伴者配置，再查看重要記憶與安全事件。此頁設計給照護人員快速判斷「今天要先關心誰」。
+        <!-- tab bar -->
+        <div style="display:flex;gap:0;margin-bottom:18px;border-bottom:2px solid var(--line);">
+            <button onclick="switchDashTab('overview')" id="dtab-overview"
+                style="padding:8px 20px;border:none;border-bottom:2px solid var(--care);margin-bottom:-2px;
+                    background:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:700;color:var(--care);">
+                概況總覽
+            </button>
+            <button onclick="switchDashTab('memory')" id="dtab-memory"
+                style="padding:8px 20px;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;
+                    background:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:normal;color:var(--muted);">
+                事件與記憶
+            </button>
+        </div>
+
+        <!-- ── Panel 1: 概況總覽 ── -->
+        <div id="dpanel-overview">
+            <div class="card" style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 500;">長者照護概況</h2>
+                        <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-top: 4px;">快速掌握長者狀態與陪伴者配置</div>
+                    </div>
+                    <button onclick="loadDemoOverview()"
+                        style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--palette-d6cec7);
+                            background: var(--palette-f7f3ee); color: var(--palette-3d3530); cursor: pointer; font-family: inherit;">
+                        重新整理
+                    </button>
+                </div>
+                <div id="demo-overview-grid"
+                    style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+                    <div style="text-align: center; color: var(--palette-bdc3c7); padding: 16px; grid-column: 1 / -1;">載入中...</div>
+                </div>
             </div>
         </div>
 
-        <div class="card" style="margin-bottom: 16px;">
-            <h2 style="font-size: 20px; font-weight: 500; margin-bottom: 6px;">啟動長者 session</h2>
-            <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 14px;">
-                產生一次性 6 位 PIN，交給長者在前台登入。
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 10px; align-items: end;">
-                <label style="font-size: 13px; color: #7F8C8D;">
-                    長者
-                    <select id="pin-elder-select" style="margin-top: 5px;"></select>
-                </label>
-                <label style="font-size: 13px; color: #7F8C8D;">
-                    有效時間
-                    <select id="pin-ttl-select" style="margin-top: 5px;">
-                        <option value="240">4 小時</option>
-                        <option value="480" selected>8 小時</option>
-                        <option value="1440">24 小時</option>
+        <!-- ── Panel 2: 事件與記憶 ── -->
+        <div id="dpanel-memory" class="hidden">
+            <!-- 選擇長者 + 統計 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">查詢長者</div>
+                    <select id="dash-elder-select" onchange="loadHistory(this.value)"
+                        style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
+                        <option value="W001">王大明</option>
+                        <option value="C001">陳秀英</option>
+                        <option value="L001">林月琴</option>
                     </select>
-                </label>
-                <button onclick="generateElderPin()"
-                    style="height: 43px; padding: 0 18px; border: none; border-radius: 9px;
-                        background: #C17F5A; color: white; cursor: pointer; font-family: inherit;">
-                    產生 PIN
-                </button>
-                <button onclick="revokeElderSession()"
-                    style="height: 43px; padding: 0 18px; border: 1px solid #C94C4C; border-radius: 9px;
-                        background: #FCEAEA; color: #922B21; cursor: pointer; font-family: inherit;">
-                    撤銷 session
-                </button>
-            </div>
-            <div id="elder-pin-result"
-                style="display: none; margin-top: 14px; padding: 14px; border-radius: 10px;
-                    background: #F7F3EE; text-align: center;"></div>
-        </div>
-
-        <div class="card" style="margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
-                <div>
-                    <h2 style="font-size: 20px; font-weight: 500;">長者照護概況</h2>
-                    <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">快速掌握長者狀態與陪伴者配置</div>
                 </div>
-                <button onclick="loadDemoOverview()"
-                    style="padding: 8px 14px; border-radius: 8px; border: 1px solid #D6CEC7;
-                        background: #F7F3EE; color: #3D3530; cursor: pointer; font-family: inherit;">
-                    重新整理
-                </button>
-            </div>
-            <div id="demo-overview-grid"
-                style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
-                <div style="text-align: center; color: #BDC3C7; padding: 16px; grid-column: 1 / -1;">載入中...</div>
-            </div>
-        </div>
-
-        <!-- 頂部選擇長者 + 統計 -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">查詢長者</div>
-                <select id="dash-elder-select" onchange="loadHistory(this.value)"
-                    style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
-                    <option value="W001">王大明</option>
-                    <option value="C001">陳秀英</option>
-                    <option value="L001">林月琴</option>
-                </select>
-            </div>
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">總紀錄數</div>
-                <div id="dash-event-count" style="font-size: 36px; font-weight: 500; color: #C17F5A;">0</div>
-            </div>
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">今日紀錄</div>
-                <div id="dash-today-count" style="font-size: 36px; font-weight: 500; color: #7B9E87;">0</div>
-            </div>
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">重要記憶</div>
-                <div id="dash-important-count" style="font-size: 36px; font-weight: 500; color: #8E44AD;">0</div>
-            </div>
-        </div>
-
-        <!-- 情緒折線圖 -->
-        <div class="card" style="margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h2 style="font-size: 18px; font-weight: 500;">情緒趨勢圖</h2>
-                <span style="font-size: 13px; color: #9B8E87;">近期情緒變化</span>
-            </div>
-            <canvas id="emotion-chart" height="120"></canvas>
-        </div>
-
-        <!-- 記憶彙整摘要 -->
-        <div id="memory-summary-card" class="card" style="margin-bottom: 16px; display: none;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <span style="font-size: 18px; font-weight: 500;">記憶彙整摘要</span>
-                <span id="summary-updated" style="font-size: 12px; color: #9B8E87;"></span>
-            </div>
-            <div id="memory-summary-text"
-                style="font-size: 15px; color: #3D3530; line-height: 1.8;
-                    background: #F7F3EE; border-radius: 10px; padding: 14px;">
-            </div>
-        </div>
-
-        <!-- 重要記憶區塊 -->
-        <div class="card" style="margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                <h2 style="font-size: 18px; font-weight: 500;">🔮 重要記憶</h2>
-                <span style="font-size: 12px; color: #9B8E87;">importance ≥ 0.7，永久保留</span>
-            </div>
-            <div id="dash-important-events" style="display: flex; flex-direction: column; gap: 8px;">
-                <div style="text-align: center; color: #BDC3C7; padding: 16px; font-size: 14px;">載入中...</div>
-            </div>
-        </div>
-
-        <!-- 時間軸 + 可展開原始紀錄 -->
-        <div class="card" style="margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h2 style="font-size: 18px; font-weight: 500;">今日時間軸</h2>
-                <button onclick="toggleAllRecords()"
-                    style="padding: 6px 14px; border-radius: 8px; border: 1px solid #D6CEC7;
-                        background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;"
-                    id="toggle-records-btn">
-                    ▶ 展開完整紀錄
-                </button>
-            </div>
-            <div id="dash-timeline" style="display: flex; flex-direction: column; gap: 6px;">
-                <div style="text-align: center; color: #BDC3C7; padding: 16px; font-size: 14px;">載入中...</div>
-            </div>
-
-            <!-- 完整紀錄（預設收起） -->
-            <div id="dash-all-records" style="display: none; margin-top: 16px;
-                border-top: 1px dashed #D6CEC7; padding-top: 16px;">
-                <div style="font-size: 14px; font-weight: 500; color: #7F8C8D; margin-bottom: 12px;">
-                    📝 完整紀錄
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">總紀錄數</div>
+                    <div id="dash-event-count" style="font-size: 36px; font-weight: 500; color: var(--palette-c17f5a);">0</div>
                 </div>
-                <div id="dash-events" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">今日紀錄</div>
+                    <div id="dash-today-count" style="font-size: 36px; font-weight: 500; color: var(--palette-7b9e87);">0</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">重要記憶</div>
+                    <div id="dash-important-count" style="font-size: 36px; font-weight: 500; color: var(--palette-8e44ad);">0</div>
+                </div>
+            </div>
+
+            <!-- 情緒折線圖 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <h2 style="font-size: 18px; font-weight: 500;">情緒趨勢圖</h2>
+                    <span style="font-size: 13px; color: var(--palette-9b8e87);">近期情緒變化</span>
+                </div>
+                <canvas id="emotion-chart" height="120"></canvas>
+            </div>
+
+            <!-- 記憶彙整摘要 -->
+            <div id="memory-summary-card" class="card" style="margin-bottom: 16px; display: none;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="font-size: 18px; font-weight: 500;">記憶彙整摘要</span>
+                    <span id="summary-updated" style="font-size: 12px; color: var(--palette-9b8e87);"></span>
+                </div>
+                <div id="memory-summary-text"
+                    style="font-size: 15px; color: var(--palette-3d3530); line-height: 1.8;
+                        background: var(--palette-f7f3ee); border-radius: 10px; padding: 14px;">
+                </div>
+            </div>
+
+            <!-- 重要記憶 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                    <h2 style="font-size: 18px; font-weight: 500;">🔮 重要記憶</h2>
+                    <span style="font-size: 12px; color: var(--palette-9b8e87);">importance ≥ 0.7，永久保留</span>
+                </div>
+                <div id="dash-important-events" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="text-align: center; color: var(--palette-bdc3c7); padding: 16px; font-size: 14px;">載入中...</div>
+                </div>
+            </div>
+
+            <!-- 今日時間軸 -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <h2 style="font-size: 18px; font-weight: 500;">今日時間軸</h2>
+                    <button onclick="toggleAllRecords()"
+                        style="padding: 6px 14px; border-radius: 8px; border: 1px solid var(--palette-d6cec7);
+                            background: var(--palette-f7f3ee); font-size: 13px; cursor: pointer; font-family: inherit;"
+                        id="toggle-records-btn">
+                        ▶ 展開完整紀錄
+                    </button>
+                </div>
+                <div id="dash-timeline" style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="text-align: center; color: var(--palette-bdc3c7); padding: 16px; font-size: 14px;">載入中...</div>
+                </div>
+                <div id="dash-all-records" style="display: none; margin-top: 16px;
+                    border-top: 1px dashed var(--palette-d6cec7); padding-top: 16px;">
+                    <div style="font-size: 14px; font-weight: 500; color: var(--palette-7f8c8d); margin-bottom: 12px;">📝 完整紀錄</div>
+                    <div id="dash-events" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
             </div>
         </div>
+
 
     </div>
 
@@ -533,7 +645,7 @@
     <div id="page-isafe" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">查詢長者</div>
+                <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">查詢長者</div>
                 <select id="isafe-elder-select" onchange="loadSafety(this.value)" style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
                     <option value="W001">王大明</option>
                     <option value="C001">陳秀英</option>
@@ -541,23 +653,55 @@
                 </select>
             </div>
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">危險等級</div>
+                <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">危險等級</div>
                 <div id="isafe-hazard" style="font-size: 24px; font-weight: 500;">—</div>
             </div>
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">緊急事件數</div>
-                <div id="isafe-urgent-count" style="font-size: 36px; font-weight: 500; color: #E74C3C;">0</div>
+                <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">緊急事件數</div>
+                <div id="isafe-urgent-count" style="font-size: 36px; font-weight: 500; color: var(--palette-e74c3c);">0</div>
             </div>
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">趨勢警報數</div>
-                <div id="isafe-trend-count" style="font-size: 36px; font-weight: 500; color: #E67E22;">0</div>
+                <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">趨勢警報數</div>
+                <div id="isafe-trend-count" style="font-size: 36px; font-weight: 500; color: var(--palette-e67e22);">0</div>
             </div>
         </div>
 
+        <!-- 🚨 緊急警報 -->
+        <div class="card" style="margin-bottom: 12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h2 style="font-size:17px;font-weight:700;color:var(--palette-c0392b);">🚨 緊急警報</h2>
+                <span style="font-size:12px;color:var(--muted);">每筆需逐一確認</span>
+            </div>
+            <div id="isafe-urgent" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;font-size:14px;">載入中...</div>
+            </div>
+        </div>
+
+        <!-- ⚠️ 須注意 -->
+        <div class="card" style="margin-bottom: 12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h2 style="font-size:17px;font-weight:700;color:var(--palette-e67e22);">⚠️ 須注意</h2>
+                <button id="btn-ack-trend" onclick="acknowledgeByTag(document.getElementById('isafe-elder-select').value, '趨勢警報')"
+                    style="display:none;padding:5px 14px;border-radius:8px;border:1px solid var(--palette-e67e22);background:white;color:var(--palette-e67e22);font-size:13px;cursor:pointer;font-family:inherit;">
+                    全部確認
+                </button>
+            </div>
+            <div id="isafe-trend" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;font-size:14px;">載入中...</div>
+            </div>
+        </div>
+
+        <!-- 💙 情緒關注 -->
         <div class="card">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">近期安全事件</h2>
-            <div id="isafe-events" style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">載入中...</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                <h2 style="font-size:17px;font-weight:700;color:var(--palette-5b9bd5);">💙 情緒關注</h2>
+                <button id="btn-ack-emotion" onclick="acknowledgeByTag(document.getElementById('isafe-elder-select').value, '情緒')"
+                    style="display:none;padding:5px 14px;border-radius:8px;border:1px solid var(--palette-5b9bd5);background:white;color:var(--palette-5b9bd5);font-size:13px;cursor:pointer;font-family:inherit;">
+                    全部確認
+                </button>
+            </div>
+            <div id="isafe-emotion" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;font-size:14px;">載入中...</div>
             </div>
         </div>
     </div>
@@ -578,99 +722,79 @@
                 </select>
             </div>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-            <div class="agent-card">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span class="agent-dot" id="dot-magic"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #C17F5A;">陪伴回應</span>
-                </div>
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">回應處理</div>
-                <div style="font-size: 13px;">第一線情感陪伴</div>
-                <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="magic-last">尚未啟動</div>
-            </div>
-            <div class="agent-card">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span class="agent-dot" id="dot-isafe"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #4A90E2;">安全觀察</span>
-                </div>
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">風險辨識</div>
-                <div style="font-size: 13px;">安全觀察 + 語意分級</div>
-                <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="isafe-last">尚未啟動</div>
-            </div>
-            <div class="agent-card">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span class="agent-dot" id="dot-decision"></span>
-                    <span style="font-weight: 500; font-size: 16px; color: #7B9E87;">流程調度</span>
-                </div>
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 4px;">流程調度</div>
-                <div style="font-size: 13px;">任務調度 + SOP</div>
-                <div style="font-size: 12px; color: #9B8E87; margin-top: 8px;" id="decision-last">尚未啟動</div>
-            </div>
-        </div>
 
-        <div class="card" style="margin-bottom: 16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
-                <div>
-                    <h2 style="font-size: 18px; font-weight: 500;">目前對話狀態</h2>
-                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">展示前可確認或清除暫存對話，避免不同長者互相影響</div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <button onclick="loadSessions()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">重新整理</button>
-                    <button onclick="clearAllSessions()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid #E7B7B7; background: var(--alert-soft); color: #922B21; font-size: 13px; cursor: pointer; font-family: inherit;">清除全部</button>
-                </div>
-            </div>
-            <div id="session-list" style="display:flex;flex-direction:column;gap:8px;">
-                <div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">尚未載入</div>
-            </div>
-        </div>
 
         <div class="card">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-                <h2 style="font-size: 18px; font-weight: 500;">系統處理紀錄</h2>
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap:12px;">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 500;">系統活動紀錄</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">AI 各模組的即時處理記錄，含安全偵測與記憶更新</div>
+                </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px; color: #9B8E87;" id="log-update-time">--</span>
-                    <button onclick="loadAgentLogs()" style="padding: 6px 14px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 13px; cursor: pointer; font-family: inherit;">重新整理</button>
+                    <span style="font-size: 13px; color: var(--palette-9b8e87);" id="log-update-time">--</span>
+                    <button onclick="loadAgentLogs()" style="padding: 6px 14px; border-radius: 8px; border: 1px solid var(--palette-d6cec7); background: var(--palette-f7f3ee); font-size: 13px; cursor: pointer; font-family: inherit;">重新整理</button>
                 </div>
             </div>
             <div id="agent-logs" style="display: flex; flex-direction: column;">
-                <div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無互動紀錄，請先開始對話</div>
+                <div style="text-align: center; color: var(--palette-bdc3c7); padding: 24px; font-size: 15px;">尚無互動紀錄，請先開始對話</div>
             </div>
         </div>
     </div>
 
-    <!-- 記憶檢索測試 -->
+    <!-- 記憶狀況 -->
     <div id="page-memory" class="hidden max-w-5xl w-full mx-auto p-4 flex-1 overflow-y-auto">
         <div class="card" style="margin-bottom: 16px;">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;">
                 <div>
-                    <h2 style="font-size: 20px; font-weight: 500;">記憶檢索測試</h2>
-                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">用精準問題確認重要記憶是否被保存並可被找回</div>
+                    <h2 style="font-size: 20px; font-weight: 500;">記憶狀況</h2>
+                    <div style="font-size:13px;color:var(--muted);margin-top:4px;">長者記憶事件彙整，追蹤重要記憶變化</div>
                 </div>
-                <select id="rag-elder-select" style="width:auto;min-width:150px;font-size:16px;text-align:center;height:auto;padding:8px;">
+                <select id="rag-elder-select" onchange="loadMemoryTimeline(this.value);loadMemoryTags(this.value)" style="width:auto;min-width:150px;font-size:16px;text-align:center;height:auto;padding:8px;">
                     <option value="W001">王大明</option>
                     <option value="C001">陳秀英</option>
                     <option value="L001">林月琴</option>
                 </select>
             </div>
-            <div style="background:#F7F3EE;border:1px solid #D6CEC7;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:var(--muted);line-height:1.7;">
-                用預先設計的問題確認重要記憶是否能被找回。展示時建議使用具體問題；若要測試更自然的自由問法，請切換到完整資料庫環境後再比較結果。
+            <div id="memory-overview-strip" class="summary-strip">
+                <div class="summary-metric"><div class="label">記憶事件</div><div class="value" id="memory-total-count">—</div></div>
+                <div class="summary-metric"><div class="label">關鍵記憶</div><div class="value" id="memory-key-count">—</div></div>
+                <div class="summary-metric"><div class="label">最近一筆</div><div class="value" id="memory-latest-date" style="font-size:18px;">—</div></div>
             </div>
-            <label>測試問題與期待命中關鍵字</label>
-            <textarea id="rag-query-input"
-                style="width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--surface-soft);font-size:15px;line-height:1.7;font-family:'Microsoft JhengHei',sans-serif;color:var(--ink);"
-                placeholder="每行一題，可用：問題｜期待關鍵字1,關鍵字2"></textarea>
-            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-                <button onclick="loadRagPreset()" style="padding: 11px 18px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 15px; cursor: pointer; font-family: inherit;">帶入預設題目</button>
-                <button onclick="runRagEvaluation()" style="padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">開始測試</button>
+            <!-- 記憶狀況頁面 tab 列 -->
+            <div style="display:flex;gap:0;margin:16px 0 0;border-bottom:2px solid var(--line);">
+                <button onclick="switchMemoryTab('timeline')" id="mem-tab-timeline"
+                    style="padding:9px 20px;border:none;border-bottom:2px solid var(--care);margin-bottom:-2px;background:none;font-size:15px;font-weight:700;color:var(--care);cursor:pointer;font-family:inherit;">
+                    記憶時間軸
+                </button>
+                <button onclick="switchMemoryTab('rag')" id="mem-tab-rag"
+                    style="padding:9px 20px;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;background:none;font-size:15px;color:var(--muted);cursor:pointer;font-family:inherit;">
+                    檢索命中測試
+                </button>
             </div>
-        </div>
-        <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
-                <h2 style="font-size:18px;font-weight:500;">測試結果</h2>
-                <div id="rag-summary" style="font-size:14px;color:var(--muted);">尚未執行</div>
+            <!-- 記憶時間軸 panel -->
+            <div id="mem-panel-timeline" style="margin-top:14px;">
+                <div id="memory-timeline" style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="text-align:center;color:var(--palette-bdc3c7);padding:24px;font-size:15px;">載入中...</div>
+                </div>
             </div>
-            <div id="rag-results" style="display:flex;flex-direction:column;gap:10px;">
-                <div style="text-align:center;color:#BDC3C7;padding:24px;font-size:15px;">請先執行評估</div>
+            <!-- 記憶主題搜尋 panel -->
+            <div id="mem-panel-rag" class="hidden" style="margin-top:14px;">
+                <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">點選主題，查看相關記憶</div>
+                <div id="memory-topic-buttons" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                    <div style="color:var(--palette-bdc3c7);font-size:14px;padding:8px 0;">載入中...</div>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:4px;">
+                    <input id="memory-topic-custom" type="text" placeholder="自訂搜尋…"
+                        style="flex:1;padding:9px 14px;height:auto;font-size:15px;"
+                        onkeydown="if(event.key==='Enter')searchMemoryByTopic(this.value)">
+                    <button onclick="searchMemoryByTopic(document.getElementById('memory-topic-custom').value)"
+                        style="padding:9px 18px;border-radius:8px;border:none;background:var(--care);color:white;font-size:15px;cursor:pointer;font-family:inherit;">
+                        搜尋
+                    </button>
+                </div>
+                <div id="memory-topic-results" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+                    <div style="text-align:center;color:var(--palette-bdc3c7);padding:24px;font-size:15px;">請選擇主題或輸入關鍵字</div>
+                </div>
             </div>
         </div>
     </div>
@@ -683,7 +807,7 @@
                     <h2 style="font-size: 20px; font-weight: 500;">台語 STT 實測輔助</h2>
                     <div style="font-size:13px;color:var(--muted);margin-top:4px;">上傳真人錄音確認辨識結果，並可用 CER 粗略評估準確度</div>
                 </div>
-                <button onclick="loadSttStatus()" style="padding: 10px 16px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 14px; cursor: pointer; font-family: inherit;">檢查狀態</button>
+                <button onclick="loadSttStatus()" style="padding: 10px 16px; border-radius: 8px; border: 1px solid var(--palette-d6cec7); background: var(--palette-f7f3ee); font-size: 14px; cursor: pointer; font-family: inherit;">檢查狀態</button>
             </div>
             <div id="stt-status-box" style="background:var(--surface-soft);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-size:14px;color:var(--muted);line-height:1.7;">尚未檢查</div>
         </div>
@@ -692,8 +816,8 @@
             <h2 style="font-size:18px;font-weight:500;margin-bottom:14px;">錄音辨識測試</h2>
             <label>語言模式</label>
             <div class="tool-two-col">
-                <button onclick="setSttVerifyLanguage('zh')" id="btn-stt-verify-zh" style="padding:12px;border-radius:8px;border:1px solid #D6CEC7;background:white;font-size:15px;cursor:pointer;font-family:inherit;">華語模式</button>
-                <button onclick="setSttVerifyLanguage('tai')" id="btn-stt-verify-tai" style="padding:12px;border-radius:8px;border:1px solid #D6CEC7;background:white;font-size:15px;cursor:pointer;font-family:inherit;">台語模式</button>
+                <button onclick="setSttVerifyLanguage('zh')" id="btn-stt-verify-zh" style="padding:12px;border-radius:8px;border:1px solid var(--palette-d6cec7);background:white;font-size:15px;cursor:pointer;font-family:inherit;">華語模式</button>
+                <button onclick="setSttVerifyLanguage('tai')" id="btn-stt-verify-tai" style="padding:12px;border-radius:8px;border:1px solid var(--palette-d6cec7);background:white;font-size:15px;cursor:pointer;font-family:inherit;">台語模式</button>
             </div>
             <label>上傳音檔</label>
             <input id="stt-audio-file" type="file" accept="audio/*,.wav,.webm,.m4a,.mp3" style="height:auto;padding:10px;">
@@ -708,11 +832,11 @@
                 style="width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--surface-soft);font-size:15px;line-height:1.7;font-family:'Microsoft JhengHei',sans-serif;color:var(--ink);"
                 placeholder="每行一筆：標準答案｜辨識結果"></textarea>
             <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-                <button onclick="loadSttCerPreset()" style="padding: 11px 18px; border-radius: 8px; border: 1px solid #D6CEC7; background: #F7F3EE; font-size: 15px; cursor: pointer; font-family: inherit;">帶入範例</button>
+                <button onclick="loadSttCerPreset()" style="padding: 11px 18px; border-radius: 8px; border: 1px solid var(--palette-d6cec7); background: var(--palette-f7f3ee); font-size: 15px; cursor: pointer; font-family: inherit;">帶入範例</button>
                 <button onclick="runSttCerEvaluation()" style="padding: 11px 22px; border-radius: 8px; border: none; background: var(--care); color: white; font-size: 15px; font-weight:700; cursor: pointer; font-family: inherit;">計算 CER</button>
             </div>
             <div id="stt-cer-result" style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
-                <div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">尚未評估</div>
+                <div style="text-align:center;color:var(--palette-bdc3c7);padding:18px;font-size:14px;">尚未評估</div>
             </div>
         </div>
     </div>
@@ -721,7 +845,7 @@
     <div id="page-persona" class="hidden max-w-5xl w-full mx-auto pt-0 px-4 pb-4 flex-1 overflow-y-auto">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">選擇長者</div>
+                <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">選擇長者</div>
                 <select id="persona-elder-select" onchange="loadPersonas(this.value)"
                     style="font-size: 16px; text-align: center; height: auto; padding: 8px;">
                     <option value="W001">王大明</option>
@@ -730,21 +854,29 @@
                 </select>
             </div>
             <div class="card" style="text-align: center;">
-                <div style="font-size: 13px; color: #7F8C8D; margin-bottom: 8px;">目前陪伴者</div>
-                <div id="active-persona-name" style="font-size: 24px; font-weight: 500; color: #C17F5A;">預設陪伴者</div>
+                <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 8px;">目前陪伴者</div>
+                <div id="active-persona-name" style="font-size: 24px; font-weight: 500; color: var(--palette-c17f5a);">預設陪伴者</div>
             </div>
         </div>
 
-        <!-- 現有人格列表 -->
-        <div class="card" style="margin-bottom: 16px;">
-            <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">目前陪伴者</h2>
-            <div id="persona-list" style="display: flex; flex-direction: column; gap: 10px;">
-                <div style="text-align: center; color: #BDC3C7; padding: 24px;">載入中...</div>
-            </div>
-        </div>
-
-        <!-- 新增人格 -->
+        <!-- 陪伴者 tab 卡 -->
         <div class="card">
+            <!-- tab bar -->
+            <div style="display:flex;gap:0;margin-bottom:18px;border-bottom:2px solid var(--line);">
+                <button onclick="switchPersonaTab('add')" id="ptab-add"
+                    style="padding:8px 18px;border:none;background:none;cursor:pointer;font-family:inherit;
+                        font-size:15px;font-weight:700;color:var(--care);border-bottom:2px solid var(--care);margin-bottom:-2px;">
+                    新增家人／陪伴者
+                </button>
+                <button onclick="switchPersonaTab('list')" id="ptab-list"
+                    style="padding:8px 18px;border:none;background:none;cursor:pointer;font-family:inherit;
+                        font-size:15px;font-weight:normal;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;">
+                    目前陪伴者
+                </button>
+            </div>
+
+            <!-- panel: 新增 -->
+            <div id="ppanel-add">
             <h2 style="font-size: 18px; font-weight: 500; margin-bottom: 16px;">新增家人／陪伴者</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <div>
@@ -770,23 +902,23 @@
 
                 <!-- 一鍵原型 -->
                 <div style="grid-column: 1 / -1;">
-                    <label>快速套用原型 <span style="color:#BDC3C7;">（可微調）</span></label>
+                    <label>快速套用原型 <span style="color:var(--palette-bdc3c7);">（可微調）</span></label>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="button" onclick="applyArchetype('sunshine')"
-                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid #F39C12;
-                                background: #FEF9E7; color: #7D6608; font-size: 14px;
+                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid var(--palette-f39c12);
+                                background: var(--palette-fef9e7); color: var(--palette-7d6608); font-size: 14px;
                                 cursor: pointer; font-family: inherit;">
                             ☀️ 小太陽
                         </button>
                         <button type="button" onclick="applyArchetype('cotton')"
-                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid #7B9E87;
-                                background: #EAF4EE; color: #2D6A4F; font-size: 14px;
+                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid var(--palette-7b9e87);
+                                background: var(--palette-eaf4ee); color: var(--palette-2d6a4f); font-size: 14px;
                                 cursor: pointer; font-family: inherit;">
                             🧤 貼心棉襖
                         </button>
                         <button type="button" onclick="applyArchetype('funny')"
-                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid #4A90E2;
-                                background: #EBF5FB; color: #1A5276; font-size: 14px;
+                            style="padding: 10px 16px; border-radius: 10px; border: 2px solid var(--palette-4a90e2);
+                                background: var(--palette-ebf5fb); color: var(--palette-1a5276); font-size: 14px;
                                 cursor: pointer; font-family: inherit;">
                             😄 逗趣活寶
                         </button>
@@ -795,7 +927,7 @@
 
                 <!-- 個性標籤 -->
                 <div style="grid-column: 1 / -1;">
-                    <label>個性 <span style="color:#BDC3C7;">（最多選2個）</span></label>
+                    <label>個性 <span style="color:var(--palette-bdc3c7);">（最多選2個）</span></label>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="personality-tags">
                         <label class="tag-option"><input type="checkbox" value="活潑開朗"> 活潑開朗</label>
                         <label class="tag-option"><input type="checkbox" value="溫柔體貼"> 溫柔體貼</label>
@@ -807,7 +939,7 @@
 
                 <!-- 說話習慣 -->
                 <div style="grid-column: 1 / -1;">
-                    <label>說話習慣 <span style="color:#BDC3C7;">（最多選2個）</span></label>
+                    <label>說話習慣 <span style="color:var(--palette-bdc3c7);">（最多選2個）</span></label>
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;" id="habit-tags">
                         <label class="tag-option"><input type="checkbox" value="愛問吃了沒"> 愛問吃了沒</label>
                         <label class="tag-option"><input type="checkbox" value="愛撒嬌"> 愛撒嬌</label>
@@ -817,17 +949,17 @@
                 </div>
 
                 <div style="grid-column: 1 / -1;">
-                    <label>共同核心記憶 <span style="color:#BDC3C7;">（選填）</span></label>
+                    <label>共同核心記憶 <span style="color:var(--palette-bdc3c7);">（選填）</span></label>
                     <input id="persona-shared-memories" type="text"
                         placeholder="例如：小玲大學放榜時阿公高興到放鞭炮">
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <label>目前近況 <span style="color:#BDC3C7;">（選填）</span></label>
+                    <label>目前近況 <span style="color:var(--palette-bdc3c7);">（選填）</span></label>
                     <input id="persona-current-status" type="text"
                         placeholder="例如：目前在台北工作，最近剛換新工作">
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <label>禁忌話題 <span style="color:#BDC3C7;">（選填）</span></label>
+                    <label>禁忌話題 <span style="color:var(--palette-bdc3c7);">（選填）</span></label>
                     <input id="persona-forbidden-topics" type="text"
                         placeholder="例如：不要提到二兒子">
                 </div>
@@ -835,11 +967,11 @@
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
                         <input type="checkbox" id="persona-deceased"
                             style="width: 20px; height: 20px; cursor: pointer;">
-                        <span style="font-size: 16px; color: #3D3530;">此親人已過世</span>
+                        <span style="font-size: 16px; color: var(--palette-3d3530);">此親人已過世</span>
                     </label>
                 </div>
                 <div style="grid-column: 1 / -1;">
-                    <label>上傳語音樣本（wav，30秒清晰人聲）</label>
+                    <label>上傳語音樣本（wav，6–10秒清晰人聲）</label>
                     <input id="persona-voice" type="file" accept=".wav"
                         style="height: auto; padding: 10px;">
                 </div>
@@ -851,13 +983,22 @@
             </div>
             <button onclick="addPersona()"
                 style="width: 100%; margin-top: 16px; padding: 14px; font-size: 17px;
-                    background: #C17F5A; color: white; border: none;
+                    background: var(--palette-c17f5a); color: white; border: none;
                     border-radius: 16px; cursor: pointer; font-family: inherit;">
                 新增陪伴者
             </button>
             <div id="persona-message" style="display: none; text-align: center; margin-top: 12px;
                 padding: 12px; border-radius: 10px; font-size: 15px;"></div>
-        </div>
+            </div><!-- /ppanel-add -->
+
+            <!-- panel: 目前陪伴者 -->
+            <div id="ppanel-list" class="hidden">
+                <div id="persona-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="text-align: center; color: var(--palette-bdc3c7); padding: 24px;">載入中...</div>
+                </div>
+            </div><!-- /ppanel-list -->
+
+        </div><!-- /card -->
     </div>
 
 </div>
@@ -879,12 +1020,29 @@ async function loadAllowedElders() {
             id: elder.elder_id,
             name: elder.name,
         }));
-        const select = document.getElementById('pin-elder-select');
-        if (select) {
+        // 更新所有長者下拉選單（含原本 hardcode 的 6 個）
+        const plainSelectIds = [
+            'elder-select', 'dash-elder-select', 'isafe-elder-select',
+            'agent-elder-select', 'rag-elder-select', 'persona-elder-select',
+        ];
+        const labelSelectIds = ['conv-filter-elder'];
+        plainSelectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            const prev = select.value;
+            select.innerHTML = DEMO_ELDERS.map(elder =>
+                `<option value="${escapeHtml(elder.id)}">${escapeHtml(elder.name)}</option>`
+            ).join('');
+            // 保留原本選到的值（如果還存在）
+            if ([...select.options].some(o => o.value === prev)) select.value = prev;
+        });
+        labelSelectIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
             select.innerHTML = DEMO_ELDERS.map(elder =>
                 `<option value="${escapeHtml(elder.id)}">${escapeHtml(elder.name)}（${escapeHtml(elder.id)}）</option>`
             ).join('');
-        }
+        });
         return DEMO_ELDERS;
     } catch (e) {
         showToast(e.message || '長者清單載入失敗。', 'error');
@@ -892,48 +1050,6 @@ async function loadAllowedElders() {
     }
 }
 
-async function generateElderPin() {
-    const elderId = document.getElementById('pin-elder-select')?.value;
-    const ttlMinutes = Number(document.getElementById('pin-ttl-select')?.value || 480);
-    const result = document.getElementById('elder-pin-result');
-    if (!elderId || !result) return;
-    try {
-        const res = await fetch(`${API_BASE}/api/admin/elder-pin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: elderId, ttl_minutes: ttlMinutes }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'PIN 產生失敗');
-        result.style.display = 'block';
-        result.innerHTML = `
-            <div style="font-size: 13px; color: #7F8C8D;">${escapeHtml(data.elder_id)} 一次性 PIN</div>
-            <div style="font: 700 36px/1.4 system-ui; letter-spacing: 8px; color: #3D3530;">${escapeHtml(data.pin)}</div>
-            <div style="font-size: 12px; color: #9B8E87;">有效至 ${escapeHtml(new Date(data.expires_at).toLocaleString('zh-TW'))}</div>
-        `;
-    } catch (e) {
-        showToast(e.message || 'PIN 產生失敗。', 'error');
-    }
-}
-
-async function revokeElderSession() {
-    const elderId = document.getElementById('pin-elder-select')?.value;
-    if (!elderId || !confirm(`確定撤銷 ${elderId} 的所有登入 session？`)) return;
-    try {
-        const res = await fetch(`${API_BASE}/api/admin/elder-session/revoke`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: elderId }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || '撤銷失敗');
-        const result = document.getElementById('elder-pin-result');
-        if (result) result.style.display = 'none';
-        showToast(`已撤銷 ${elderId} 的 ${data.removed_tokens} 個登入 token。`, 'success');
-    } catch (e) {
-        showToast(e.message || '撤銷 session 失敗。', 'error');
-    }
-}
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -954,14 +1070,37 @@ function safeAvatarSrc(path) {
     return '/static/avatars/ai_assistant_nobg.png';
 }
 
+function safetyLevelFromText(text = '') {
+    const value = String(text);
+    if (/(胸痛|胸口痛|喘不過氣|呼吸困難|昏倒|救命|流血)/.test(value)) return 3;
+    if (/(跌倒|頭暈|站不穩|很痛|視線模糊|忘記吃藥)/.test(value)) return 2;
+    if (/(孤單|難過|焦慮|心慌|睡不好|想念|寂寞)/.test(value)) return 1;
+    return 0;
+}
+
+function safetyBadge(level) {
+    if (level === null || level === undefined) return '<span style="color:var(--muted);">—</span>';
+    const n = Number(level);
+    if (n >= 3) return '<span class="badge badge-danger">● 緊急</span>';
+    if (n === 2) return '<span class="badge badge-warn">● 需注意</span>';
+    if (n === 1) return '<span class="badge badge-emotion">● 情緒關注</span>';
+    return '<span class="badge badge-safe">● 正常</span>';
+}
+
+function sentimentBadge(sentiment) {
+    if (sentiment === 'positive') return '<span class="badge badge-safe">正向</span>';
+    if (sentiment === 'negative') return '<span class="badge badge-emotion">負向</span>';
+    return '<span class="badge badge-low">中性</span>';
+}
+
 function showToast(message, type = 'info') {
     const toast = document.getElementById('admin-toast');
     if (!toast) return;
     const colors = {
-        info: ['#FFFFFF', 'var(--line)', 'var(--ink)'],
-        success: ['var(--care-soft)', '#BFD6C8', 'var(--care)'],
-        error: ['var(--alert-soft)', '#E7B7B7', '#922B21'],
-        warn: ['var(--memory-soft)', '#E8D48A', 'var(--memory)'],
+        info: ['var(--palette-ffffff)', 'var(--line)', 'var(--ink)'],
+        success: ['var(--care-soft)', 'var(--palette-bfd6c8)', 'var(--care)'],
+        error: ['var(--alert-soft)', 'var(--palette-e7b7b7)', 'var(--palette-922b21)'],
+        warn: ['var(--memory-soft)', 'var(--palette-e8d48a)', 'var(--memory)'],
     };
     const [bg, border, color] = colors[type] || colors.info;
     toast.style.background = bg;
@@ -1018,7 +1157,7 @@ function closeSidebar() {
 async function loadDemoOverview() {
     const container = document.getElementById('demo-overview-grid');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:16px;grid-column:1/-1;">載入中...</div>';
+    container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;grid-column:1/-1;">載入中...</div>';
 
     try {
         const rows = await Promise.all(DEMO_ELDERS.map(async elder => {
@@ -1045,7 +1184,7 @@ async function loadDemoOverview() {
             const hazardHigh = safety.hazard_level === 'high';
             const card = document.createElement('div');
             card.style.cssText = `
-                background:#FFFFFF; border:1px solid var(--line); border-radius:8px;
+                background:var(--palette-ffffff); border:1px solid var(--line); border-radius:8px;
                 padding:16px; min-height:180px; display:flex; flex-direction:column; gap:10px;
             `;
             card.innerHTML = `
@@ -1057,7 +1196,7 @@ async function loadDemoOverview() {
                     <span class="badge ${hazardHigh ? 'badge-high' : 'badge-low'}">${hazardHigh ? '高風險' : '正常'}</span>
                 </div>
                 <div style="font-size:13px;color:var(--muted);line-height:1.6;">
-                    <strong style="color:var(--ink);">陪伴者 ${Object.keys(personas).length}/4</strong><br>
+                    <strong style="color:var(--ink);">陪伴者</strong><br>
                     ${escapeHtml(personaList)}
                 </div>
                 <div style="font-size:13px;color:var(--muted);">使用中：<strong style="color:var(--care);">${escapeHtml(active)}</strong></div>
@@ -1066,13 +1205,13 @@ async function loadDemoOverview() {
             container.appendChild(card);
         });
     } catch (e) {
-        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:16px;grid-column:1/-1;">總覽載入失敗</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-922b21);padding:16px;grid-column:1/-1;">總覽載入失敗</div>';
         console.error('總覽載入失敗', e);
     }
 }
 
 function navigateTo(page) {
-    ['profile','persona','dashboard','isafe','agents','memory','stt'].forEach(p => {
+    ['profile','persona','dashboard','isafe','agents','memory','stt'].forEach(p => { // stt page still exists, just hidden from nav
         document.getElementById('page-' + p).classList.add('hidden');
     });
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -1081,27 +1220,29 @@ function navigateTo(page) {
 
     const titles = {
         profile: ['長者資料建檔', '建立照護所需的背景、健康注意事項與家人資訊'],
-        dashboard: ['照護總覽', '快速查看三位長者、重要記憶與安全事件'],
-        isafe: ['安全觀察', '用固定案例檢查危急、低落與日常狀態'],
-        agents: ['系統處理紀錄', '確認陪伴、安全與流程是否正常運作'],
-        memory: ['記憶檢索測試', '確認重要記憶是否能被精準問題找回'],
-        stt: ['語音驗證', '測試台語 STT 與辨識準確度'],
-        persona: ['陪伴者管理', '設定家人或陪伴者的稱呼、關係與說話風格'],
+        dashboard: ['對話紀錄', '快速查看長者近期對話、重要記憶與安全事件'],
+        isafe: ['安全警示', '查看安全分級紀錄，及早發現異常狀況'],
+        agents: ['操作紀錄', '確認系統陪伴、安全與流程是否正常運作'],
+        memory: ['記憶狀況', '長者記憶事件彙整，追蹤重要記憶變化'],
+        stt: ['語音驗證', '測試語音辨識品質與準確度'],
+        persona: ['陪伴者設定', '設定家人或陪伴者的稱呼、關係與說話風格'],
     };
     document.getElementById('page-title').textContent = titles[page][0];
     document.getElementById('page-subtitle').textContent = titles[page][1];
 
     if (page === 'profile') loadElderData(document.getElementById('elder-select').value);
     if (page === 'dashboard') {
-        loadDemoOverview();
-        loadHistory(document.getElementById('dash-elder-select').value);
+        switchDashTab('overview');   // 重置到第一頁
+        loadDemoOverview();          // 只載概況，其餘 tab 點到再 lazy load
     }
     if (page === 'isafe') {
         loadSafety(document.getElementById('isafe-elder-select').value);
     }
     if (page === 'persona') loadPersonas(document.getElementById('persona-elder-select').value);
-    if (page === 'memory' && !document.getElementById('rag-query-input').value.trim()) {
-        loadRagPreset();
+    if (page === 'memory') {
+        const memoryElder = document.getElementById('rag-elder-select').value;
+        loadMemoryTimeline(memoryElder);
+        loadMemoryTags(memoryElder);
     }
     if (page === 'stt') {
         loadSttStatus();
@@ -1109,7 +1250,6 @@ function navigateTo(page) {
     }
 
     if (page === 'agents') {
-        loadSessions();
         loadAgentLogs();
         if (agentLogInterval) clearInterval(agentLogInterval);
         agentLogInterval = setInterval(loadAgentLogs, 3000);
@@ -1119,7 +1259,188 @@ function navigateTo(page) {
     closeSidebar();
 }
 
+// ===== 對話紀錄 tab =====
+function switchDashTab(tabName) {
+    ['overview', 'memory'].forEach(key => {
+        const btn   = document.getElementById('dtab-' + key);
+        const panel = document.getElementById('dpanel-' + key);
+        const isActive = key === tabName;
+        btn.style.color        = isActive ? 'var(--care)'  : 'var(--muted)';
+        btn.style.fontWeight   = isActive ? '700'          : 'normal';
+        btn.style.borderBottom = isActive ? '2px solid var(--care)' : '2px solid transparent';
+        panel.classList.toggle('hidden', !isActive);
+    });
+    if (tabName === 'memory') {
+        const elderId = document.getElementById('dash-elder-select').value;
+        loadHistory(elderId);
+    }
+}
+
+// ===== 陪伴者 tab =====
+function switchPersonaTab(tabName) {
+    ['add', 'list'].forEach(key => {
+        const btn   = document.getElementById('ptab-' + key);
+        const panel = document.getElementById('ppanel-' + key);
+        const isActive = key === tabName;
+        btn.style.color       = isActive ? 'var(--care)'  : 'var(--muted)';
+        btn.style.fontWeight  = isActive ? '700'          : 'normal';
+        btn.style.borderBottom = isActive ? '2px solid var(--care)' : '2px solid transparent';
+        panel.classList.toggle('hidden', !isActive);
+    });
+    // 切換到「目前陪伴者」時確保列表是最新的
+    if (tabName === 'list') {
+        const elderId = document.getElementById('persona-elder-select').value;
+        loadPersonas(elderId);
+    }
+}
+
+// ===== 記憶狀況 tab =====
+function switchMemoryTab(tabName) {
+    const tabs = { timeline: 'mem-tab-timeline', rag: 'mem-tab-rag' };
+    const panels = { timeline: 'mem-panel-timeline', rag: 'mem-panel-rag' };
+    Object.entries(tabs).forEach(([key, id]) => {
+        const btn = document.getElementById(id);
+        const isActive = key === tabName;
+        btn.style.color = isActive ? 'var(--care)' : 'var(--muted)';
+        btn.style.fontWeight = isActive ? '700' : 'normal';
+        btn.style.borderBottom = isActive ? '2px solid var(--care)' : '2px solid transparent';
+    });
+    Object.entries(panels).forEach(([key, id]) => {
+        document.getElementById(id).classList.toggle('hidden', key !== tabName);
+    });
+    if (tabName === 'rag') {
+        const elderId = document.getElementById('rag-elder-select').value;
+        const buttons = document.getElementById('memory-topic-buttons');
+        if (buttons && buttons.querySelector('[data-elder]')?.dataset.elder !== elderId) {
+            loadMemoryTags(elderId);
+        }
+    }
+}
+
+async function loadMemoryTags(elderId) {
+    const container = document.getElementById('memory-topic-buttons');
+    if (!container) return;
+    container.innerHTML = '<div style="color:var(--palette-bdc3c7);font-size:14px;padding:8px 0;">載入中...</div>';
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${encodeURIComponent(elderId)}`);
+        if (!res.ok) throw new Error('profile');
+        const profile = await res.json();
+        const events = profile.recent_events || [];
+
+        // 統計 tag 出現次數
+        const tagCount = {};
+        events.forEach(evt => {
+            (evt.topic_tags || []).forEach(tag => {
+                tagCount[tag] = (tagCount[tag] || 0) + 1;
+            });
+        });
+
+        const sorted = Object.entries(tagCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 12);
+
+        if (!sorted.length) {
+            container.innerHTML = '<div style="color:var(--muted);font-size:14px;">尚無記憶標籤</div>';
+            return;
+        }
+
+        // 用第一個按鈕記錄目前 elder，避免重複載入
+        container.innerHTML = `<span data-elder="${escapeHtml(elderId)}" style="display:none"></span>` +
+            sorted.map(([tag, count]) => `
+                <button onclick="searchMemoryByTopic('${escapeHtml(tag)}')"
+                    data-topic="${escapeHtml(tag)}"
+                    style="padding:7px 16px;border-radius:20px;border:1px solid var(--line);
+                        background:var(--palette-f7f3ee);color:var(--ink);font-size:14px;
+                        cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;">
+                    ${escapeHtml(tag)}
+                </button>
+            `).join('');
+    } catch(e) {
+        container.innerHTML = '<div style="color:var(--palette-922b21);font-size:14px;">標籤載入失敗</div>';
+    }
+}
+
+async function searchMemoryByTopic(query) {
+    query = (query || '').trim();
+    if (!query) return;
+    const elderId = document.getElementById('rag-elder-select').value;
+    const container = document.getElementById('memory-topic-results');
+    container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:24px;font-size:15px;">搜尋中...</div>';
+
+    // 更新按鈕 active 狀態
+    document.querySelectorAll('#memory-topic-buttons button[data-topic]').forEach(btn => {
+        const isActive = btn.dataset.topic === query;
+        btn.style.background = isActive ? 'var(--care)' : 'var(--palette-f7f3ee)';
+        btn.style.color = isActive ? 'white' : 'var(--ink)';
+        btn.style.borderColor = isActive ? 'var(--care)' : 'var(--line)';
+        btn.style.fontWeight = isActive ? '700' : 'normal';
+    });
+
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/rag/evaluate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elder_id: elderId, queries: [{ query, expected: [] }] }),
+        });
+        if (!res.ok) throw new Error('rag');
+        const data = await res.json();
+        const retrieved = data.rows?.[0]?.retrieved || [];
+
+        if (!retrieved.length) {
+            container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px;font-size:15px;">找不到相關記憶</div>';
+            return;
+        }
+
+        container.innerHTML = retrieved.map(item => {
+            const importance = Number(item.importance || 0);
+            const isKey = importance >= 0.7;
+            return `
+                <div style="padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--care);
+                    border-radius:8px;background:white;">
+                    <div style="font-size:15px;color:var(--ink);line-height:1.6;">${escapeHtml(item.event || '')}</div>
+                    <div style="display:flex;gap:12px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+                        <span style="font-size:12px;color:var(--muted);">${escapeHtml(item.date || '')}</span>
+                        <span style="font-size:12px;color:var(--muted);">重要度 ${importance.toFixed(1)}</span>
+                        ${isKey ? '<span class="badge badge-emotion">★ 關鍵記憶</span>' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch(e) {
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-922b21);padding:24px;font-size:15px;">搜尋失敗，請確認後端服務</div>';
+    }
+}
+
 // ===== 長者資料建檔 =====
+function switchProfileTab(tabName) {
+    document.querySelectorAll('.profile-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.profileTab === tabName);
+    });
+    document.querySelectorAll('.profile-tab-panel').forEach(panel => {
+        panel.classList.toggle('hidden', panel.dataset.profilePanel !== tabName);
+    });
+}
+
+async function loadProfilePersonaOptions(elderId, selectedId = 'ai') {
+    const select = document.getElementById('field-active-persona');
+    if (!select) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        if (!res.ok) throw new Error('personas');
+        const data = await res.json();
+        const personas = data.personas || {};
+        select.innerHTML = Object.entries(personas).map(([id, persona]) =>
+            `<option value="${escapeHtml(id)}">${escapeHtml(persona.name || id)}${persona.relation ? `（${escapeHtml(persona.relation)}）` : ''}</option>`
+        ).join('');
+        select.value = personas[selectedId] ? selectedId : (data.active_persona || 'ai');
+        if (!select.value && select.options.length) select.value = select.options[0].value;
+    } catch (e) {
+        select.innerHTML = '<option value="ai">AI 助理</option>';
+        select.value = 'ai';
+        console.error('預設陪伴者選項載入失敗', e);
+    }
+}
+
 async function loadElderData(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
@@ -1132,6 +1453,7 @@ async function loadElderData(elderId) {
         document.getElementById('field-hobbies').value = (profile.persona?.hobbies || []).join('、');
         document.getElementById('field-sensitivity').value = (profile.health_notes?.sensitivity || []).join('、');
         document.getElementById('field-diet').value = profile.health_notes?.diet || '';
+        await loadProfilePersonaOptions(elderId, profile.active_persona || 'ai');
 
 
         // 顯示生平資料
@@ -1169,11 +1491,11 @@ function addFamilyRow(role = "", name = "") {
             </select>
             <div style="display: ${isCustom ? 'flex' : 'none'}; align-items: center; gap: 4px;">
                 <input type="text" placeholder="輸入稱謂" value="${customValue}" class="custom-role-input" style="width: 100px; height: 52px; flex: 1;">
-                <button onclick="resetToSelect(this)" type="button" style="width: 32px; height: 32px; border-radius: 50%; background: #D6CEC7; border: none; color: #3D3530; font-size: 14px; cursor: pointer; flex-shrink: 0;">↩</button>
+                <button onclick="resetToSelect(this)" type="button" style="width: 32px; height: 32px; border-radius: 50%; background: var(--palette-d6cec7); border: none; color: var(--palette-3d3530); font-size: 14px; cursor: pointer; flex-shrink: 0;">↩</button>
             </div>
         </div>
         <input type="text" placeholder="請輸入姓名" value="${name}" class="family-name-input" style="flex: 1; height: 52px;">
-        <button onclick="this.closest('div[style*=flex]').remove()" type="button" style="width: 44px; height: 44px; border-radius: 50%; background: #FDECEA; border: none; color: #C17B7B; font-size: 20px; cursor: pointer; flex-shrink: 0;">×</button>
+        <button onclick="this.closest('div[style*=flex]').remove()" type="button" style="width: 44px; height: 44px; border-radius: 50%; background: var(--palette-fdecea); border: none; color: var(--palette-c17b7b); font-size: 20px; cursor: pointer; flex-shrink: 0;">×</button>
     `;
     container.appendChild(row);
 }
@@ -1228,18 +1550,19 @@ async function saveElderProfile() {
                 hobbies: document.getElementById('field-hobbies').value,
                 sensitivity: document.getElementById('field-sensitivity').value,
                 diet: document.getElementById('field-diet').value,
+                active_persona: document.getElementById('field-active-persona').value,
             })
         });
         const data = await res.json();
         msgEl.style.display = 'block';
-        msgEl.style.background = '#E8F5EC';
-        msgEl.style.color = '#2D6A4F';
+        msgEl.style.background = 'var(--palette-e8f5ec)';
+        msgEl.style.color = 'var(--palette-2d6a4f)';
         msgEl.textContent = data.message;
         showToast('長者資料已儲存。', 'success');
     } catch (e) {
         msgEl.style.display = 'block';
-        msgEl.style.background = '#FDECEA';
-        msgEl.style.color = '#922B21';
+        msgEl.style.background = 'var(--palette-fdecea)';
+        msgEl.style.color = 'var(--palette-922b21)';
         msgEl.textContent = '儲存失敗';
         showToast('儲存失敗，請確認後端服務。', 'error');
     }
@@ -1259,7 +1582,11 @@ async function loadHistory(elderId) {
         document.getElementById('dash-event-count').textContent = events.length;
         document.getElementById('dash-today-count').textContent =
             events.filter(e => e.date === today).length;
-        const importantEvents = events.filter(e => e.importance >= 0.7);
+        const _safetyTags = ['安全警報', '趨勢警報'];
+        const importantEvents = events.filter(e =>
+            e.importance >= 0.7 &&
+            !(e.topic_tags || []).some(t => _safetyTags.includes(t))
+        );
         document.getElementById('dash-important-count').textContent = importantEvents.length;
 
         // 記憶彙整摘要
@@ -1290,6 +1617,110 @@ async function loadHistory(elderId) {
     } catch (e) { console.error('載入失敗', e); }
 }
 
+let conversationRowsCache = [];
+
+async function loadConvHistory(elderId) {
+    const container = document.getElementById('conv-history-list');
+    container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;font-size:14px;">載入中...</div>';
+    const elderSelect = document.getElementById('conv-filter-elder');
+    if (elderSelect && elderSelect.value !== elderId) elderSelect.value = elderId;
+    try {
+        const res = await fetch(`${API_BASE}/api/history/${encodeURIComponent(elderId)}`);
+        if (!res.ok) throw new Error('history');
+        const data = await res.json();
+        const msgs = (data.history || []).filter(m => m.role === 'user' || m.role === 'model');
+        if (msgs.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--palette-9b8e87);padding:24px;font-size:14px;">尚無對話紀錄。請先至長者端進行對話。</div>';
+            conversationRowsCache = [];
+            return;
+        }
+        const elderName = (DEMO_ELDERS.find(e => e.id === elderId) || {}).name || elderId;
+        // 先把 AI 的 escalation_level 往前配對給緊接的 user 行
+        const levelMap = {};
+        msgs.forEach((msg, i) => {
+            if (msg.role === 'model' && msg.escalation_level != null) {
+                // 找前一筆 user 訊息
+                for (let j = i - 1; j >= 0; j--) {
+                    if (msgs[j].role === 'user') { levelMap[j] = msg.escalation_level; break; }
+                }
+            }
+        });
+
+        conversationRowsCache = msgs.map((msg, index) => {
+            const content = msg.content || '';
+            let level;
+            if (msg.role === 'model') {
+                level = msg.escalation_level ?? null;
+            } else {
+                // user 行：優先用 AI 配對的等級，完全沒有就顯示 null（不猜）
+                level = levelMap[index] ?? null;
+            }
+            return {
+                index,
+                elder_id: elderId,
+                elder_name: elderName,
+                role: msg.role,
+                speaker: msg.role === 'user' ? '長者' : 'AI',
+                persona: msg.persona_id || msg._persona_id || '預設陪伴者',
+                content,
+                summary: content.length > 40 ? `${content.slice(0, 40)}...` : content,
+                date: msg.date || '',
+                time: msg.time || '',
+                level,
+                sentiment: msg.sentiment || 'neutral',
+                rag_hits: msg._rag_hits || 0,
+            };
+        });
+        renderConversationTable();
+    } catch (e) {
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-922b21);padding:16px;font-size:14px;">載入失敗，請確認 session 是否存在。</div>';
+    }
+}
+
+function renderConversationTable() {
+    const container = document.getElementById('conv-history-list');
+    if (!container) return;
+    const levelFilter = document.getElementById('conv-filter-level')?.value || '';
+    const from = document.getElementById('conv-filter-from')?.value || '';
+    const to = document.getElementById('conv-filter-to')?.value || '';
+    let rows = conversationRowsCache.slice();
+    if (levelFilter !== '') rows = rows.filter(row => String(row.level) === levelFilter);
+    if (from) rows = rows.filter(row => !row.date || row.date >= from);
+    if (to) rows = rows.filter(row => !row.date || row.date <= to);
+    if (!rows.length) {
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-9b8e87);padding:24px;font-size:14px;">沒有符合篩選條件的對話紀錄</div>';
+        return;
+    }
+    container.innerHTML = `
+        <table class="work-table">
+            <thead>
+                <tr>
+                    <th>時間</th><th>長者</th><th>角色</th><th>情緒</th><th>安全等級</th><th>摘要（前40字）</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(row => `
+                    <tr class="data-row" onclick="toggleConversationDetail(${row.index})">
+                        <td>${escapeHtml(row.time || row.date || '—')}</td>
+                        <td>${escapeHtml(row.elder_name)}</td>
+                        <td>${escapeHtml(row.speaker === 'AI' ? row.persona : row.speaker)}</td>
+                        <td>${sentimentBadge(row.sentiment)}</td>
+                        <td>${safetyBadge(row.level)}</td>
+                        <td>${escapeHtml(row.summary)}${row.rag_hits ? ` <span class="badge badge-low">記憶檢索 ×${row.rag_hits}</span>` : ''}</td>
+                    </tr>
+                    <tr class="accordion-detail" id="conv-detail-${row.index}">
+                        <td colspan="6">${escapeHtml(row.content)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function toggleConversationDetail(index) {
+    document.getElementById(`conv-detail-${index}`)?.classList.toggle('open');
+}
+
 function renderEmotionChart(events) {
     const ctx = document.getElementById('emotion-chart').getContext('2d');
 
@@ -1305,7 +1736,7 @@ function renderEmotionChart(events) {
         return -0.7;
     });
     const colors = scores.map(s =>
-        s > 0.3 ? '#27AE60' : s > -0.3 ? '#F39C12' : '#E74C3C'
+        s > 0.3 ? 'var(--palette-27ae60)' : s > -0.3 ? 'var(--palette-f39c12)' : 'var(--palette-e74c3c)'
     );
 
     if (emotionChartInstance) emotionChartInstance.destroy();
@@ -1317,7 +1748,7 @@ function renderEmotionChart(events) {
             datasets: [{
                 label: '情緒狀態',
                 data: scores,
-                borderColor: '#C17F5A',
+                borderColor: 'var(--palette-c17f5a)',
                 backgroundColor: 'rgba(193,127,90,0.1)',
                 pointBackgroundColor: colors,
                 pointRadius: 6,
@@ -1353,23 +1784,20 @@ function renderImportantMemory(events) {
     container.innerHTML = '';
 
     if (events.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:16px;font-size:14px;">尚無重要記憶</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;font-size:14px;">尚無重要記憶</div>';
         return;
     }
 
     events.slice().reverse().forEach(evt => {
         const div = document.createElement('div');
         div.style.cssText = `display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-            background: #F4ECF7; border-radius: 10px; border-left: 4px solid #8E44AD;`;
+            background: var(--palette-f4ecf7); border-radius: 10px; border-left: 4px solid var(--palette-8e44ad);`;
         div.innerHTML = `
-            <div style="font-size: 20px; flex-shrink:0;">
-                ${evt.sentiment === 'positive' ? '😊' : evt.sentiment === 'negative' ? '😢' : '😐'}
-            </div>
             <div style="flex:1;">
-                <div style="font-size:14px;font-weight:500;color:#3D3530;">${escapeHtml(evt.event)}</div>
-                <div style="font-size:12px;color:#9B8E87;margin-top:2px;">${evt.date} ${evt.time || ''}</div>
+                <div style="font-size:14px;font-weight:500;color:var(--palette-3d3530);">${escapeHtml(evt.event)}</div>
+                <div style="font-size:12px;color:var(--palette-9b8e87);margin-top:2px;">${evt.date} ${evt.time || ''}</div>
             </div>
-            <div style="font-size:12px;background:#8E44AD;color:white;
+            <div style="font-size:12px;background:var(--palette-8e44ad);color:white;
                 padding:2px 8px;border-radius:6px;flex-shrink:0;">
                 重要 ${(evt.importance||0).toFixed(1)}
             </div>
@@ -1383,7 +1811,7 @@ function renderTimeline(events) {
     container.innerHTML = '';
 
     if (events.length === 0) {
-        container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:16px;font-size:14px;">今日尚無紀錄</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:16px;font-size:14px;">今日尚無紀錄</div>';
         return;
     }
 
@@ -1392,21 +1820,21 @@ function renderTimeline(events) {
         const isTrend = evt.topic_tags?.includes('趨勢警報');
         const emoji = evt.sentiment === 'positive' ? '😊' :
                       isUrgent || isTrend ? '🚨' : '😢';
-        const bgColor = isUrgent || isTrend ? '#FDECEA' :
-                        evt.sentiment === 'positive' ? '#E8F5EC' : '#F7F3EE';
-        const borderColor = isUrgent || isTrend ? '#E74C3C' :
-                           evt.sentiment === 'positive' ? '#27AE60' : '#D6CEC7';
+        const bgColor = isUrgent || isTrend ? 'var(--palette-fdecea)' :
+                        evt.sentiment === 'positive' ? 'var(--palette-e8f5ec)' : 'var(--palette-f7f3ee)';
+        const borderColor = isUrgent || isTrend ? 'var(--palette-e74c3c)' :
+                           evt.sentiment === 'positive' ? 'var(--palette-27ae60)' : 'var(--palette-d6cec7)';
 
         const div = document.createElement('div');
         div.style.cssText = `display: flex; align-items: center; gap: 12px; padding: 10px 14px;
             background: ${bgColor}; border-radius: 10px; border-left: 3px solid ${borderColor};`;
         div.innerHTML = `
-            <div style="font-size:13px;color:#9B8E87;min-width:48px;font-family:monospace;">
+            <div style="font-size:13px;color:var(--palette-9b8e87);min-width:48px;font-family:monospace;">
                 ${evt.time ? evt.time.substring(0,5) : '--:--'}
             </div>
             <div style="font-size:18px;">${emoji}</div>
-            <div style="flex:1;font-size:14px;color:#3D3530;">${escapeHtml(evt.event)}</div>
-            ${evt.importance >= 0.7 ? '<div style="font-size:11px;background:#8E44AD;color:white;padding:2px 6px;border-radius:4px;">重要</div>' : ''}
+            <div style="flex:1;font-size:14px;color:var(--palette-3d3530);">${escapeHtml(evt.event)}</div>
+            ${evt.importance >= 0.7 ? '<div style="font-size:11px;background:var(--palette-8e44ad);color:white;padding:2px 6px;border-radius:4px;">重要</div>' : ''}
         `;
         container.appendChild(div);
     });
@@ -1433,25 +1861,25 @@ function toggleAllRecords() {
 
 function renderEvent(evt, container, isLong) {
     const importance = evt.importance || 0;
-    const sentimentColor = evt.sentiment === 'negative' ? '#FDECEA' :
-                           evt.sentiment === 'positive' ? '#E8F5EC' : '#F7F3EE';
+    const sentimentColor = evt.sentiment === 'negative' ? 'var(--palette-fdecea)' :
+                           evt.sentiment === 'positive' ? 'var(--palette-e8f5ec)' : 'var(--palette-f7f3ee)';
     const sentimentText = evt.sentiment === 'negative' ? '😢 負向' :
                           evt.sentiment === 'positive' ? '😊 正向' : '😐 中性';
-    const borderStyle = isLong ? 'border: 2px solid #C9A8E0;' : 'border: 1px solid transparent;';
+    const borderStyle = isLong ? 'border: 2px solid var(--palette-c9a8e0);' : 'border: 1px solid transparent;';
 
     const div = document.createElement('div');
     div.style.cssText = `background: ${sentimentColor}; border-radius: 10px; padding: 12px 16px; font-size: 15px; margin-bottom: 8px; ${borderStyle}`;
     div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-            <span style="font-weight: 500; color: #3D3530; flex: 1;">${escapeHtml(evt.event)}</span>
-            <span style="font-size: 13px; color: #7F8C8D; margin-left: 8px; white-space: nowrap;">${evt.date} ${evt.time || ''}</span>
+            <span style="font-weight: 500; color: var(--palette-3d3530); flex: 1;">${escapeHtml(evt.event)}</span>
+            <span style="font-size: 13px; color: var(--palette-7f8c8d); margin-left: 8px; white-space: nowrap;">${evt.date} ${evt.time || ''}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 13px; color: #7F8C8D;">${sentimentText}</span>
-            ${evt.topic_tags ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${evt.topic_tags.join('、')}</span>` : ''}
-            ${evt.reason ? `<span style="font-size: 13px; color: #7F8C8D;">｜ ${escapeHtml(evt.reason)}</span>` : ''}
-            ${isLong ? `<span style="margin-left: auto; font-size: 12px; background: #F4ECF7; color: #8E44AD; padding: 2px 8px; border-radius: 6px; font-weight: 500;">🔮 重要 ${importance.toFixed(1)}</span>` :
-              importance > 0 ? `<span style="margin-left: auto; font-size: 12px; color: #BDC3C7;">重要度 ${importance.toFixed(1)}</span>` : ''}
+            <span style="font-size: 13px; color: var(--palette-7f8c8d);">${sentimentText}</span>
+            ${evt.topic_tags ? `<span style="font-size: 13px; color: var(--palette-7f8c8d);">｜ ${evt.topic_tags.join('、')}</span>` : ''}
+            ${evt.reason ? `<span style="font-size: 13px; color: var(--palette-7f8c8d);">｜ ${escapeHtml(evt.reason)}</span>` : ''}
+            ${isLong ? `<span style="margin-left: auto; font-size: 12px; background: var(--palette-f4ecf7); color: var(--palette-8e44ad); padding: 2px 8px; border-radius: 6px; font-weight: 500;">🔮 重要 ${importance.toFixed(1)}</span>` :
+              importance > 0 ? `<span style="margin-left: auto; font-size: 12px; color: var(--palette-bdc3c7);">重要度 ${importance.toFixed(1)}</span>` : ''}
         </div>
     `;
     container.appendChild(div);
@@ -1481,8 +1909,8 @@ async function findBackgroundCandidates() {
     }
 
     resultEl.style.display = 'block';
-    resultEl.style.background = '#F7F3EE';
-    resultEl.style.color = '#7F8C8D';
+    resultEl.style.background = 'var(--palette-f7f3ee)';
+    resultEl.style.color = 'var(--palette-7f8c8d)';
     resultEl.textContent = '正在自動整理搜尋線索並尋找候選來源...';
     queryEl.style.display = 'none';
     candidateEl.style.display = 'none';
@@ -1501,14 +1929,14 @@ async function findBackgroundCandidates() {
         });
         const data = await res.json();
         if (!data.success) {
-            resultEl.style.background = '#FEF9E7';
-            resultEl.style.color = '#7D6608';
+            resultEl.style.background = 'var(--palette-fef9e7)';
+            resultEl.style.color = 'var(--palette-7d6608)';
             resultEl.textContent = data.message || '候選來源搜尋失敗。';
             return;
         }
 
-        resultEl.style.background = data.candidates?.length ? '#E8F5EC' : '#FEF9E7';
-        resultEl.style.color = data.candidates?.length ? '#2D6A4F' : '#7D6608';
+        resultEl.style.background = data.candidates?.length ? 'var(--palette-e8f5ec)' : 'var(--palette-fef9e7)';
+        resultEl.style.color = data.candidates?.length ? 'var(--palette-2d6a4f)' : 'var(--palette-7d6608)';
         resultEl.textContent = data.message || '已完成搜尋線索整理。';
 
         queryEl.style.display = 'block';
@@ -1517,8 +1945,8 @@ async function findBackgroundCandidates() {
         currentBackgroundCandidates = data.candidates || [];
         renderBackgroundCandidates(currentBackgroundCandidates);
     } catch (e) {
-        resultEl.style.background = '#FDECEA';
-        resultEl.style.color = '#922B21';
+        resultEl.style.background = 'var(--palette-fdecea)';
+        resultEl.style.color = 'var(--palette-922b21)';
         resultEl.textContent = '搜尋候選來源失敗';
         showToast('搜尋候選來源失敗，請確認後端服務。', 'error');
     }
@@ -1542,17 +1970,17 @@ function renderBackgroundCandidates(candidates) {
 
     candidates.forEach((source, index) => {
         const card = document.createElement('label');
-        card.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid #D6CEC7;border-radius:10px;background:white;cursor:pointer;';
+        card.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--palette-d6cec7);border-radius:10px;background:white;cursor:pointer;';
         card.innerHTML = `
             <input type="checkbox" class="candidate-source-check" value="${index}" style="margin-top:5px;width:18px;height:18px;">
             <div style="flex:1;">
                 <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
-                    <div style="font-size:15px;font-weight:700;color:#3D3530;">${escapeHtml(source.title || '未命名來源')}</div>
-                    <span style="font-size:12px;color:#7B9E87;white-space:nowrap;">${escapeHtml(source.confidence || '需要確認')}</span>
+                    <div style="font-size:15px;font-weight:700;color:var(--palette-3d3530);">${escapeHtml(source.title || '未命名來源')}</div>
+                    <span style="font-size:12px;color:var(--palette-7b9e87);white-space:nowrap;">${escapeHtml(source.confidence || '需要確認')}</span>
                 </div>
-                <div style="font-size:12px;color:#7F8C8D;margin-top:4px;">搜尋線索：${escapeHtml(source.query || '')}</div>
-                <div style="font-size:13px;color:#6B5E58;line-height:1.6;margin-top:6px;">${escapeHtml(source.summary || '無摘要')}</div>
-                ${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:13px;color:#4A90E2;text-decoration:none;">查看來源</a>` : ''}
+                <div style="font-size:12px;color:var(--palette-7f8c8d);margin-top:4px;">搜尋線索：${escapeHtml(source.query || '')}</div>
+                <div style="font-size:13px;color:var(--palette-6b5e58);line-height:1.6;margin-top:6px;">${escapeHtml(source.summary || '無摘要')}</div>
+                ${source.url ? `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="font-size:13px;color:var(--palette-4a90e2);text-decoration:none;">查看來源</a>` : ''}
             </div>
         `;
         candidateEl.appendChild(card);
@@ -1567,8 +1995,8 @@ async function generateBiographyDraft() {
         .filter(Boolean);
 
     resultEl.style.display = 'block';
-    resultEl.style.background = '#F7F3EE';
-    resultEl.style.color = '#7F8C8D';
+    resultEl.style.background = 'var(--palette-f7f3ee)';
+    resultEl.style.color = 'var(--palette-7f8c8d)';
     resultEl.textContent = checked.length
         ? '正在根據確認來源產生生平草稿...'
         : '正在根據基本資料產生生平草稿...';
@@ -1584,14 +2012,14 @@ async function generateBiographyDraft() {
         });
         const data = await res.json();
         if (!data.success) {
-            resultEl.style.background = '#FEF9E7';
-            resultEl.style.color = '#7D6608';
+            resultEl.style.background = 'var(--palette-fef9e7)';
+            resultEl.style.color = 'var(--palette-7d6608)';
             resultEl.textContent = data.message || '生平草稿生成失敗。';
             return;
         }
 
-        resultEl.style.background = '#E8F5EC';
-        resultEl.style.color = '#2D6A4F';
+        resultEl.style.background = 'var(--palette-e8f5ec)';
+        resultEl.style.color = 'var(--palette-2d6a4f)';
         resultEl.textContent = '已產生生平草稿，請檢查內容後再儲存。';
 
         const bioSection = document.getElementById('biography-section');
@@ -1606,8 +2034,8 @@ async function generateBiographyDraft() {
         document.getElementById('bio-save-btn').style.display = 'block';
         document.getElementById('bio-edit-btn').textContent = '✕ 取消';
     } catch (e) {
-        resultEl.style.background = '#FDECEA';
-        resultEl.style.color = '#922B21';
+        resultEl.style.background = 'var(--palette-fdecea)';
+        resultEl.style.color = 'var(--palette-922b21)';
         resultEl.textContent = '生平草稿生成失敗';
         showToast('生平草稿生成失敗，請確認後端服務。', 'error');
     }
@@ -1659,70 +2087,156 @@ async function saveBiography() {
 }
 
 // ===== 安全觀察 =====
+
+function _renderSafetySection(containerId, events, elderId, isUrgent) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const unacked = events.filter(({ event: e }) => e.acknowledged !== true);
+    const acked   = events.filter(({ event: e }) => e.acknowledged === true);
+    // 已確認只保留最近 5 筆
+    const ackedShow = acked.slice().reverse().slice(0, 5);
+    const toShow = [
+        ...unacked.slice().reverse(),
+        ...ackedShow,
+    ];
+    if (toShow.length === 0) {
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:14px;font-size:14px;">無相關事件</div>';
+        return;
+    }
+    container.innerHTML = '';
+    const rowBg   = isUrgent === 2 ? 'var(--palette-fef0f0)' : isUrgent === 1 ? 'var(--palette-fef8ec)' : 'var(--palette-eef5fd)';
+    const border  = isUrgent === 2 ? '#d32f2f' : isUrgent === 1 ? '#f0a500' : 'var(--palette-5b9bd5)';
+    const level   = isUrgent === 2 ? 3 : isUrgent === 1 ? 2 : 1;
+    toShow.forEach(({ event: evt, index }) => {
+        const isAcked = evt.acknowledged === true;
+        const div = document.createElement('div');
+        div.style.cssText = `background:${isAcked ? 'var(--palette-f5f5f5)' : rowBg};border-radius:10px;padding:12px 16px;font-size:15px;
+            border-left:3px solid ${isAcked ? 'var(--palette-bdc3c7)' : border};opacity:${isAcked ? '0.6' : '1'};`;
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px;">
+                <span style="font-weight:500;color:${isAcked ? 'var(--palette-7f8c8d)' : 'var(--palette-3d3530)'};flex:1;">${escapeHtml(evt.event)}</span>
+                <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                    ${isAcked ? '<span class="badge badge-safe">✓ 已確認</span>' : safetyBadge(level)}
+                    <span style="font-size:12px;color:var(--palette-7f8c8d);">${evt.date} ${(evt.time||'').substring(0,5)}</span>
+                </div>
+            </div>
+            <div style="font-size:13px;color:var(--palette-7f8c8d);">${escapeHtml(evt.reason || (evt.topic_tags||[]).join('、') || '')}</div>
+            ${(!isAcked && isUrgent === 2) ? `
+                <button onclick="acknowledgeSafetyEvent('${escapeHtml(elderId)}', ${index})"
+                    style="margin-top:8px;padding:6px 12px;border-radius:8px;border:1px solid var(--palette-bfd6c8);
+                        background:white;color:var(--color-primary);font-size:13px;cursor:pointer;font-family:inherit;">
+                    確認已知悉
+                </button>` : ''}
+        `;
+        container.appendChild(div);
+    });
+    // 若有更多已確認被截斷，顯示提示
+    const hiddenCount = acked.length - ackedShow.length;
+    if (hiddenCount > 0) {
+        const note = document.createElement('div');
+        note.style.cssText = 'text-align:center;font-size:12px;color:var(--palette-bdc3c7);padding:6px 0 2px;';
+        note.textContent = `另有 ${hiddenCount} 筆較早的已確認事件未顯示`;
+        container.appendChild(note);
+    }
+    // 批次確認按鈕只在有未確認時顯示
+    if (containerId === 'isafe-trend') {
+        const btn = document.getElementById('btn-ack-trend');
+        if (btn) btn.style.display = unacked.length ? 'inline-block' : 'none';
+    }
+    if (containerId === 'isafe-emotion') {
+        const btn = document.getElementById('btn-ack-emotion');
+        if (btn) btn.style.display = unacked.length ? 'inline-block' : 'none';
+    }
+}
+
 async function loadSafety(elderId) {
     try {
-        const res = await fetch(`${API_BASE}/api/safety/${elderId}`);
-        const data = await res.json();
+        const [safetyRes, profileRes] = await Promise.all([
+            fetch(`${API_BASE}/api/safety/${elderId}`),
+            fetch(`${API_BASE}/api/profile/${elderId}`),
+        ]);
+        const data    = await safetyRes.json();
+        const profile = await profileRes.json();
 
+        // 數字卡
         const hazardEl = document.getElementById('isafe-hazard');
-        hazardEl.textContent = data.hazard_level === 'high' ? '🔴 高風險' : '🟢 正常';
-        hazardEl.style.color = data.hazard_level === 'high' ? '#E74C3C' : '#27AE60';
+        hazardEl.innerHTML = data.hazard_level === 'high' ? safetyBadge(2) : safetyBadge(0);
+        hazardEl.style.color = data.hazard_level === 'high' ? 'var(--palette-e74c3c)' : 'var(--palette-27ae60)';
         document.getElementById('isafe-urgent-count').textContent = data.urgent_count;
-
         const trendEl = document.getElementById('isafe-trend-count');
         if (trendEl) {
             trendEl.textContent = data.trend_alerts || 0;
-            trendEl.style.color = data.trend_alerts > 0 ? '#E74C3C' : '#27AE60';
+            trendEl.style.color = (data.trend_alerts || 0) > 0 ? 'var(--palette-e74c3c)' : 'var(--palette-27ae60)';
         }
 
-        const res2 = await fetch(`${API_BASE}/api/profile/${elderId}`);
-        const profile = await res2.json();
-        const events = (profile.recent_events || []).filter(e =>
-            e.topic_tags && (
-                e.topic_tags.includes('安全警報') ||
-                e.topic_tags.includes('情緒') ||
-                e.topic_tags.includes('趨勢警報')
-            )
-        );
+        // 分欄事件
+        const allEvents = (profile.recent_events || []).map((event, index) => ({ event, index }));
+        const urgent  = allEvents.filter(({ event: e }) => (e.topic_tags||[]).includes('安全警報'));
+        const trend   = allEvents.filter(({ event: e }) => (e.topic_tags||[]).includes('趨勢警報') && !(e.topic_tags||[]).includes('安全警報'));
+        const emotion = allEvents.filter(({ event: e }) => (e.topic_tags||[]).includes('情緒') && !(e.topic_tags||[]).includes('安全警報') && !(e.topic_tags||[]).includes('趨勢警報'));
 
-        const container = document.getElementById('isafe-events');
-        if (events.length === 0) {
-            container.innerHTML = '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">尚無安全事件</div>';
-            return;
-        }
+        _renderSafetySection('isafe-urgent',  urgent,  elderId, 2);
+        _renderSafetySection('isafe-trend',   trend,   elderId, 1);
+        _renderSafetySection('isafe-emotion', emotion, elderId, 0);
 
-        container.innerHTML = '';
-        events.slice().reverse().forEach(evt => {
-            const isTrend = evt.topic_tags?.includes('趨勢警報');
-            const isUrgent = evt.topic_tags?.includes('安全警報');
-
-            let bgColor, badgeText;
-            if (isTrend) {
-                bgColor = '#FEF3CD';
-                badgeText = '趨勢警報';
-            } else if (isUrgent) {
-                bgColor = '#FDECEA';
-                badgeText = '🚨 緊急';
-            } else {
-                bgColor = '#FEF9E7';
-                badgeText = '⚠️ 注意';
-            }
-
-            const div = document.createElement('div');
-            div.style.cssText = `background: ${bgColor}; border-radius: 10px; padding: 12px 16px; font-size: 15px; margin-bottom: 8px;`;
-            div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                    <span style="font-weight: 500; color: #3D3530;">${escapeHtml(evt.event)}</span>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <span class="badge ${isUrgent ? 'badge-high' : ''}" style="${!isUrgent && !isTrend ? 'background:#FEF9E7;color:#7D6608;' : ''}">${badgeText}</span>
-                        <span style="font-size: 13px; color: #7F8C8D;">${evt.date} ${evt.time || ''}</span>
-                    </div>
-                </div>
-                <div style="font-size: 13px; color: #7F8C8D;">${escapeHtml(evt.reason || evt.topic_tags?.join('、') || '')}</div>
-            `;
-            container.appendChild(div);
-        });
+        // 更新全後台緊急橫幅
+        updateEmergencyBanner();
     } catch (e) { console.error('iSafe 載入失敗', e); }
+}
+
+async function acknowledgeByTag(elderId, tag) {
+    try {
+        const res = await fetch(`${API_BASE}/api/isafe/${elderId}/events/acknowledge-tag`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tag }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || '確認失敗');
+        showToast(`已確認 ${data.acknowledged_count} 筆${tag}事件。`, 'success');
+        await loadSafety(elderId);
+    } catch (e) { showToast(e.message || '確認失敗', 'error'); }
+}
+
+async function updateEmergencyBanner() {
+    try {
+        const elders = DEMO_ELDERS.map(e => e.id);
+        const results = await Promise.all(elders.map(id =>
+            fetch(`${API_BASE}/api/safety/${id}`).then(r => r.json()).catch(() => null)
+        ));
+        const elderNames = Object.fromEntries(DEMO_ELDERS.map(e => [e.id, e.name]));
+        const urgent = results
+            .map((d, i) => d?.urgent_count > 0 ? elderNames[elders[i]] : null)
+            .filter(Boolean);
+        const banner = document.getElementById('emergency-banner');
+        const dot    = document.getElementById('nav-isafe-dot');
+        if (urgent.length > 0) {
+            document.getElementById('emergency-banner-text').textContent =
+                `${urgent.join('、')} 有未確認的緊急警報`;
+            banner.style.display = 'flex';
+            if (dot) dot.style.display = 'inline-block';
+            document.body.style.paddingTop = '46px';
+        } else {
+            banner.style.display = 'none';
+            if (dot) dot.style.display = 'none';
+            document.body.style.paddingTop = '';
+        }
+    } catch (e) { /* 靜默失敗，不影響主功能 */ }
+}
+
+async function acknowledgeSafetyEvent(elderId, index) {
+    try {
+        const res = await fetch(`${API_BASE}/api/isafe/${elderId}/events/${index}/acknowledge`, {
+            method: 'PATCH',
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || '確認失敗');
+        showToast('安全事件已標記為已確認。', 'success');
+        await loadSafety(elderId);
+        await loadAdminDashboard();
+    } catch (e) {
+        showToast(e.message || '安全事件確認失敗。', 'error');
+    }
 }
 async function setLanguage(language) {
     const elderId = document.getElementById('elder-select').value;
@@ -1739,20 +2253,20 @@ async function setLanguage(language) {
             const status = document.getElementById('lang-status');
 
             if (language === 'zh') {
-                zhBtn.style.background = '#C17F5A';
+                zhBtn.style.background = 'var(--palette-c17f5a)';
                 zhBtn.style.color = 'white';
-                zhBtn.style.borderColor = '#C17F5A';
+                zhBtn.style.borderColor = 'var(--palette-c17f5a)';
                 taiBtn.style.background = 'white';
-                taiBtn.style.color = '#3D3530';
-                taiBtn.style.borderColor = '#D6CEC7';
+                taiBtn.style.color = 'var(--palette-3d3530)';
+                taiBtn.style.borderColor = 'var(--palette-d6cec7)';
                 status.textContent = '目前：華語模式';
             } else {
-                taiBtn.style.background = '#C17F5A';
+                taiBtn.style.background = 'var(--palette-c17f5a)';
                 taiBtn.style.color = 'white';
-                taiBtn.style.borderColor = '#C17F5A';
+                taiBtn.style.borderColor = 'var(--palette-c17f5a)';
                 zhBtn.style.background = 'white';
-                zhBtn.style.color = '#3D3530';
-                zhBtn.style.borderColor = '#D6CEC7';
+                zhBtn.style.color = 'var(--palette-3d3530)';
+                zhBtn.style.borderColor = 'var(--palette-d6cec7)';
                 status.textContent = '目前：台語模式（Breeze ASR 26）';
                 if (language === 'tai') {
                     status.textContent += data.breeze_loaded
@@ -1771,18 +2285,18 @@ function renderFamilyNotes(notes) {
     const container = document.getElementById('family-notes-list');
     container.innerHTML = '';
     if (!notes || notes.length === 0) {
-        container.innerHTML = '<div style="color:#BDC3C7;font-size:13px;padding:4px 0;">尚無家人提供的資訊</div>';
+        container.innerHTML = '<div style="color:var(--palette-bdc3c7);font-size:13px;padding:4px 0;">尚無家人提供的資訊</div>';
         return;
     }
     notes.forEach((note, idx) => {
         const div = document.createElement('div');
-        div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:white;border-radius:8px;border:1px solid #D6CEC7;';
+        div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;background:white;border-radius:8px;border:1px solid var(--palette-d6cec7);';
         div.innerHTML = `
-            <div style="flex:1;font-size:14px;color:#3D3530;">${escapeHtml(note.note)}</div>
-            <div style="font-size:12px;color:#9B8E87;white-space:nowrap;">${note.date || ''}</div>
+            <div style="flex:1;font-size:14px;color:var(--palette-3d3530);">${escapeHtml(note.note)}</div>
+            <div style="font-size:12px;color:var(--palette-9b8e87);white-space:nowrap;">${note.date || ''}</div>
             <button onclick="deleteFamilyNote(${idx})"
-                style="width:28px;height:28px;border-radius:50%;background:#FDECEA;
-                       border:none;color:#922B21;font-size:14px;cursor:pointer;flex-shrink:0;">×</button>
+                style="width:28px;height:28px;border-radius:50%;background:var(--palette-fdecea);
+                       border:none;color:var(--palette-922b21);font-size:14px;cursor:pointer;flex-shrink:0;">×</button>
         `;
         container.appendChild(div);
     });
@@ -1831,41 +2345,28 @@ async function loadAgentLogs() {
 
         document.getElementById('log-update-time').textContent = '更新：' + new Date().toLocaleTimeString('zh-TW');
 
-        const dotMap = { MagicAI: 'dot-magic', iSafe: 'dot-isafe', Decision: 'dot-decision' };
-        const lastMap = { MagicAI: 'magic-last', iSafe: 'isafe-last', Decision: 'decision-last' };
         const agentLabels = { MagicAI: '陪伴回應', iSafe: '安全觀察', Decision: '流程調度' };
-
-        ['MagicAI', 'iSafe', 'Decision'].forEach(agent => {
-            document.getElementById(dotMap[agent])?.classList.add('inactive');
-            const el = document.getElementById(lastMap[agent]);
-            if (el) el.textContent = '尚未啟動';
-            const lastLog = logs.find(l => l.agent === agent);
-            if (lastLog) {
-                document.getElementById(dotMap[agent])?.classList.remove('inactive');
-                if (el) el.textContent = `最後活動：${lastLog.time}`;
-            }
-        });
 
         const container = document.getElementById('agent-logs');
         container.innerHTML = '';
         if (logs.length === 0) {
             container.innerHTML =
-                '<div style="text-align: center; color: #BDC3C7; padding: 24px; font-size: 15px;">這位長者目前尚無系統處理紀錄</div>';
+                '<div style="text-align: center; color: var(--palette-bdc3c7); padding: 24px; font-size: 15px;">這位長者目前尚無系統處理紀錄</div>';
             return;
         }
         logs.forEach(log => {
             const row = document.createElement('div');
             row.className = 'log-row';
-            const actionColor = log.action === '分析完成' ? '#27AE60' :
-                               log.action === '完成' ? '#4A90E2' :
-                               log.action === '回應完成' ? '#C17F5A' :
-                               log.action === '降級' ? '#E74C3C' : '#7F8C8D';
+            const actionColor = log.action === '分析完成' ? 'var(--palette-27ae60)' :
+                               log.action === '完成' ? 'var(--palette-4a90e2)' :
+                               log.action === '回應完成' ? 'var(--palette-c17f5a)' :
+                               log.action === '降級' ? 'var(--palette-e74c3c)' : 'var(--palette-7f8c8d)';
             row.innerHTML = `
                 <span class="log-time">${log.time}</span>
                 <span class="log-agent ${log.agent}">${agentLabels[log.agent] || escapeHtml(log.agent)}</span>
                 <span style="min-width: 70px; color: ${actionColor}; font-size: 13px;">${log.action}</span>
-                <span style="color: #3D3530; font-size: 13px;">${escapeHtml(log.detail)}</span>
-                ${log.persona_id ? `<span style="margin-left:auto;color:#9B8E87;font-size:12px;">${escapeHtml(personaMap[log.persona_id] || log.persona_id)}</span>` : ''}
+                <span style="color: var(--palette-3d3530); font-size: 13px;">${escapeHtml(log.detail)}</span>
+                ${log.persona_id ? `<span style="margin-left:auto;color:var(--palette-9b8e87);font-size:12px;">${escapeHtml(personaMap[log.persona_id] || log.persona_id)}</span>` : ''}
             `;
             container.appendChild(row);
         });
@@ -1889,155 +2390,57 @@ async function loadPersonaNameMap(elderId) {
     }
 }
 
-async function loadSessions() {
-    const container = document.getElementById('session-list');
+async function loadMemoryTimeline(elderId) {
+    const container = document.getElementById('memory-timeline');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">載入中...</div>';
+    container.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:24px;font-size:15px;">載入中...</div>';
     try {
-        const res = await fetch(`${API_BASE}/api/admin/sessions`);
-        if (!res.ok) throw new Error('sessions');
-        const data = await res.json();
-        const rows = data.sessions || [];
-        if (rows.length === 0) {
-            container.innerHTML = '<div style="text-align:center;color:#9B8E87;padding:18px;font-size:14px;">目前沒有暫存中的對話狀態</div>';
+        const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
+        if (!res.ok) throw new Error('profile');
+        const profile = await res.json();
+        const SAFETY_TAGS = ['安全警報', '趨勢警報'];
+        const allEvents = (profile.recent_events || []).slice().reverse();
+        // 記憶時間軸只顯示生活記憶，安全事件歸 iSafe 頁面管
+        const events = allEvents.filter(evt =>
+            !(evt.topic_tags || []).some(t => SAFETY_TAGS.includes(t))
+        );
+        const keyEvents = events.filter(evt => Number(evt.importance || 0) >= 0.7);
+        const latest = events[0];
+        document.getElementById('memory-total-count').textContent = events.length;
+        document.getElementById('memory-key-count').textContent = keyEvents.length;
+        document.getElementById('memory-latest-date').textContent = latest ? `${latest.date || ''} ${latest.time || ''}`.trim() || '—' : '—';
+        if (!events.length) {
+            container.innerHTML = '<div style="text-align:center;color:var(--palette-9b8e87);padding:24px;font-size:15px;">尚無記憶事件</div>';
             return;
         }
-        const elderNames = Object.fromEntries(DEMO_ELDERS.map(elder => [elder.id, elder.name]));
-        container.innerHTML = '';
-        rows.forEach(row => {
-            const div = document.createElement('div');
-            div.className = 'session-row';
-            div.innerHTML = `
-                <div style="min-width:0;">
-                    <div style="font-size:15px;font-weight:700;color:var(--ink);">${escapeHtml(elderNames[row.elder_id] || row.elder_id)}</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:4px;">
-                        session：${escapeHtml(row.session_id || 'default')}｜陪伴者：${escapeHtml(row.persona_id || 'profile')}｜互動 ${row.chat_count || 0} 次
+        container.innerHTML = events.slice(0, 30).map(evt => {
+            const importance = Number(evt.importance || 0);
+            const isKey = importance >= 0.7;
+            const tone = evt.sentiment === 'positive'
+                ? ['var(--palette-e8f5ec)', 'var(--color-safe)']
+                : evt.sentiment === 'negative'
+                ? ['var(--palette-fef3e2)', 'var(--color-warning)']
+                : ['var(--palette-f7f3ee)', 'var(--color-primary-light)'];
+            return `
+                <div style="display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-left:4px solid ${tone[1]};border-radius:8px;background:${tone[0]};">
+                    <div style="font-size:12px;color:var(--muted);font-family:monospace;">${escapeHtml(evt.date || '')}<br>${escapeHtml(evt.time || '')}</div>
+                    <div>
+                        <div style="font-size:14px;font-weight:700;color:var(--ink);line-height:1.6;">${escapeHtml(evt.event || '')}</div>
+                        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${escapeHtml(evt.reason || (evt.topic_tags || []).join('、') || '')}</div>
                     </div>
-                    <div style="font-size:12px;color:#9B8E87;margin-top:2px;">最後活動：${escapeHtml(row.last_seen || '')}</div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                        ${isKey ? '<span class="badge badge-emotion">★ 關鍵記憶</span>' : ''}
+                        <span style="font-size:12px;color:var(--muted);">重要度 ${importance.toFixed(1)}</span>
+                    </div>
                 </div>
-                <button onclick="clearSession('${escapeHtml(row.elder_id)}','${escapeHtml(row.session_id || '')}')"
-                    style="flex-shrink:0;padding:7px 12px;border-radius:8px;border:1px solid #E7B7B7;background:white;color:#922B21;font-size:13px;cursor:pointer;font-family:inherit;">
-                    清除
-                </button>
             `;
-            container.appendChild(div);
-        });
+        }).join('');
     } catch (e) {
-        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:18px;font-size:14px;">對話狀態載入失敗</div>';
+        container.innerHTML = '<div style="text-align:center;color:var(--palette-922b21);padding:24px;font-size:15px;">記憶事件載入失敗</div>';
+        console.error('記憶事件載入失敗', e);
     }
 }
 
-async function clearSession(elderId, sessionId = null) {
-    await postClearSessions({ elder_id: elderId, session_id: sessionId || null });
-}
-
-async function clearAllSessions() {
-    await postClearSessions({ elder_id: null, session_id: null });
-}
-
-async function postClearSessions(payload) {
-    try {
-        const res = await fetch(`${API_BASE}/api/admin/sessions/clear`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-        if (res.status === 403) {
-            showToast('需要系統管理者權限才能清除對話狀態。', 'warn');
-            return;
-        }
-        if (!res.ok) throw new Error('clear');
-        showToast('對話狀態已清除。', 'success');
-        await loadSessions();
-        await loadAgentLogs();
-    } catch (e) {
-        showToast('清除失敗，請確認後端服務與權限。', 'error');
-    }
-}
-
-function loadRagPreset() {
-    const elderId = document.getElementById('rag-elder-select')?.value || 'W001';
-    const presets = {
-        W001: [
-            '王大明最近有沒有頭暈跌倒的安全風險？｜頭很暈,跌倒,安全警報',
-            '王大明曾經提到胸口痛或喘不過氣嗎？｜胸口很痛,喘不過氣',
-            '王大明最近有沒有孤單或不開心？｜孤單,不開心',
-        ],
-        C001: [
-            '陳秀英最近有沒有想念以前的家？｜以前的家,老朋友',
-            '陳秀英有沒有頭暈快跌倒的紀錄？｜頭很暈,跌倒',
-            '陳秀英有沒有提到晚餐讓她開心？｜晚餐,開心',
-        ],
-        L001: [
-            '林月琴以前做旗袍的回憶是什麼？｜旗袍,裁縫',
-            '林月琴晚上是否會心慌或擔心忘記事情？｜心慌,女兒',
-            '林月琴最近有沒有想念以前的裁縫店？｜裁縫店,孤單',
-        ],
-    };
-    document.getElementById('rag-query-input').value = (presets[elderId] || presets.W001).join('\n');
-}
-
-function parseRagQueries() {
-    const text = document.getElementById('rag-query-input').value.trim();
-    return text.split('\n')
-        .map(line => line.trim())
-        .filter(Boolean)
-        .map(line => {
-            const [query, expectedText = ''] = line.split(/[|｜]/);
-            return {
-                query: query.trim(),
-                expected: expectedText.split(/[,，、]/).map(item => item.trim()).filter(Boolean),
-            };
-        })
-        .filter(item => item.query);
-}
-
-async function runRagEvaluation() {
-    const elderId = document.getElementById('rag-elder-select').value;
-    const summary = document.getElementById('rag-summary');
-    const container = document.getElementById('rag-results');
-    const queries = parseRagQueries();
-    if (queries.length === 0) {
-        showToast('請先輸入至少一題測試問題。', 'warn');
-        return;
-    }
-    summary.textContent = '測試中...';
-    container.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:24px;font-size:15px;">正在搜尋相關記憶...</div>';
-    try {
-        const res = await fetch(`${API_BASE}/api/admin/rag/evaluate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: elderId, queries }),
-        });
-        if (!res.ok) throw new Error('rag');
-        const data = await res.json();
-        summary.textContent = `命中 ${data.hits || 0}/${data.total || 0}，命中率 ${Math.round((data.hit_rate || 0) * 100)}%`;
-        container.innerHTML = '';
-        (data.rows || []).forEach(row => {
-            const card = document.createElement('div');
-            card.style.cssText = `border:1px solid ${row.hit ? '#BFD6C8' : '#E7B7B7'};background:${row.hit ? 'var(--care-soft)' : 'var(--alert-soft)'};border-radius:8px;padding:14px 16px;`;
-            const retrieved = (row.retrieved || []).map(item => `
-                <div style="margin-top:8px;padding:10px;border-radius:8px;background:white;border:1px solid var(--line);">
-                    <div style="font-size:14px;color:var(--ink);line-height:1.6;">${escapeHtml(item.event || '')}</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:4px;">重要度 ${item.importance || 0}｜相關度 ${item.rag_score ?? '—'}</div>
-                </div>
-            `).join('');
-            card.innerHTML = `
-                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
-                    <div style="font-size:16px;font-weight:700;color:var(--ink);">${escapeHtml(row.query)}</div>
-                    <span class="badge ${row.hit ? 'badge-low' : 'badge-high'}">${row.hit ? '命中' : '未命中'}</span>
-                </div>
-                <div style="font-size:13px;color:var(--muted);margin-top:6px;">期待關鍵字：${escapeHtml((row.expected || []).join('、') || '未設定')}</div>
-                ${row.hit ? '' : '<div style="font-size:13px;color:#922B21;margin-top:8px;">未命中可能代表問法太抽象、期待關鍵字和記憶文字不同，或目前展示環境尚未切換到完整資料庫檢索。</div>'}
-                ${retrieved || '<div style="font-size:13px;color:var(--muted);margin-top:10px;">沒有找到相關記憶</div>'}
-            `;
-            container.appendChild(card);
-        });
-    } catch (e) {
-        summary.textContent = '測試失敗';
-        container.innerHTML = '<div style="text-align:center;color:#922B21;padding:24px;font-size:15px;">記憶檢索測試失敗，請確認後端服務。</div>';
-    }
-}
 
 async function loadSttStatus() {
     const box = document.getElementById('stt-status-box');
@@ -2050,10 +2453,10 @@ async function loadSttStatus() {
             <div><strong style="color:var(--ink);">台語路徑：</strong>${data.taiwanese_stt_verified ? '可選擇' : '尚未完整'}</div>
             <div><strong style="color:var(--ink);">模型池：</strong>${data.pool_initialized ? `已載入 ${data.pool_size || 0} 個 worker` : '尚未載入，第一次辨識時才初始化'}</div>
             <div><strong style="color:var(--ink);">Torch：</strong>${data.torch_available ? '可用' : '不可用'}｜<strong style="color:var(--ink);">Transformers：</strong>${data.transformers_available ? '可用' : '不可用'}｜<strong style="color:var(--ink);">Breeze Cache：</strong>${data.breeze_cache_exists ? '已找到' : '未找到'}</div>
-            <div style="margin-top:6px;color:#9B8E87;">${escapeHtml(data.verification_note || '')}</div>
+            <div style="margin-top:6px;color:var(--palette-9b8e87);">${escapeHtml(data.verification_note || '')}</div>
         `;
     } catch (e) {
-        box.innerHTML = '<span style="color:#922B21;">STT 狀態檢查失敗</span>';
+        box.innerHTML = '<span style="color:var(--palette-922b21);">STT 狀態檢查失敗</span>';
     }
 }
 
@@ -2093,7 +2496,7 @@ async function runSttAudioTest() {
             <div style="font-size:13px;color:var(--muted);margin-top:6px;">語速判定：${escapeHtml(data.speed_emotion || 'normal')}｜成功：${data.success ? '是' : '否'}</div>
         `;
     } catch (e) {
-        result.innerHTML = '<span style="color:#922B21;">辨識失敗，請確認音檔格式與 STT 模型狀態。</span>';
+        result.innerHTML = '<span style="color:var(--palette-922b21);">辨識失敗，請確認音檔格式與 STT 模型狀態。</span>';
     }
 }
 
@@ -2126,7 +2529,7 @@ async function runSttCerEvaluation() {
         showToast('請先輸入至少一筆標準答案與辨識結果。', 'warn');
         return;
     }
-    result.innerHTML = '<div style="text-align:center;color:#BDC3C7;padding:18px;font-size:14px;">計算中...</div>';
+    result.innerHTML = '<div style="text-align:center;color:var(--palette-bdc3c7);padding:18px;font-size:14px;">計算中...</div>';
     try {
         const res = await fetch(`${API_BASE}/api/admin/stt/evaluate-transcripts`, {
             method: 'POST',
@@ -2147,7 +2550,7 @@ async function runSttCerEvaluation() {
             result.appendChild(div);
         });
     } catch (e) {
-        result.innerHTML = '<div style="text-align:center;color:#922B21;padding:18px;font-size:14px;">CER 評估失敗</div>';
+        result.innerHTML = '<div style="text-align:center;color:var(--palette-922b21);padding:18px;font-size:14px;">CER 評估失敗</div>';
     }
 }
 
@@ -2205,6 +2608,9 @@ window.addEventListener('load', async () => {
     loadElderData(firstElderId);
     loadDemoOverview();
     initTagLimits();
+    // 緊急橫幅初始化 + 每60秒自動更新
+    updateEmergencyBanner();
+    setInterval(updateEmergencyBanner, 60000);
 });
 // ===== 人格設定 =====
 async function loadPersonas(elderId) {
@@ -2227,56 +2633,49 @@ async function loadPersonas(elderId) {
             const avatarSrc = safeAvatarSrc(persona.avatar_path);
             const div = document.createElement('div');
             div.style.cssText = `
-                background: ${isActive ? '#FEF3E8' : '#F7F3EE'};
-                border: ${isActive ? '2px solid #C17F5A' : '1px solid #D6CEC7'};
+                background: ${isActive ? 'var(--palette-fef3e8)' : 'var(--palette-f7f3ee)'};
+                border: ${isActive ? '2px solid var(--palette-c17f5a)' : '1px solid var(--palette-d6cec7)'};
                 border-radius: 12px; padding: 16px;
                 display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center;
             `;
             div.innerHTML = `
                 <img src="${avatarSrc}" alt="${escapeHtml(persona.name)}"
-                    style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid #D6CEC7;background:white;">
+                    style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--palette-d6cec7);background:white;">
                 <div>
-                    <div style="font-weight: 500; font-size: 16px; color: #3D3530;">
+                    <div style="font-weight: 500; font-size: 16px; color: var(--palette-3d3530);">
                         ${escapeHtml(persona.name)}
-                        ${isActive ? '<span style="font-size: 12px; color: #C17F5A; margin-left: 8px;">使用中</span>' : ''}
+                        ${isActive ? '<span style="font-size: 12px; color: var(--palette-c17f5a); margin-left: 8px;">使用中</span>' : ''}
                     </div>
-                    <div style="font-size: 13px; color: #7F8C8D; margin-top: 4px;">
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-top: 4px;">
                         ${persona.relation ? escapeHtml(persona.relation) + '｜' : ''}
                         稱呼：${escapeHtml(persona.honorific || '')}｜
                         聲音：${persona.voice_path ? '已上傳語音樣本' : '使用後援語音'}
                         ${persona.voice_path ? '｜已上傳語音樣本' : ''}
                         ${persona.avatar_path ? '｜已上傳照片' : ''}
-                        ${persona.is_deceased ? '｜<span style="color:#E74C3C;">已故親人</span>' : ''}
+                        ${persona.is_deceased ? '｜<span style="color:var(--palette-e74c3c);">已故親人</span>' : ''}
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
                         <label style="margin:0;">
                             <input id="avatar-file-${elderId}-${id}" type="file" accept=".png,.jpg,.jpeg,.webp" style="display:none;"
                                 onchange="uploadPersonaAvatar('${elderId}', '${id}', this.files[0])">
-                            <span style="display:inline-block;padding:7px 12px;border-radius:8px;border:1px solid #D6CEC7;background:white;color:#3D3530;font-size:13px;cursor:pointer;">
+                            <span style="display:inline-block;padding:7px 12px;border-radius:8px;border:1px solid var(--palette-d6cec7);background:white;color:var(--palette-3d3530);font-size:13px;cursor:pointer;">
                                 上傳照片
                             </span>
                         </label>
                         <label style="margin:0;">
                             <input id="voice-file-${elderId}-${id}" type="file" accept=".wav" style="display:none;"
                                 onchange="uploadPersonaVoice('${elderId}', '${id}', this.files[0])">
-                            <span style="display:inline-block;padding:7px 12px;border-radius:8px;border:1px solid #D6CEC7;background:white;color:#3D3530;font-size:13px;cursor:pointer;">
+                            <span style="display:inline-block;padding:7px 12px;border-radius:8px;border:1px solid var(--palette-d6cec7);background:white;color:var(--palette-3d3530);font-size:13px;cursor:pointer;">
                                 上傳聲音
                             </span>
                         </label>
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                    ${!isActive ? `
-                    <button onclick="switchPersona('${elderId}', '${id}')"
-                        style="padding: 8px 16px; border-radius: 8px; border: none;
-                               background: #7B9E87; color: white; font-size: 14px;
-                               cursor: pointer; font-family: inherit;">
-                        切換
-                    </button>` : ''}
                     ${id !== 'ai' ? `
                     <button onclick="deletePersona('${elderId}', '${id}')"
                         style="padding: 8px 16px; border-radius: 8px; border: none;
-                               background: #FDECEA; color: #922B21; font-size: 14px;
+                               background: var(--palette-fdecea); color: var(--palette-922b21); font-size: 14px;
                                cursor: pointer; font-family: inherit;">
                         刪除
                     </button>` : ''}
@@ -2312,8 +2711,8 @@ async function addPersona() {
     }
 
     msgEl.style.display = 'block';
-    msgEl.style.background = '#F7F3EE';
-    msgEl.style.color = '#7F8C8D';
+    msgEl.style.background = 'var(--palette-f7f3ee)';
+    msgEl.style.color = 'var(--palette-7f8c8d)';
     msgEl.textContent = '新增中...';
 
     try {
@@ -2343,11 +2742,14 @@ async function addPersona() {
         }
 
         if (data.success) {
-        msgEl.style.background = '#E8F5EC';
-        msgEl.style.color = '#2D6A4F';
+        msgEl.style.background = 'var(--palette-e8f5ec)';
+        msgEl.style.color = 'var(--palette-2d6a4f)';
         msgEl.textContent = data.message + '（說話風格生成中...）';
         showToast('陪伴者已新增。', 'success');
         loadPersonas(elderId);
+        if (elderId === document.getElementById('elder-select')?.value) {
+            loadProfilePersonaOptions(elderId);
+        }
 
             // 清空表單
             document.getElementById('persona-name').value = '';
@@ -2364,8 +2766,8 @@ async function addPersona() {
             document.querySelectorAll('#habit-tags input').forEach(cb => cb.checked = false);
         }
     } catch (e) {
-        msgEl.style.background = '#FDECEA';
-        msgEl.style.color = '#922B21';
+        msgEl.style.background = 'var(--palette-fdecea)';
+        msgEl.style.color = 'var(--palette-922b21)';
         msgEl.textContent = '新增失敗';
         showToast('陪伴者新增失敗。', 'error');
     }
@@ -2375,8 +2777,8 @@ async function uploadPersonaVoice(elderId, personaId, file) {
     if (!file) return;
     const msgEl = document.getElementById('persona-message');
     msgEl.style.display = 'block';
-    msgEl.style.background = '#F7F3EE';
-    msgEl.style.color = '#7F8C8D';
+    msgEl.style.background = 'var(--palette-f7f3ee)';
+    msgEl.style.color = 'var(--palette-7f8c8d)';
     msgEl.textContent = '上傳聲音樣本中...';
 
     try {
@@ -2389,14 +2791,14 @@ async function uploadPersonaVoice(elderId, personaId, file) {
             body: formData
         });
         if (!res.ok) throw new Error(await res.text());
-        msgEl.style.background = '#E8F5EC';
-        msgEl.style.color = '#2D6A4F';
+        msgEl.style.background = 'var(--palette-e8f5ec)';
+        msgEl.style.color = 'var(--palette-2d6a4f)';
         msgEl.textContent = '聲音樣本已上傳，會優先使用這份聲音。';
         showToast('聲音樣本已上傳。', 'success');
         loadPersonas(elderId);
     } catch (e) {
-        msgEl.style.background = '#FDECEA';
-        msgEl.style.color = '#922B21';
+        msgEl.style.background = 'var(--palette-fdecea)';
+        msgEl.style.color = 'var(--palette-922b21)';
         msgEl.textContent = '聲音上傳失敗';
         showToast('聲音上傳失敗，請確認檔案格式。', 'error');
         console.error('聲音上傳失敗', e);
@@ -2407,8 +2809,8 @@ async function uploadPersonaAvatar(elderId, personaId, file) {
     if (!file) return;
     const msgEl = document.getElementById('persona-message');
     msgEl.style.display = 'block';
-    msgEl.style.background = '#F7F3EE';
-    msgEl.style.color = '#7F8C8D';
+    msgEl.style.background = 'var(--palette-f7f3ee)';
+    msgEl.style.color = 'var(--palette-7f8c8d)';
     msgEl.textContent = '上傳照片中...';
 
     try {
@@ -2421,35 +2823,17 @@ async function uploadPersonaAvatar(elderId, personaId, file) {
             body: formData
         });
         if (!res.ok) throw new Error(await res.text());
-        msgEl.style.background = '#E8F5EC';
-        msgEl.style.color = '#2D6A4F';
+        msgEl.style.background = 'var(--palette-e8f5ec)';
+        msgEl.style.color = 'var(--palette-2d6a4f)';
         msgEl.textContent = '陪伴者照片已上傳。';
         showToast('陪伴者照片已上傳。', 'success');
         loadPersonas(elderId);
     } catch (e) {
-        msgEl.style.background = '#FDECEA';
-        msgEl.style.color = '#922B21';
+        msgEl.style.background = 'var(--palette-fdecea)';
+        msgEl.style.color = 'var(--palette-922b21)';
         msgEl.textContent = '照片上傳失敗';
         showToast('照片上傳失敗，請確認檔案格式。', 'error');
         console.error('照片上傳失敗', e);
-    }
-}
-
-async function switchPersona(elderId, personaId) {
-    try {
-        const res = await fetch(`${API_BASE}/api/profile/persona/switch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: elderId, persona_id: personaId })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showToast('陪伴者已切換。', 'success');
-            loadPersonas(elderId);
-        }
-    } catch (e) {
-        showToast('陪伴者切換失敗。', 'error');
-        console.error('切換失敗', e);
     }
 }
 
@@ -2465,12 +2849,251 @@ async function deletePersona(elderId, personaId) {
         if (data.success) {
             showToast('陪伴者已刪除。', 'success');
             loadPersonas(elderId);
+            if (elderId === document.getElementById('elder-select')?.value) {
+                loadProfilePersonaOptions(elderId);
+            }
         }
     } catch (e) {
         showToast('陪伴者刪除失敗。', 'error');
         console.error('刪除失敗', e);
     }
 }
+
+// ===== 新增長者 Modal =====
+function openAddElderModal() {
+    document.getElementById('add-elder-modal').style.display = 'flex';
+    // 重置表單
+    document.getElementById('aem-name').value = '';
+    document.getElementById('aem-birth-year').value = '';
+    document.getElementById('aem-hometown').value = '';
+    document.getElementById('aem-job').value = '';
+    document.getElementById('aem-hobbies').value = '';
+    document.getElementById('aem-hints').value = '';
+    document.getElementById('aem-family').value = '';
+    document.getElementById('aem-biography').value = '';
+    document.getElementById('aem-elder-id-preview').textContent = '（輸入姓名後自動產生）';
+    document.getElementById('aem-bio-section').style.display = 'none';
+    document.getElementById('aem-generate-btn').disabled = false;
+}
+
+function closeAddElderModal() {
+    document.getElementById('add-elder-modal').style.display = 'none';
+}
+
+// 輸入姓名後即時預覽 ID
+let _aemIdTimer = null;
+async function onAemNameInput() {
+    const name = document.getElementById('aem-name').value.trim();
+    clearTimeout(_aemIdTimer);
+    if (!name) {
+        document.getElementById('aem-elder-id-preview').textContent = '（輸入姓名後自動產生）';
+        return;
+    }
+    _aemIdTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/admin/elders/preview-id?name=${encodeURIComponent(name)}`, {
+                headers: { 'Authorization': `Bearer ${sessionStorage.getItem('care4u_admin_token') || ''}` }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById('aem-elder-id-preview').textContent = data.elder_id;
+        } catch (_) {}
+    }, 400);
+}
+
+// 解析 "兒子：志明" 格式的家人列表
+function parseAemFamily(text) {
+    return text.split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+            const [rel, nm] = line.split(/[：:]/);
+            return { relation: (rel || '').trim(), name: (nm || '').trim() };
+        })
+        .filter(m => m.relation && m.name);
+}
+
+async function generateAemBiography() {
+    const name = document.getElementById('aem-name').value.trim();
+    if (!name) { showToast('請先輸入姓名', 'error'); return; }
+    const btn = document.getElementById('aem-generate-btn');
+    btn.disabled = true;
+    btn.textContent = '生成中…';
+    try {
+        const body = {
+            name,
+            gender:         document.getElementById('aem-gender').value,
+            birth_year:     parseInt(document.getElementById('aem-birth-year').value) || null,
+            hometown:       document.getElementById('aem-hometown').value.trim(),
+            job:            document.getElementById('aem-job').value.trim(),
+            hobbies:        document.getElementById('aem-hobbies').value.split(/[,，、]/).map(s => s.trim()).filter(Boolean),
+            family_members: parseAemFamily(document.getElementById('aem-family').value),
+            hints:          document.getElementById('aem-hints').value.trim(),
+        };
+        const res = await fetch(`${API_BASE}/api/profile/biography-preview-new`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('care4u_admin_token') || ''}`,
+            },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || '生成失敗');
+        document.getElementById('aem-biography').value = data.biography;
+        document.getElementById('aem-bio-section').style.display = 'block';
+        showToast('傳記草稿已生成，請確認後再儲存', 'success');
+    } catch (e) {
+        showToast(e.message || '傳記生成失敗', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ AI 生成傳記';
+    }
+}
+
+async function submitNewElder() {
+    const name = document.getElementById('aem-name').value.trim();
+    if (!name) { showToast('請填寫姓名', 'error'); return; }
+    const btn = document.getElementById('aem-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '建立中…';
+    try {
+        const body = {
+            name,
+            gender:         document.getElementById('aem-gender').value,
+            birth_year:     parseInt(document.getElementById('aem-birth-year').value) || null,
+            hometown:       document.getElementById('aem-hometown').value.trim(),
+            cognitive_status: document.getElementById('aem-cognitive-status').value,
+            job:            document.getElementById('aem-job').value.trim(),
+            hobbies:        document.getElementById('aem-hobbies').value.split(/[,，、]/).map(s => s.trim()).filter(Boolean),
+            family_members: parseAemFamily(document.getElementById('aem-family').value),
+            hints:          document.getElementById('aem-hints').value.trim(),
+            biography:      document.getElementById('aem-biography').value.trim(),
+        };
+        const res = await fetch(`${API_BASE}/api/admin/elders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('care4u_admin_token') || ''}`,
+            },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || '建立失敗');
+        showToast(`${data.message}`, 'success');
+        closeAddElderModal();
+        // 重新載入長者清單並切換到新長者
+        await loadAllowedElders();
+        const sel = document.getElementById('elder-select');
+        if (sel) { sel.value = data.elder_id; loadElderData(data.elder_id); }
+    } catch (e) {
+        showToast(e.message || '長者建立失敗', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '確認建立';
+    }
+}
 </script>
+
+<!-- 新增長者 Modal -->
+<div id="add-elder-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:9000; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--surface); border-radius:16px; width:100%; max-width:620px; max-height:90vh; overflow-y:auto; padding:28px 28px 24px; box-shadow:0 8px 40px rgba(0,0,0,.25);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="font-size:18px; font-weight:600; margin:0;">新增長者</h3>
+      <button onclick="closeAddElderModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--muted); line-height:1;">×</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+      <div style="grid-column:1/3;">
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">姓名 <span style="color:#e74c3c;">*</span></label>
+        <input id="aem-name" type="text" placeholder="例：王小明" oninput="onAemNameInput()"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">性別</label>
+        <select id="aem-gender" style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft);">
+          <option value="male">男</option>
+          <option value="female">女</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">認知狀態</label>
+        <select id="aem-cognitive-status" style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft);">
+          <option value="normal">正常</option>
+          <option value="mild_dementia">輕度認知障礙</option>
+          <option value="moderate_dementia">中度認知障礙</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">出生年（西元）</label>
+        <input id="aem-birth-year" type="number" placeholder="例：1945" min="1900" max="2010"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">家鄉</label>
+        <input id="aem-hometown" type="text" placeholder="例：台南市"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
+      </div>
+
+      <div style="grid-column:1/3;">
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">曾任職業</label>
+        <input id="aem-job" type="text" placeholder="例：臺鐵火車司機"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
+      </div>
+
+      <div style="grid-column:1/3;">
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">嗜好（逗號分隔）</label>
+        <input id="aem-hobbies" type="text" placeholder="例：釣魚、下象棋、聽台語老歌"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
+      </div>
+
+      <div style="grid-column:1/3;">
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">家人（每行一位，格式：關係：姓名）</label>
+        <textarea id="aem-family" rows="3" placeholder="兒子：志明&#10;女兒：淑芬&#10;孫子：小宇"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; background:var(--surface-soft); box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+      </div>
+
+      <div style="grid-column:1/3;">
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">關鍵人生事件 hint（給 AI 生成傳記用）</label>
+        <textarea id="aem-hints" rows="3" placeholder="例：退休後每天釣魚，妻子十年前過世，孫子在成大念書"
+          style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; background:var(--surface-soft); box-sizing:border-box; resize:vertical; font-family:inherit;"></textarea>
+        <p style="font-size:12px; color:var(--muted); margin:4px 0 0;">⚠️ AI 只會使用你填寫的資料，不會自行捏造個人細節。</p>
+      </div>
+    </div>
+
+    <!-- 自動 ID 預覽 -->
+    <div style="margin:14px 0; padding:10px 14px; background:var(--surface-soft); border-radius:8px; font-size:14px; color:var(--muted);">
+      自動產生 ID：<strong id="aem-elder-id-preview" style="color:var(--care);">（輸入姓名後自動產生）</strong>
+    </div>
+
+    <!-- AI 傳記生成 -->
+    <button id="aem-generate-btn" type="button" onclick="generateAemBiography()"
+      style="width:100%; padding:12px; margin-bottom:12px; background:var(--palette-d6cec7); color:var(--palette-3d3530); border:none; border-radius:10px; font-size:15px; cursor:pointer; font-family:inherit;">
+      ✨ AI 生成傳記（選用）
+    </button>
+
+    <div id="aem-bio-section" style="display:none; margin-bottom:14px;">
+      <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">傳記草稿（可直接編輯）</label>
+      <textarea id="aem-biography" rows="8"
+        style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; background:var(--surface-soft); box-sizing:border-box; resize:vertical; font-family:inherit; line-height:1.6;"></textarea>
+      <p style="font-size:12px; color:#e67e22; margin:4px 0 0;">📋 請仔細確認內容，確保沒有不正確的個人細節後再儲存。</p>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button type="button" onclick="closeAddElderModal()"
+        style="flex:1; padding:13px; background:var(--surface-soft); color:var(--ink); border:1px solid var(--line); border-radius:10px; font-size:15px; cursor:pointer; font-family:inherit;">
+        取消
+      </button>
+      <button id="aem-submit-btn" type="button" onclick="submitNewElder()"
+        style="flex:2; padding:13px; background:var(--care); color:#fff; border:none; border-radius:10px; font-size:15px; cursor:pointer; font-family:inherit; font-weight:600;">
+        確認建立
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

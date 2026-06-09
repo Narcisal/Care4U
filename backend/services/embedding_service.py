@@ -2,7 +2,7 @@ import os
 from google import genai
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 _client = None
 
@@ -23,7 +23,7 @@ class EmbeddingService:
 
     def __init__(self):
         self.model = "models/gemini-embedding-2"
-        self.dimensions = 768
+        self.dimensions = 3072
 
     def embed(self, text: str) -> list | None:
         client = _get_client()

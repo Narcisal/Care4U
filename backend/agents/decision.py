@@ -179,6 +179,8 @@ class Decision:
                 "_isafe_ms": None,
                 "_magic_ms": None,
                 "_chat_total_ms": round((time.perf_counter() - t_chat) * 1000),
+                "_llm_used": False,
+                "_isafe_path": "emergency_keyword",
             }
 
         safety_future = _agent_executor.submit(
@@ -192,6 +194,10 @@ class Decision:
         response = magic_result["_text"]
 
         escalation_level = safety.get("escalation_level", 0)
+
+        # Write iSafe result back into the last model message so the admin view can read it.
+        self._patch_last_model_message(escalation_level, safety.get("sentiment", "neutral"))
+
         if escalation_level >= 2:
             response = (
                 f"{response}\n\n"
@@ -222,7 +228,126 @@ class Decision:
             "_isafe_ms": safety.get("_isafe_ms"),
             "_magic_ms": magic_result.get("_magic_ms"),
             "_chat_total_ms": round((time.perf_counter() - t_chat) * 1000),
+            "_llm_used": safety.get("_llm_used"),
+            "_isafe_path": safety.get("_isafe_path"),
         }
+
+    def stream_chat(
+        self,
+        user_message: str,
+        speed_emotion: str = "normal",
+    ):
+        t_chat = time.perf_counter()
+        self.last_seen = datetime.now()
+        self.chat_count += 1
+
+        if quick_keyword_check(user_message) == 3:
+            message = (
+                "這可能是緊急狀況，請先保持安全並立即通知照護人員，"
+                "必要時撥打 119。"
+            )
+            yield {"type": "chunk", "chunk": message}
+            yield {
+                "type": "done",
+                "message": message,
+                "emotion": "urgent",
+                "is_urgent": True,
+                "sentiment": "negative",
+                "trend_alert": None,
+                "escalation_level": 3,
+                "elder_id": self.elder_id,
+                "history_length": len(self.magic.get_history()),
+                "persona_name": self.active_persona.get("name", "AI 助理"),
+                "_isafe_ms": None,
+                "_magic_ms": None,
+                "_first_chunk_ms": round(
+                    (time.perf_counter() - t_chat) * 1000
+                ),
+                "_chat_total_ms": round(
+                    (time.perf_counter() - t_chat) * 1000
+                ),
+                "_llm_used": False,
+                "_isafe_path": "emergency_keyword",
+            }
+            return
+
+        safety_future = _agent_executor.submit(
+            self._run_isafe,
+            user_message,
+            speed_emotion,
+        )
+        magic_started = time.perf_counter()
+        first_chunk_ms = None
+        chunks = []
+
+        try:
+            for chunk in self.magic.stream_chat(user_message):
+                if not chunk:
+                    continue
+                if first_chunk_ms is None:
+                    first_chunk_ms = round(
+                        (time.perf_counter() - t_chat) * 1000
+                    )
+                chunks.append(chunk)
+                yield {"type": "chunk", "chunk": chunk}
+        except Exception as e:
+            self._log("MagicAI", "降級", f"串流失敗：{str(e)[:50]}")
+            fallback = "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"
+            chunks.append(fallback)
+            if first_chunk_ms is None:
+                first_chunk_ms = round(
+                    (time.perf_counter() - t_chat) * 1000
+                )
+            yield {"type": "chunk", "chunk": fallback}
+
+        magic_ms = round((time.perf_counter() - magic_started) * 1000)
+        safety = safety_future.result()
+        escalation_level = safety.get("escalation_level", 0)
+
+        # Write iSafe result back into the last model message so the admin view can read it.
+        self._patch_last_model_message(escalation_level, safety.get("sentiment", "neutral"))
+
+        response = "".join(chunks)
+
+        if escalation_level >= 2:
+            warning = (
+                "\n\n請立即通知照護人員；若症狀持續或情況危急，"
+                "請撥打 119。"
+            )
+            response += warning
+            yield {"type": "chunk", "chunk": warning}
+
+        if self.chat_count % 10 == 0:
+            self._schedule_biography_update()
+
+        yield {
+            "type": "done",
+            "message": response,
+            "emotion": safety["emotion"],
+            "is_urgent": safety["is_urgent"],
+            "sentiment": safety["sentiment"],
+            "trend_alert": safety.get("trend_alert"),
+            "escalation_level": escalation_level,
+            "elder_id": self.elder_id,
+            "history_length": len(self.magic.get_history()),
+            "persona_name": self.active_persona.get("name", "AI 助理"),
+            "_isafe_ms": safety.get("_isafe_ms"),
+            "_magic_ms": magic_ms,
+            "_first_chunk_ms": first_chunk_ms,
+            "_chat_total_ms": round(
+                (time.perf_counter() - t_chat) * 1000
+            ),
+            "_llm_used": safety.get("_llm_used"),
+            "_isafe_path": safety.get("_isafe_path"),
+        }
+
+    def _patch_last_model_message(self, escalation_level: int, sentiment: str) -> None:
+        """Write iSafe results back into the most recent model message in conversation_history."""
+        for msg in reversed(self.magic.conversation_history):
+            if msg.get("role") == "model":
+                msg["escalation_level"] = escalation_level
+                msg["sentiment"] = sentiment
+                break
 
     def get_history(self) -> list:
         return self.magic.get_history()
@@ -270,6 +395,8 @@ class Decision:
                 "sentiment": "neutral",
                 "should_record": False,
                 "reason": "iSafe 降級",
+                "_llm_used": True,
+                "_isafe_path": "llm_error",
                 "_isafe_ms": round((time.perf_counter() - t0) * 1000),
             }
 

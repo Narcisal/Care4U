@@ -20,6 +20,10 @@ class MemoryManager(ABC):
         pass
 
     @abstractmethod
+    def acknowledge_event_at(self, elder_id: str, index: int) -> bool:
+        pass
+
+    @abstractmethod
     def get_recent_events(self, elder_id: str, limit: int = 5) -> list:
         pass
 

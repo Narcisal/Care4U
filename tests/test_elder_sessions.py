@@ -9,7 +9,10 @@ from backend.main import app
 
 
 @pytest.fixture(autouse=True)
-def reset_session_state():
+def reset_session_state(monkeypatch):
+    monkeypatch.setattr(main_module, "CARE4U_DEMO_MODE", True)
+    monkeypatch.setattr(main_module, "ADMIN_PASSWORD", "")
+    monkeypatch.setattr(main_module, "ADMIN_USERS", "")
     clear_all_sessions()
     with main_module.admin_auth_fail_lock:
         main_module.admin_auth_fail_counts.clear()
@@ -54,7 +57,7 @@ def test_pin_is_one_time_and_token_reads_bound_profile(local_client):
 
     reused = local_client.post("/api/elder-login", json={"pin": pin})
     profile = local_client.get(
-        "/api/elder/profile",
+        "/api/elder/profile?elder_id=W001",
         headers={"Authorization": f"Bearer {login['elder_token']}"},
     )
 
@@ -63,8 +66,7 @@ def test_pin_is_one_time_and_token_reads_bound_profile(local_client):
     assert profile.json()["elder_id"] == "W001"
 
 
-def test_greet_ignores_forged_body_elder_id(local_client, monkeypatch):
-    _, login = issue_and_login(local_client, "W001")
+def test_greet_uses_body_elder_id(local_client, monkeypatch):
     seen = {}
 
     class FakeDecision:
@@ -78,16 +80,14 @@ def test_greet_ignores_forged_body_elder_id(local_client, monkeypatch):
     monkeypatch.setattr(main_module, "get_decision", fake_get_decision)
     response = local_client.post(
         "/api/greet",
-        headers={"Authorization": f"Bearer {login['elder_token']}"},
         json={"elder_id": "C001"},
     )
 
     assert response.status_code == 200
-    assert seen["elder_id"] == "W001"
+    assert seen["elder_id"] == "C001"
 
 
-def test_chat_ignores_forged_body_elder_id(local_client, monkeypatch):
-    _, login = issue_and_login(local_client, "C001")
+def test_chat_uses_body_elder_id(local_client, monkeypatch):
     seen = {}
 
     class FakeDecision:
@@ -110,45 +110,46 @@ def test_chat_ignores_forged_body_elder_id(local_client, monkeypatch):
     monkeypatch.setattr(main_module, "get_decision", fake_get_decision)
     response = local_client.post(
         "/api/chat",
-        headers={"Authorization": f"Bearer {login['elder_token']}"},
         json={"elder_id": "W001", "message": "hello"},
     )
 
     assert response.status_code == 200
-    assert seen["elder_id"] == "C001"
+    assert seen["elder_id"] == "W001"
 
 
-def test_background_result_is_private_to_creating_token(local_client):
-    _, first = issue_and_login(local_client, "W001")
-    _, second = issue_and_login(local_client, "W001")
-    task_id = main_module._reserve_background_result(first["elder_token"])
+def test_background_result_is_private_to_elder_id(local_client):
+    task_id = main_module._reserve_background_result("W001")
 
     denied = local_client.get(
-        f"/api/elder/chat/background/{task_id}",
-        headers={"Authorization": f"Bearer {second['elder_token']}"},
+        f"/api/elder/chat/background/{task_id}?elder_id=C001",
     )
     allowed = local_client.get(
-        f"/api/elder/chat/background/{task_id}",
-        headers={"Authorization": f"Bearer {first['elder_token']}"},
+        f"/api/elder/chat/background/{task_id}?elder_id=W001",
     )
 
     assert denied.status_code == 404
     assert allowed.status_code == 200
 
 
-def test_revoke_invalidates_existing_token(local_client):
-    _, login = issue_and_login(local_client, "L001")
+def test_elder_profile_rejects_disallowed_elder_id(local_client, monkeypatch):
+    monkeypatch.setattr(main_module, "ALLOWED_ELDER_IDS", ("W001",))
+    response = local_client.get("/api/elder/profile?elder_id=L001")
+
+    assert response.status_code == 403
+
+
+def test_revoke_keeps_simplified_elder_profile_access(local_client):
+    issue_and_login(local_client, "L001")
     revoked = local_client.post(
         "/api/admin/elder-session/revoke",
         json={"elder_id": "L001"},
     )
     profile = local_client.get(
-        "/api/elder/profile",
-        headers={"Authorization": f"Bearer {login['elder_token']}"},
+        "/api/elder/profile?elder_id=L001",
     )
 
     assert revoked.status_code == 200
-    assert profile.status_code == 401
+    assert profile.status_code == 200
 
 
 def test_elder_login_rate_limit(local_client):

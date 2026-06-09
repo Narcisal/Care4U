@@ -306,7 +306,22 @@ class JsonMemoryStore(MemoryManager):
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                return data.get("history", [])
+                history = data.get("history", [])
+                # Backfill missing fields for messages saved before the timestamp / iSafe fix.
+                fallback_date = (data.get("updated_at") or "")[:10]  # "YYYY-MM-DD"
+                for msg in history:
+                    if not msg.get("date"):
+                        msg["date"] = fallback_date
+                    if not msg.get("time"):
+                        msg["time"] = ""
+                    # Model messages from before the iSafe patch lack escalation_level/sentiment.
+                    # Default both so the admin table shows "● 正常" / "中性" instead of "—".
+                    if msg.get("role") == "model":
+                        if "escalation_level" not in msg:
+                            msg["escalation_level"] = 0
+                        if "sentiment" not in msg:
+                            msg["sentiment"] = "neutral"
+                return history
             except Exception as e:
                 print(f"對話記憶載入失敗：{e}")
                 return []
@@ -347,10 +362,58 @@ class JsonMemoryStore(MemoryManager):
             else:
                 event["date"] = datetime.now().strftime("%Y-%m-%d")
                 event["time"] = datetime.now().strftime("%H:%M:%S")
+            event.setdefault("acknowledged", False)
 
             profile.setdefault("recent_events", []).append(event)
             profile["recent_events"] = self._trim_events(profile["recent_events"])
             return self._write_profile_unlocked(path, profile)
+
+    def acknowledge_event_at(self, elder_id: str, index: int) -> bool:
+        path = self._get_path(elder_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if not path.exists():
+                return False
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    profile = json.load(f)
+            except Exception as e:
+                print(f"讀取長者事件失敗：{e}")
+                return False
+
+            events = profile.get("recent_events", [])
+            if index < 0 or index >= len(events):
+                return False
+            events[index]["acknowledged"] = True
+            events[index]["acknowledged_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return self._write_profile_unlocked(path, profile)
+
+    def acknowledge_events_by_tag(self, elder_id: str, tag: str) -> int:
+        """Acknowledge all unacknowledged events that contain the given tag. Returns count."""
+        path = self._get_path(elder_id)
+        lock = _get_file_lock(str(path))
+        with lock:
+            if not path.exists():
+                return 0
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    profile = json.load(f)
+            except Exception as e:
+                print(f"讀取長者事件失敗：{e}")
+                return 0
+            events = profile.get("recent_events", [])
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            count = 0
+            for event in events:
+                if event.get("acknowledged") is True:
+                    continue
+                if tag in (event.get("topic_tags") or []):
+                    event["acknowledged"] = True
+                    event["acknowledged_at"] = now
+                    count += 1
+            if count:
+                self._write_profile_unlocked(path, profile)
+            return count
 
     def _trim_events(self, events: list) -> list:
         if len(events) <= self.MAX_EVENTS:

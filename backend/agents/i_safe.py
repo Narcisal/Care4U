@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import datetime
 from backend.memory.vector_store import VectorMemoryStore
@@ -34,6 +35,15 @@ _URGENT_EN = [
     "dizzy", "can't stand", "blurry", "nausea", "severe pain", "hurts a lot",
 ]
 
+_SAFE_ZH = [
+    "早安", "午安", "晚安", "謝謝", "天氣", "聊天", "故事",
+    "回憶", "喜歡", "開心", "休息", "吃飯", "散步",
+]
+_SAFE_EN = [
+    "good morning", "good afternoon", "good night", "thank you",
+    "weather", "chat", "story", "memory", "happy", "rest", "meal", "walk",
+]
+
 # Cooldown: suppress duplicate trend alerts within this window.
 _TREND_ALERT_COOLDOWN_HOURS = 2
 
@@ -49,12 +59,14 @@ def _keyword_match(message: str, zh_keywords: list, en_keywords: list) -> bool:
     return False
 
 
-def quick_keyword_check(message: str) -> int:
+def quick_keyword_check(message: str) -> int | None:
     if _keyword_match(message, _EMERGENCY_ZH, _EMERGENCY_EN):
         return 3
     if _keyword_match(message, _URGENT_ZH, _URGENT_EN):
         return 2
-    return 0
+    if _keyword_match(message, _SAFE_ZH, _SAFE_EN):
+        return 0
+    return None
 
 
 class ISafe:
@@ -64,7 +76,7 @@ class ISafe:
         self.persona_id = persona_id
         self.memory = VectorMemoryStore()
         self.embedding = EmbeddingService()
-        self.llm = LLMService()
+        self.llm = LLMService(os.getenv("ISAFE_MODEL", "gemini-2.0-flash"))
         self.emotion_history: list[str] = []
         profile = self.memory.get_profile(elder_id)
         self.active_persona_id = persona_id or (profile.get("active_persona", "ai") if profile else "ai")
@@ -79,8 +91,25 @@ class ISafe:
         profile = self.memory.get_profile(self.elder_id)
         self.active_persona_id = self.persona_id or (profile.get("active_persona", "ai") if profile else "ai")
 
-        result = self.llm.analyze_emotion(message)
-        _log(f"情緒分析結果：emotion={result.get('emotion')}, importance={result.get('importance')}")
+        keyword_level = quick_keyword_check(message)
+        if keyword_level == 0:
+            result = {
+                "emotion": "normal",
+                "emotion_score": 0.0,
+                "importance": 0.3,
+                "reason": "明確安全日常語句，使用快速路徑",
+                "is_urgent": False,
+                "sentiment": "neutral",
+                "memory_type": "short",
+                "should_record": False,
+                "_llm_used": False,
+                "_isafe_path": "safe_keyword",
+            }
+        else:
+            result = self.llm.analyze_emotion(message)
+            result["_llm_used"] = True
+            result["_isafe_path"] = "llm"
+            _log(f"情緒分析結果：emotion={result.get('emotion')}, importance={result.get('importance')}")
         result = self._apply_importance_rules(message, result)
 
         if speed_emotion == "slow" and result.get("emotion") == "normal":
@@ -144,16 +173,19 @@ class ISafe:
         return result
 
     def get_safety_status(self) -> dict:
-        events = self.memory.get_recent_events(self.elder_id, limit=10)
-        urgent_count = sum(1 for e in events if "安全警報" in e.get("topic_tags", []))
-        negative_count = sum(1 for e in events if e.get("sentiment") == "negative")
-        trend_alerts = sum(1 for e in events if "趨勢警報" in e.get("topic_tags", []))
+        # 掃描所有事件（不限 10 筆），以「有無未確認警報」決定危險等級
+        all_events = self.memory.get_recent_events(self.elder_id, limit=200)
+        unacked = [e for e in all_events if e.get("acknowledged") is not True]
+        urgent_unacked = [e for e in unacked if "安全警報" in e.get("topic_tags", [])]
+        trend_unacked  = [e for e in unacked if "趨勢警報"  in e.get("topic_tags", [])]
+        negative_count = sum(1 for e in all_events[-20:] if e.get("sentiment") == "negative")
         return {
             "elder_id": self.elder_id,
-            "urgent_count": urgent_count,
+            "urgent_count": len(urgent_unacked),
+            "trend_alerts": len(trend_unacked),
             "negative_count": negative_count,
-            "trend_alerts": trend_alerts,
-            "hazard_level": "high" if urgent_count > 0 or trend_alerts > 0 else "low",
+            # high = 有任何未確認的安全/趨勢警報；全部確認後自動回正
+            "hazard_level": "high" if (urgent_unacked or trend_unacked) else "low",
             "last_checked": datetime.now().strftime("%Y-%m-%d %H:%M"),
         }
 
@@ -162,19 +194,24 @@ class ISafe:
     # ------------------------------------------------------------------
 
     def _determine_escalation(self, message: str, emotion_result: dict) -> int:
-        keyword_level = quick_keyword_check(message)
-        if keyword_level:
-            return keyword_level
+        keyword_level = quick_keyword_check(message) or 0
+
+        model_level = emotion_result.get("escalation_level")
+        if isinstance(model_level, int) and 0 <= model_level <= 3:
+            return max(keyword_level, model_level)
 
         emotion = emotion_result.get("emotion", "normal")
         importance = emotion_result.get("importance", 0)
         is_urgent = emotion_result.get("is_urgent", False)
 
         if is_urgent and importance >= 0.7:
-            return 2
-        if emotion in ["urgent", "comfort"] or is_urgent:
-            return 1
-        return 0
+            llm_level = 2
+        elif emotion in ["urgent", "comfort"] or is_urgent:
+            llm_level = 1
+        else:
+            llm_level = 0
+
+        return max(keyword_level, llm_level)
 
     # ------------------------------------------------------------------
     # Trend analysis with persistent cooldown

@@ -8,6 +8,7 @@ def build_router(handlers: Mapping[str, Callable]) -> APIRouter:
     routes = [
         ("GET", "/admin", "admin_page"),
         ("GET", "/api/admin/me", "admin_me"),
+        ("GET", "/api/admin/dashboard", "get_admin_dashboard"),
         ("GET", "/api/admin/sessions", "list_sessions"),
         ("POST", "/api/admin/sessions/clear", "clear_sessions"),
         ("POST", "/api/admin/rag/evaluate", "evaluate_rag"),

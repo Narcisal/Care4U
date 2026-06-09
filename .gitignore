@@ -110,3 +110,32 @@ generated/
 
 TASKS.md
 BUGS.md
+GUI_REDESIGN.md
+
+# ------------------------------------------------------------------
+# Runtime conversation session files (generated at runtime, per-elder)
+# ------------------------------------------------------------------
+
+backend/data/elders/*_conv.json
+
+# ------------------------------------------------------------------
+# One-off phase scripts and seed tools (not part of core codebase)
+# ------------------------------------------------------------------
+
+scripts/
+backend/tools/phase10_*.py
+backend/tools/phase7_live_collect.py
+backend/tools/seed_*.py
+
+# ------------------------------------------------------------------
+# Generated reports and benchmark outputs
+# ------------------------------------------------------------------
+
+reports/
+
+# ------------------------------------------------------------------
+# Stray output / scratch files
+# ------------------------------------------------------------------
+
+testsrag_out.txt
+tests/prompt_generate_test_cases.md

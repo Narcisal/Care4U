@@ -125,14 +125,12 @@ def collect_chat_metrics() -> tuple[list[dict], dict]:
                 json={"pin": pin_response.json()["pin"]},
             )
             login_response.raise_for_status()
-            token = login_response.json()["elder_token"]
-            headers = {"Authorization": f"Bearer {token}"}
 
             for index, (category, message) in enumerate(CHAT_PROMPTS, start=1):
                 response = client.post(
                     "/api/chat",
-                    headers=headers,
                     json={
+                        "elder_id": ELDER_ID,
                         "message": message,
                         "session_id": "phase7",
                     },

@@ -1,9 +1,7 @@
 const urlParams = new URLSearchParams(window.location.search);
 let ELDER_ID = sessionStorage.getItem("care4u_elder_id") || "";
-let ELDER_TOKEN = sessionStorage.getItem("care4u_elder_token") || "";
 let SELECTED_PERSONA = urlParams.get("persona") || null;
-const API_BASE = "http://127.0.0.1:8000";
-let pinValue = "";
+const API_BASE = window.location.origin;
 const SESSION_ID = (() => {
     const key = "care4u_session_id";
     let value = sessionStorage.getItem(key);
@@ -21,81 +19,30 @@ let isRecording = false;
 let currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
 let currentElderAvatar = "/static/avatars/elder_male_nobg.png";
 
-function clearElderSession() {
-    ELDER_ID = "";
-    ELDER_TOKEN = "";
-    sessionStorage.removeItem("care4u_elder_id");
-    sessionStorage.removeItem("care4u_elder_token");
-}
-
 async function elderFetch(path, options = {}) {
-    if (!ELDER_TOKEN) {
-        throw new Error("尚未登入");
-    }
-    const headers = new Headers(options.headers || {});
-    headers.set("Authorization", `Bearer ${ELDER_TOKEN}`);
-    const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-    if (res.status === 401) {
-        clearElderSession();
-        showPinOverlay("登入已失效，請重新輸入 PIN");
-    }
-    return res;
+    return fetch(`${API_BASE}${path}`, options);
 }
 
-function showPinOverlay(message = "") {
-    const overlay = document.getElementById("pin-overlay");
-    const error = document.getElementById("pin-error");
-    if (overlay) overlay.style.display = "flex";
-    if (error) error.textContent = message;
+function elderQueryPath(path) {
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}elder_id=${encodeURIComponent(ELDER_ID)}`;
 }
 
-function hidePinOverlay() {
-    const overlay = document.getElementById("pin-overlay");
-    if (overlay) overlay.style.display = "none";
+function elderBody(data = {}) {
+    return JSON.stringify({ ...data, elder_id: ELDER_ID });
 }
 
-function renderPin() {
-    const display = document.getElementById("pin-display");
-    if (display) display.textContent = `${"●".repeat(pinValue.length)}${"•".repeat(6 - pinValue.length)}`;
-}
-
-function appendPin(digit) {
-    if (pinValue.length < 6) pinValue += digit;
-    renderPin();
-}
-
-function clearPin() {
-    pinValue = "";
-    renderPin();
-    const error = document.getElementById("pin-error");
-    if (error) error.textContent = "";
-}
-
-async function submitElderPin() {
-    const error = document.getElementById("pin-error");
-    if (pinValue.length !== 6) {
-        if (error) error.textContent = "請輸入完整 6 位 PIN";
-        return;
-    }
-    try {
-        const res = await fetch(`${API_BASE}/api/elder-login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pin: pinValue })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || "PIN 驗證失敗");
-        ELDER_ID = data.elder_id;
-        ELDER_TOKEN = data.elder_token;
-        sessionStorage.setItem("care4u_elder_id", ELDER_ID);
-        sessionStorage.setItem("care4u_elder_token", ELDER_TOKEN);
-        clearPin();
-        hidePinOverlay();
-        await startAuthenticatedView();
-    } catch (e) {
-        if (error) error.textContent = e.message || "PIN 驗證失敗";
-        pinValue = "";
-        renderPin();
+function showLaunchHint() {
+    document.getElementById('welcome-screen').style.display = 'flex';
+    document.getElementById('main-screen').style.display = 'none';
+    const container = document.getElementById('welcome-persona-list');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align:center;color:#6B5E58;padding:36px;font-size:24px;grid-column:1/-1;line-height:1.8;">
+                請透過指定長者連結開啟<br>
+                <span style="font-size:18px;color:#A89080;">例如 /?elder=W001</span>
+            </div>
+        `;
     }
 }
 
@@ -137,7 +84,7 @@ function enableButtons() {
 async function loadElderProfile() {
     if (!ELDER_ID) return;
     try {
-        const res = await elderFetch("/api/elder/profile");
+        const res = await elderFetch(elderQueryPath("/api/elder/profile"));
         if (!res.ok) throw new Error("profile");
         const profile = await res.json();
         const nameEl = document.getElementById("elder-name-display");
@@ -156,29 +103,10 @@ async function switchElder(elderId) {
     }
 
     try {
-        const pinRes = await fetch(`${API_BASE}/api/admin/elder-pin`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                elder_id: elderId,
-                ttl_minutes: 480
-            })
-        });
-        const pinData = await pinRes.json();
-        if (!pinRes.ok) throw new Error(pinData.detail || "無法產生切換 PIN");
-        const loginRes = await fetch(`${API_BASE}/api/elder-login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pin: pinData.pin })
-        });
-        const loginData = await loginRes.json();
-        if (!loginRes.ok) throw new Error(loginData.detail || "切換登入失敗");
-        ELDER_ID = loginData.elder_id;
-        ELDER_TOKEN = loginData.elder_token;
+        ELDER_ID = elderId;
         SELECTED_PERSONA = null;
         sessionStorage.setItem("care4u_elder_id", ELDER_ID);
-        sessionStorage.setItem("care4u_elder_token", ELDER_TOKEN);
-        window.location.assign("/");
+        window.location.reload();
     } catch (e) {
         console.error("切換長者失敗", e);
         alert(e.message || "切換長者失敗");
@@ -194,7 +122,7 @@ async function startSession() {
         const res = await elderFetch("/api/greet", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: elderBody({
                 session_id: SESSION_ID,
                 persona_id: SELECTED_PERSONA
             })
@@ -232,19 +160,22 @@ async function processAndRespond(message, speedEmotion = "normal") {
 
     const thinkingId = addThinking();
     try {
-        const res = await elderFetch("/api/chat", {
+        const res = await elderFetch("/api/chat?stream=true", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: elderBody({
                 message: message,
                 speed_emotion: speedEmotion,
                 session_id: SESSION_ID,
                 persona_id: SELECTED_PERSONA
             })
         });
-        const data = await res.json();
+        if (!res.ok) throw new Error("chat");
+        const data = await readChatResponse(res, thinkingId);
         removeThinking(thinkingId);
-        addMessage("ai", data.message);
+        if (!data._streamed) {
+            addMessage("ai", data.message);
+        }
 
         if (data.image) {
             if (data.image_caption) {
@@ -295,13 +226,69 @@ async function processAndRespond(message, speedEmotion = "normal") {
     }
 }
 
+async function readChatResponse(response, thinkingId) {
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("text/event-stream") || !response.body) {
+        return response.json();
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+    let fullText = "";
+    let bubble = null;
+    let metadata = {};
+
+    const handleEvent = (rawEvent) => {
+        const dataLine = rawEvent
+            .split(/\r?\n/)
+            .find(line => line.startsWith("data:"));
+        if (!dataLine) return;
+        const event = JSON.parse(dataLine.slice(5).trim());
+        if (event.done) {
+            metadata = event;
+            return;
+        }
+        const chunk = event.chunk || "";
+        if (!chunk) return;
+        if (!bubble) {
+            removeThinking(thinkingId);
+            bubble = addMessage("ai", "");
+        }
+        fullText += chunk;
+        bubble.textContent = fullText;
+        const container = document.getElementById("chat-container");
+        if (container) container.scrollTop = container.scrollHeight;
+    };
+
+    while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+        const events = buffer.split(/\r?\n\r?\n/);
+        buffer = events.pop() || "";
+        events.forEach(handleEvent);
+        if (done) break;
+    }
+    if (buffer.trim()) handleEvent(buffer);
+
+    if (!bubble && metadata.message) {
+        removeThinking(thinkingId);
+        addMessage("ai", metadata.message);
+    }
+    return {
+        ...metadata,
+        message: metadata.message || fullText,
+        _streamed: true
+    };
+}
+
 async function pollChatBackground(taskId) {
     let imageShown = false;
     let healthShown = false;
     for (let attempt = 0; attempt < 15; attempt++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         try {
-            const res = await elderFetch(`/api/elder/chat/background/${encodeURIComponent(taskId)}`);
+            const res = await elderFetch(elderQueryPath(`/api/elder/chat/background/${encodeURIComponent(taskId)}`));
             if (!res.ok) return;
             const data = await res.json();
             if (!imageShown && data.image_status !== "pending" && data.image) {
@@ -391,12 +378,12 @@ async function speakText(text, emotion = "normal") {
     return new Promise(async (resolve) => {
         try {
             const res = await elderFetch("/api/elder/tts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    text: text,
-                    emotion: emotion,
-                    persona_id: SELECTED_PERSONA
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: elderBody({
+                text: text,
+                emotion: emotion,
+                persona_id: SELECTED_PERSONA
                 })
             });
             const audioBlob = await res.blob();
@@ -448,6 +435,7 @@ function addMessage(role, text) {
 
     container.appendChild(row);
     container.scrollTop = container.scrollHeight;
+    return row.querySelector(".msg-bubble") || row;
 }
 
 function addThinking() {
@@ -598,7 +586,7 @@ try {
 }
 async function loadWelcomePersonas(elderId) {
     try {
-        const res = await elderFetch("/api/elder/personas");
+        const res = await elderFetch(elderQueryPath("/api/elder/personas"));
         const data = await res.json();
         const personas = data.personas || {};
         const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
@@ -680,7 +668,7 @@ function addEscalationAlert(level, message) {
 
 async function prepareActivePersona(elderId) {
     try {
-        const res = await elderFetch("/api/elder/personas");
+        const res = await elderFetch(elderQueryPath("/api/elder/personas"));
         const data = await res.json();
         const personas = data.personas || {};
         const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
@@ -754,7 +742,7 @@ async function speakText(text, emotion = "normal") {
             const res = await elderFetch("/api/elder/tts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
+                body: elderBody({
                     text,
                     emotion,
                     persona_id: SELECTED_PERSONA
@@ -790,7 +778,7 @@ async function enterChat() {
     await prepareActivePersona(ELDER_ID);
 
     try {
-        const res = await elderFetch("/api/elder/profile");
+        const res = await elderFetch(elderQueryPath("/api/elder/profile"));
         const profile = await res.json();
         const nameEl = document.getElementById("elder-name-display");
         if (nameEl) nameEl.textContent = profile.name || "未知";
@@ -810,7 +798,7 @@ async function enterChat() {
 
 async function showPersonaSwitcher() {
     try {
-        const res = await elderFetch("/api/elder/personas");
+        const res = await elderFetch(elderQueryPath("/api/elder/personas"));
         const data = await res.json();
         const personas = data.personas || {};
         const activeId = SELECTED_PERSONA || data.active_persona || 'ai';
@@ -939,6 +927,14 @@ async function loadDemoControls() {
 }
 
 async function initializeApp() {
+    if (!ELDER_ID) {
+        const urlElderId = urlParams.get("elder");
+        if (urlElderId) {
+            ELDER_ID = urlElderId;
+            sessionStorage.setItem("care4u_elder_id", ELDER_ID);
+        }
+    }
+
     try {
         const modeRes = await fetch(`${API_BASE}/api/system/mode`);
         const mode = await modeRes.json();
@@ -947,18 +943,19 @@ async function initializeApp() {
         console.error("載入系統模式失敗", e);
     }
 
-    if (!ELDER_TOKEN || !ELDER_ID) {
-        showPinOverlay();
+    if (!ELDER_ID) {
+        showLaunchHint();
         return;
     }
+
     try {
-        const res = await elderFetch("/api/elder/profile");
+        const res = await elderFetch(elderQueryPath("/api/elder/profile"));
         if (!res.ok) throw new Error("invalid token");
-        hidePinOverlay();
         await startAuthenticatedView();
     } catch {
-        clearElderSession();
-        showPinOverlay("請輸入照護人員提供的 PIN");
+        sessionStorage.removeItem("care4u_elder_id");
+        ELDER_ID = "";
+        showLaunchHint();
     }
 }
 

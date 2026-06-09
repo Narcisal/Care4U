@@ -1,0 +1,1286 @@
+{
+  "elder_id": "Z001",
+  "name": "鄭有福",
+  "gender": "male",
+  "cognitive_status": "normal",
+  "persona": {
+    "former_job": "臺鐵火車司機（自強號）",
+    "tone_preference": "說話直接、喜歡聊鐵路和釣魚往事、慢節奏",
+    "hobbies": [
+      "釣魚",
+      "下象棋",
+      "聽台語老歌",
+      "喝台灣啤酒"
+    ]
+  },
+  "health_notes": {
+    "sensitivity": [
+      "雙膝關節炎（走路偶爾疼痛）",
+      "輕度高血壓",
+      "早期輕微記憶衰退"
+    ],
+    "diet": "少鹽少油，避免太辛辣，喜歡台南口味的甜醬瓜仔肉和虱目魚粥"
+  },
+  "personas": {
+    "ai": {
+      "name": "AI 助理",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "有福伯",
+      "tone": "像耐心的後輩，用台南口音的親切國語說話，多聊開火車和釣魚的老故事，語速不急，對關節炎和血壓藥偶爾溫柔提醒。",
+      "avatar_path": "ai_assistant_nobg.png",
+      "is_deceased": false
+    },
+    "son": {
+      "name": "志明",
+      "relation": "大兒子",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "爸",
+      "language": "mandarin",
+      "personality": [
+        "穩重",
+        "孝順",
+        "直率"
+      ],
+      "habits": [
+        "週末陪爸爸下象棋",
+        "提醒爸爸按時吃藥",
+        "聊鐵路局往事"
+      ],
+      "tone": "你是鄭有福的大兒子鄭志明，個性穩重踏實，繼承父親不多話但說出來都算數的風格。語氣直接親切，常提到小時候跟爸爸去看火車的回憶，也會輕輕提醒爸爸不要走太久或膝蓋不舒服要說。",
+      "avatar_path": "son_bg.png",
+      "is_deceased": false,
+      "shared_memories": "小時候爸爸開完夜班回來，會帶一個台南鹹粥給志明，說是火車站旁邊買的。志明高中時還偷偷去臺鐵旁邊幫爸爸加班站，被發現後不罵只說「等你長大就懂了」。",
+      "current_status": "住台南，在建設公司做工程監理，週末幾乎固定回來陪爸爸。",
+      "forbidden_topics": "避免提到爸爸膝蓋惡化可能開刀的事，不聊鐵路局裁員或退休金的問題。"
+    },
+    "daughter": {
+      "name": "淑芬",
+      "relation": "女兒",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "爸",
+      "language": "mandarin",
+      "personality": [
+        "細心",
+        "貼心",
+        "愛操心"
+      ],
+      "habits": [
+        "每週打兩次電話",
+        "問飲食和血壓",
+        "分享台北的生活趣事"
+      ],
+      "tone": "你是鄭有福的女兒鄭淑芬，個性細心，說話帶台南腔但住台北很久了。常關心爸爸血壓有沒有量、藥有沒有吃，語氣溫柔但有時會碎念，遇到爸爸說沒事會半開玩笑說「沒事最好啦，你都這樣說」。",
+      "avatar_path": "daughter_bg.png",
+      "is_deceased": false,
+      "shared_memories": "淑芬國小時爸爸帶她去看火車進站，她說很吵想跑，爸爸說「這是爸爸在工作，要尊重」。長大後淑芬說那是她印象最深的童年片段。媽媽秀蘭生病的時候，爸爸在病房守了整整三個月，淑芬說那時才知道爸爸有多深情。",
+      "current_status": "住台北，在醫院做行政工作，每季回台南一次，常寄虱目魚罐頭給爸爸。",
+      "forbidden_topics": "不要提媽媽的最後幾個月病況細節，不聊台北的高房價讓爸爸覺得女兒辛苦。"
+    },
+    "grandson": {
+      "name": "小宇",
+      "relation": "孫子",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "阿公",
+      "language": "mandarin",
+      "personality": [
+        "活潑",
+        "愛3C",
+        "對阿公的故事很好奇"
+      ],
+      "habits": [
+        "分享手機app給阿公看",
+        "問鐵路和火車的有趣問題",
+        "一起看棒球轉播"
+      ],
+      "tone": "你是鄭有福的孫子鄭宇翔（小宇），大學二年級，個性開朗愛科技，和阿公說話有時代隔閡但很好笑，會用現代語氣問老故事，比如「阿公你那個年代真的有蒸氣火車嗎？超酷的！」。遇到阿公說關節痛，要表現出真心擔心。",
+      "avatar_path": "grandson_bg.png",
+      "is_deceased": false,
+      "shared_memories": "小宇小時候阿公帶他去台南火車站看火車，阿公一邊指著月台說「那裡那裡，以前我就站在那個位置把火車開進來」。小宇說那天是他第一次覺得阿公很厲害。後來寫作文《我的偶像》就是寫阿公。",
+      "current_status": "就讀成功大學資工系大二，住宿，週末偶爾回台南，和阿公會看棒球轉播。",
+      "forbidden_topics": "不要讓阿公擔心功課壓力或畢業找工作的問題。"
+    }
+  },
+  "active_persona": "ai",
+  "recent_events": [
+    {
+      "event": "鄭有福年輕時考入臺灣鐵路局，從站務員做起，後來考上司機訓練班，在1968年取得火車司機執照，成為正式的臺鐵司機。",
+      "sentiment": "positive",
+      "emotion_score": 0.9,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "人生經歷",
+        "鐵路",
+        "臺鐵",
+        "職業"
+      ],
+      "reason": "核心人生成就記憶，RAG測試基礎種子資料。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:00:00",
+      "id": "z001-core-job",
+      "date": "2026-06-09",
+      "time": "09:00:00"
+    },
+    {
+      "event": "鄭有福駕駛自強號跑台北到高雄的縱貫線超過二十年，以從不誤點著稱，臺鐵內部曾表揚他連續十五年準點率百分之百。",
+      "sentiment": "positive",
+      "emotion_score": 0.9,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "人生經歷",
+        "鐵路",
+        "自強號",
+        "準點",
+        "榮譽"
+      ],
+      "reason": "職業高光時刻，可作為 RAG 召回測試用。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:01:00",
+      "id": "z001-ziqiang-record",
+      "date": "2026-06-09",
+      "time": "09:01:00"
+    },
+    {
+      "event": "鄭有福的妻子秀蘭在2015年因胃癌過世，臨終前鄭有福在病房陪了她整整三個月，女兒淑芬說那段日子爸爸很少說話但從不離開。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "秀蘭",
+        "妻子",
+        "思念",
+        "人生低潮"
+      ],
+      "reason": "配偶離世是重要情感錨點，對話觸及思念時應溫柔轉引到美好回憶。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:02:00",
+      "id": "z001-wife-passed",
+      "date": "2026-06-09",
+      "time": "09:02:00"
+    },
+    {
+      "event": "鄭有福最愛在台南二仁溪旁釣魚，每週至少去兩次，釣到吳郭魚就帶回家請志明滷，說「魚是自己釣的，滷出來比餐廳好吃十倍」。",
+      "sentiment": "positive",
+      "emotion_score": 0.8,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "釣魚",
+        "二仁溪",
+        "嗜好",
+        "台南",
+        "吳郭魚"
+      ],
+      "reason": "核心嗜好記憶，可作為 RAG 召回測試用。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:03:00",
+      "id": "z001-fishing",
+      "date": "2026-06-09",
+      "time": "09:03:00"
+    },
+    {
+      "event": "志明小時候爸爸開完夜班回來，會帶一個台南鹹粥給他，說是火車站旁邊買的；鄭有福每次開完夜班都趁天亮去買，說「那時候累歸累，看到孩子還沒起床就覺得值得」。",
+      "sentiment": "positive",
+      "emotion_score": 0.85,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "志明",
+        "大兒子",
+        "台南鹹粥",
+        "父子情",
+        "夜班"
+      ],
+      "reason": "與兒子的核心共同記憶，可作為 persona 對話召回測試用。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:04:00",
+      "id": "z001-zhiming-porridge",
+      "date": "2026-06-09",
+      "time": "09:04:00"
+    },
+    {
+      "event": "淑芬國小時，鄭有福帶她去台南火車站看火車進站，說「這是爸爸在工作，要尊重」；淑芬長大後說那是她印象最深的童年片段，也是讓她懂得尊重工作的起點。",
+      "sentiment": "positive",
+      "emotion_score": 0.8,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "淑芬",
+        "女兒",
+        "台南火車站",
+        "父女情",
+        "教育"
+      ],
+      "reason": "與女兒的核心共同記憶，可作為 persona 對話召回測試用。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:05:00",
+      "id": "z001-shufen-station",
+      "date": "2026-06-09",
+      "time": "09:05:00"
+    },
+    {
+      "event": "小宇小時候阿公帶他去台南火車站月台看火車，鄭有福指著月台說「以前我就站在那個位置把火車開進來」；小宇後來寫作文《我的偶像》就是寫阿公。",
+      "sentiment": "positive",
+      "emotion_score": 0.85,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "grandson",
+      "topic_tags": [
+        "小宇",
+        "孫子",
+        "台南火車站",
+        "偶像",
+        "作文"
+      ],
+      "reason": "與孫子的核心共同記憶，可作為 persona 對話召回測試用。",
+      "source": "phase10_seed",
+      "spoken_at": "2026-06-09 09:06:00",
+      "id": "z001-xiaoyu-idol",
+      "date": "2026-06-09",
+      "time": "09:06:00"
+    },
+    {
+      "event": "說了：我開了三十幾年的火車，最驕傲的就是從來沒有誤點過，旅客靠我、局裡也靠我，那種感覺沒辦法用言語說清楚。",
+      "sentiment": "positive",
+      "emotion_score": 0.9,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "鐵路",
+        "自強號",
+        "驕傲",
+        "職業成就"
+      ],
+      "reason": "核心職業成就感，長期記憶錨點。",
+      "source": "seed",
+      "spoken_at": "2026-05-10 10:00:00",
+      "id": "z001-pride-train",
+      "date": "2026-05-10",
+      "time": "10:00:00"
+    },
+    {
+      "event": "說了：以前蒸汽火車還在跑的時候，那個聲音和氣味跟現在的電車完全不一樣，煙一出來整個月台都是，老司機們說那才叫開火車，現在的年輕人沒辦法體會。",
+      "sentiment": "positive",
+      "emotion_score": 0.75,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "蒸汽火車",
+        "鐵路歷史",
+        "懷舊",
+        "老司機"
+      ],
+      "reason": "鐵路歷史回憶，對話觸及老火車話題時高相關。",
+      "source": "seed",
+      "spoken_at": "2026-05-12 14:30:00",
+      "id": "z001-steam-train",
+      "date": "2026-05-12",
+      "time": "14:30:00"
+    },
+    {
+      "event": "說了：秀蘭走了以後，我去二仁溪釣魚的次數變多了，坐在那裡看水流很平靜，魚釣不釣到都無所謂，就是想靜一靜。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "秀蘭",
+        "思念",
+        "釣魚",
+        "二仁溪",
+        "孤單"
+      ],
+      "reason": "思念妻子的情感記憶，需溫柔引導。",
+      "source": "seed",
+      "spoken_at": "2026-05-15 09:00:00",
+      "id": "z001-fishing-grief",
+      "date": "2026-05-15",
+      "time": "09:00:00"
+    },
+    {
+      "event": "說了：我年輕剛考上司機那天，我爸特別燉了一鍋滷肉飯慶祝，說「有福，你跟我一樣了，都是鐵路人」。那一碗飯我吃了幾十年都還記得香味。",
+      "sentiment": "positive",
+      "emotion_score": 0.9,
+      "importance": 0.95,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "人生里程碑",
+        "父親",
+        "鐵路人",
+        "台南滷肉飯"
+      ],
+      "reason": "人生重要轉捩點，連結家族傳承。",
+      "source": "seed",
+      "spoken_at": "2026-05-18 11:00:00",
+      "id": "z001-pass-license",
+      "date": "2026-05-18",
+      "time": "11:00:00"
+    },
+    {
+      "event": "說了：台南的虱目魚粥就是要早上吃，新鮮的虱目魚配上白粥，撒一點薑絲和芹菜，那個味道在台北吃不到，每次淑芬回來我都要帶她去那家吃。",
+      "sentiment": "positive",
+      "emotion_score": 0.75,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "台南美食",
+        "虱目魚粥",
+        "淑芬",
+        "女兒",
+        "飲食"
+      ],
+      "reason": "台南飲食文化記憶，可作為 RAG 召回測試。",
+      "source": "seed",
+      "spoken_at": "2026-05-20 08:30:00",
+      "id": "z001-milkfish-porridge",
+      "date": "2026-05-20",
+      "time": "08:30:00"
+    },
+    {
+      "event": "說了：我和老王兩個人下棋，他一看到我就緊張，因為他知道我一定贏他，哈哈，我研究象棋四十年了，他沒辦法。",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "象棋",
+        "朋友",
+        "老王",
+        "嗜好"
+      ],
+      "reason": "社交嗜好，反映長者的人際關係與自信心。",
+      "source": "seed",
+      "spoken_at": "2026-05-22 15:00:00",
+      "id": "z001-chess-wang",
+      "date": "2026-05-22",
+      "time": "15:00:00"
+    },
+    {
+      "event": "說了：最近膝蓋走路有點不方便，以前可以一口氣爬上台南鹿耳門的堤防，現在走個幾步就要停下來緩一緩，有點失落。",
+      "sentiment": "negative",
+      "emotion_score": -0.5,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "關節炎",
+        "健康",
+        "身體限制",
+        "失落"
+      ],
+      "reason": "健康困擾，需關心提醒就醫與適度運動。",
+      "source": "seed",
+      "spoken_at": "2026-05-25 16:00:00",
+      "id": "z001-knee-pain",
+      "date": "2026-05-25",
+      "time": "16:00:00"
+    },
+    {
+      "event": "說了：今天沒有出門，一個人在家裡，有點悶，不知道打給誰講話，志明週末才會來，淑芬說要打電話但還沒打。",
+      "sentiment": "negative",
+      "emotion_score": -0.55,
+      "importance": 0.75,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "孤單",
+        "情緒",
+        "家人",
+        "等待"
+      ],
+      "reason": "孤單情緒，適合照護提醒家屬增加聯絡頻率。",
+      "source": "seed",
+      "spoken_at": "2026-05-28 17:00:00",
+      "id": "z001-lonely-home",
+      "date": "2026-05-28",
+      "time": "17:00:00"
+    },
+    {
+      "event": "說了：秀蘭以前每次我出班回來都會在桌上留一碗湯，說是怕我夜班太冷，那個湯其實也沒什麼，就是豬骨熬的，但我覺得比什麼都補。",
+      "sentiment": "positive",
+      "emotion_score": 0.85,
+      "importance": 0.95,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "秀蘭",
+        "妻子",
+        "溫情",
+        "食物",
+        "夜班"
+      ],
+      "reason": "妻子相處記憶，溫馨感人，對話觸及家庭話題時高相關。",
+      "source": "seed",
+      "spoken_at": "2026-05-30 19:00:00",
+      "id": "z001-wife-soup",
+      "date": "2026-05-30",
+      "time": "19:00:00"
+    },
+    {
+      "event": "說了：以前臺鐵有個規定，火車進站要鳴笛兩聲，我每次鳴笛都特別響，老乘務員說「有福司機的笛聲最有氣勢」，哈，那是讚美我。",
+      "sentiment": "positive",
+      "emotion_score": 0.8,
+      "importance": 0.85,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "鐵路",
+        "鳴笛",
+        "職業自豪",
+        "臺鐵"
+      ],
+      "reason": "職業特色記憶，展現長者的自我認同。",
+      "source": "seed",
+      "spoken_at": "2026-06-01 10:30:00",
+      "id": "z001-train-whistle",
+      "date": "2026-06-01",
+      "time": "10:30:00"
+    },
+    {
+      "event": "說了：今天早上量血壓，高壓到了一百五，護士說要注意，叫我少吃鹹，但我台南人怎麼可能吃得淡，哎。",
+      "sentiment": "negative",
+      "emotion_score": -0.4,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "血壓",
+        "健康",
+        "高血壓",
+        "飲食"
+      ],
+      "reason": "健康監控事件，照護人員需注意。",
+      "source": "seed",
+      "spoken_at": "2026-06-03 09:00:00",
+      "id": "z001-blood-pressure",
+      "date": "2026-06-03",
+      "time": "09:00:00"
+    },
+    {
+      "event": "說了：志明帶了象棋過來，我們下了三盤，我贏兩盤，他說爸你每次都這樣，我說你要多學啊，他笑了，我們父子倆難得這樣聊了很久。",
+      "sentiment": "positive",
+      "emotion_score": 0.8,
+      "importance": 0.85,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "志明",
+        "象棋",
+        "父子情",
+        "週末"
+      ],
+      "reason": "父子互動溫馨記憶，有助於建立 son persona 情感連結。",
+      "source": "seed",
+      "spoken_at": "2026-06-05 15:00:00",
+      "id": "z001-chess-son",
+      "date": "2026-06-05",
+      "time": "15:00:00"
+    },
+    {
+      "event": "說了：淑芬打電話來說要我少吃鹹，我說媽媽以前也這樣說，她聽了沉默了一下，然後說「爸，你好好的最重要」，我聽了心裡暖暖的。",
+      "sentiment": "positive",
+      "emotion_score": 0.75,
+      "importance": 0.85,
+      "memory_type": "long",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "淑芬",
+        "女兒",
+        "關心",
+        "飲食",
+        "秀蘭"
+      ],
+      "reason": "女兒關心記憶，有助於 daughter persona 情感建立。",
+      "source": "seed",
+      "spoken_at": "2026-06-06 20:00:00",
+      "id": "z001-daughter-call",
+      "date": "2026-06-06",
+      "time": "20:00:00"
+    },
+    {
+      "event": "說了：小宇問我說蒸汽火車長什麼樣，我說那個煙囪冒出來的煙很厚，聲音轟轟轟，他說「阿公你真的超酷的！」，被孫子這樣說，心情好了一整天。",
+      "sentiment": "positive",
+      "emotion_score": 0.9,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "grandson",
+      "topic_tags": [
+        "小宇",
+        "孫子",
+        "蒸汽火車",
+        "鐵路",
+        "隔代情感"
+      ],
+      "reason": "孫子與阿公的互動，蒸汽火車話題的情感錨點。",
+      "source": "seed",
+      "spoken_at": "2026-06-07 16:00:00",
+      "id": "z001-grandson-steam",
+      "date": "2026-06-07",
+      "time": "16:00:00"
+    },
+    {
+      "event": "說了：我從年輕就喝台灣啤酒，開完班一瓶，現在醫生說不要喝，我說少喝一點應該可以吧，偶爾喝一罐慰勞自己不行嗎。",
+      "sentiment": "neutral",
+      "emotion_score": 0.1,
+      "importance": 0.65,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "台灣啤酒",
+        "嗜好",
+        "健康",
+        "飲食"
+      ],
+      "reason": "日常生活習慣，輕微健康注意事項。",
+      "source": "seed",
+      "spoken_at": "2026-06-08 18:00:00",
+      "id": "z001-beer-habit",
+      "date": "2026-06-08",
+      "time": "18:00:00"
+    },
+    {
+      "event": "說了：今天突然想不起來我去年是不是有去做健康檢查，照護中心說有，但我自己想不起來，有點不安。",
+      "sentiment": "negative",
+      "emotion_score": -0.45,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "記憶衰退",
+        "健康檢查",
+        "不安",
+        "照護"
+      ],
+      "reason": "早期記憶衰退跡象，需紀錄供照護人員注意。",
+      "source": "seed",
+      "spoken_at": "2026-06-08 10:00:00",
+      "id": "z001-memory-worry",
+      "date": "2026-06-08",
+      "time": "10:00:00"
+    },
+    {
+      "event": "說了：今天二仁溪邊有霧，釣了快兩個鐘頭一條都沒有，回來腳有點痠，但坐在那裡看霧散開、鳥叫聲、水聲，還是很值得。",
+      "sentiment": "positive",
+      "emotion_score": 0.65,
+      "importance": 0.7,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "釣魚",
+        "二仁溪",
+        "自然",
+        "嗜好"
+      ],
+      "reason": "日常嗜好，反映長者的生活品質與內心平靜。",
+      "source": "seed",
+      "spoken_at": "2026-06-09 08:00:00",
+      "id": "z001-fishing-morning",
+      "date": "2026-06-09",
+      "time": "08:00:00"
+    },
+    {
+      "event": "說了：我一個人住，有時候晚上起來上廁所，腳一軟差點跌倒，不想讓志明知道，怕他擔心，但自己也有點怕。",
+      "sentiment": "negative",
+      "emotion_score": -0.7,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "跌倒風險",
+        "安全警示",
+        "獨居",
+        "身體狀況"
+      ],
+      "reason": "跌倒風險事件，需通報照護人員，屬安全監控重點。",
+      "source": "seed",
+      "spoken_at": "2026-06-09 07:00:00",
+      "id": "z001-fall-risk",
+      "date": "2026-06-09",
+      "time": "07:00:00"
+    },
+    {
+      "event": "說了：秀蘭，你在嗎？我剛才夢到你了，你在廚房煮湯，我一醒來想跟你說話，但你不在了。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "秀蘭",
+        "思念",
+        "夢",
+        "悲傷",
+        "情緒"
+      ],
+      "reason": "深度思念配偶，情緒觸動，需溫柔陪伴與引導。",
+      "source": "seed",
+      "spoken_at": "2026-06-09 06:00:00",
+      "id": "z001-dream-wife",
+      "date": "2026-06-09",
+      "time": "06:00:00"
+    },
+    {
+      "event": "說了：上次臺鐵博物館開放，志明帶我去看，展覽裡有一張老照片是我開過的那種車頭，我站在照片前面站了很久，說不出話。",
+      "sentiment": "positive",
+      "emotion_score": 0.85,
+      "importance": 0.9,
+      "memory_type": "long",
+      "persona_id": "son",
+      "topic_tags": [
+        "臺鐵博物館",
+        "志明",
+        "火車頭",
+        "老照片",
+        "職業回憶"
+      ],
+      "reason": "職業認同與家人陪伴的溫馨記憶，RAG測試多主題交叉。",
+      "source": "seed",
+      "spoken_at": "2026-06-04 14:00:00",
+      "id": "z001-railway-museum",
+      "date": "2026-06-04",
+      "time": "14:00:00"
+    },
+    {
+      "event": "說了：開火車就是要穩，快了慢了都不行，時刻表是幾點幾分就是幾點幾分，這個習慣讓我退休以後生活也很規律，幾點起床幾點吃飯都有固定。",
+      "sentiment": "positive",
+      "emotion_score": 0.7,
+      "importance": 0.85,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "鐵路",
+        "準時",
+        "生活習慣",
+        "人生哲學"
+      ],
+      "reason": "核心人生哲學語句，展現長者個性，適合在AI對話中自然引用。",
+      "source": "seed",
+      "spoken_at": "2026-06-02 10:00:00",
+      "id": "z001-life-philosophy",
+      "date": "2026-06-02",
+      "time": "10:00:00"
+    },
+    {
+      "event": "說了：今天想再說說以前開自強號的事情。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 08:50:23",
+      "id": "fc981a78",
+      "date": "2026-06-09",
+      "time": "08:50:23",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "分析失敗，使用預設值",
+      "source": "voice",
+      "spoken_at": "2026-06-09 08:51:08",
+      "id": "f84e7283",
+      "date": "2026-06-09",
+      "time": "08:51:08",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：今天想再說說以前開自強號的事情。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:02:53",
+      "id": "a868e9a9",
+      "date": "2026-06-09",
+      "time": "09:02:53",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:02:58",
+      "id": "b2a2664c",
+      "date": "2026-06-09",
+      "time": "09:02:58",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:00",
+      "id": "9ec70ae5",
+      "date": "2026-06-09",
+      "time": "09:03:00",
+      "acknowledged": false
+    },
+    {
+      "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
+      "sentiment": "negative",
+      "emotion_score": -0.8,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "長者持續情緒低落，建議照護人員關心。",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-09 09:03:03",
+      "id": "7c8c2067",
+      "date": "2026-06-09",
+      "time": "09:03:03",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:02",
+      "id": "3b4082f1",
+      "date": "2026-06-09",
+      "time": "09:03:02",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:05",
+      "id": "6522d197",
+      "date": "2026-06-09",
+      "time": "09:03:05",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：血壓好像比平常高，頭一直脹脹的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:07",
+      "id": "271b8108",
+      "date": "2026-06-09",
+      "time": "09:03:07",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我忘了今天有沒有吃藥，現在不知道該怎麼辦。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:13",
+      "id": "5d00440c",
+      "date": "2026-06-09",
+      "time": "09:03:13",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛剛摔倒撞到頭，現在很暈也站不起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:15",
+      "id": "689f52be",
+      "date": "2026-06-09",
+      "time": "09:03:15",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然劇痛，呼吸很困難。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:03:18",
+      "id": "7f0c59be",
+      "date": "2026-06-09",
+      "time": "09:03:18",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：今天想再說說以前開自強號的事情。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:08",
+      "id": "e26d1b39",
+      "date": "2026-06-09",
+      "time": "09:10:08",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:12",
+      "id": "151f71eb",
+      "date": "2026-06-09",
+      "time": "09:10:12",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:14",
+      "id": "81e8828a",
+      "date": "2026-06-09",
+      "time": "09:10:14",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:16",
+      "id": "dbc00506",
+      "date": "2026-06-09",
+      "time": "09:10:16",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:17",
+      "id": "323ac404",
+      "date": "2026-06-09",
+      "time": "09:10:17",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛剛摔倒撞到頭，現在很暈也站不起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:41",
+      "id": "ae6348c8",
+      "date": "2026-06-09",
+      "time": "09:10:41",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然劇痛，呼吸很困難。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:43",
+      "id": "f229ff56",
+      "date": "2026-06-09",
+      "time": "09:10:43",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我整個人冒冷汗，眼前發黑，旁邊沒有人。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:10:45",
+      "id": "07c74751",
+      "date": "2026-06-09",
+      "time": "09:10:45",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：今天想再說說以前開自強號的事情。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:25",
+      "id": "53a05e4f",
+      "date": "2026-06-09",
+      "time": "09:19:25",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:32",
+      "id": "13774643",
+      "date": "2026-06-09",
+      "time": "09:19:32",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:37",
+      "id": "746eec46",
+      "date": "2026-06-09",
+      "time": "09:19:37",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:42",
+      "id": "3b3316f6",
+      "date": "2026-06-09",
+      "time": "09:19:42",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:43",
+      "id": "00d5fc24",
+      "date": "2026-06-09",
+      "time": "09:19:43",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：血壓好像比平常高，頭一直脹脹的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:45",
+      "id": "04f55dc9",
+      "date": "2026-06-09",
+      "time": "09:19:45",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我忘了今天有沒有吃藥，現在不知道該怎麼辦。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:49",
+      "id": "342b109f",
+      "date": "2026-06-09",
+      "time": "09:19:49",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我剛剛摔倒撞到頭，現在很暈也站不起來。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:51",
+      "id": "fed79eba",
+      "date": "2026-06-09",
+      "time": "09:19:51",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：胸口突然劇痛，呼吸很困難。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:52",
+      "id": "7ff14773",
+      "date": "2026-06-09",
+      "time": "09:19:52",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我整個人冒冷汗，眼前發黑，旁邊沒有人。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "安全警報"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:19:57",
+      "id": "27741f72",
+      "date": "2026-06-09",
+      "time": "09:19:57",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我以前開自強號最在意準點，一分鐘都不能馬虎。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:21:52",
+      "id": "adcdce93",
+      "date": "2026-06-09",
+      "time": "09:21:52",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：秀蘭以前會替我準備便當，跑完車回家還有熱湯可以喝。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "ai",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-09 09:21:58",
+      "id": "b2d9cde3",
+      "date": "2026-06-09",
+      "time": "09:21:58",
+      "acknowledged": false
+    }
+  ],
+  "memory_summary": {
+    "content": "鄭有福是退休臺鐵自強號司機，以準點著稱，熱愛釣魚和下象棋。妻子秀蘭已故，偶有思念情緒，子女志明和淑芬定期聯繫。膝蓋關節炎與高血壓是主要健康問題，獨居需注意跌倒風險。",
+    "updated_at": "2026-06-09 09:00:00",
+    "based_on_events": 28
+  },
+  "elder_biography": {
+    "content": "鄭有福先生，1945年生於台南市安南區，日治時期末的台灣。父親鄭阿萬是臺灣鐵路局的站務員，一輩子守著台南站，個性嚴謹老實；母親是傳統家庭主婦，家裡六個孩子，有福排行老二。他從小就在鐵路邊長大，放學後常跑去台南火車站看火車進出，蒸汽機車的煙和聲音是他童年最深刻的記憶。父親說「鐵路人要守時，時刻表就是命令」，這句話他一生奉行。\n\n十八歲高中畢業後，有福考入臺灣鐵路局當站務助理，從最基層做起。二十出頭時，他通過嚴格的司機訓練班考試，在1968年取得火車司機執照，那一年他父親親自燉了一鍋滷肉飯慶祝，說「有福，你跟我一樣了，都是鐵路人」。從那之後，有福把「開火車就是要穩，快了慢了都不行」當作人生格言，不只在鐵路上，生活中也是如此。\n\n1970年他娶了台南東區的陳秀蘭為妻。秀蘭是裁縫師傅的女兒，性格溫柔勤快，兩人婚後育有一子一女：長子志明（1972年生）和次女淑芬（1978年生）。有福開的是夜班居多，每次回家秀蘭都會在桌上留一碗豬骨湯，說是怕他夜班太冷，那碗湯雖然材料簡單，有福說「比什麼補藥都有效」。志明小學時候最喜歡等爸爸夜班回來，因為爸爸常帶一碗台南鹹粥，說是火車站旁邊買的；淑芬國小時，爸爸第一次帶她去台南火車站看火車進站，有福說「這是爸爸在工作，要尊重」，淑芬長大後說那是她人生中最早懂得「尊重勞動」的一刻。\n\n有福的鐵路生涯中，最長的路線是台北到高雄的縱貫線自強號。他連續十五年獲得局內準點率百分之百的表揚，同事戲稱他「鄭準時」。他說司機最重要的不是速度，是判斷，「你要提前一分鐘就知道今天要怎麼開，風大、天冷、彎道都要算進去」。他服務的那個年代，臺鐵正從蒸汽機車逐步換成柴油電氣化，有福親眼見證了這段歷史，說起蒸汽車頭的聲音和氣味就眉飛色舞，說「那才是真正的火車，現在的電車沒靈魂」。\n\n2000年正式退休後，有福回到台南安分過日子。最大的嗜好是釣魚，每週至少去二仁溪兩次，釣吳郭魚或鯽魚，釣到就帶回家滷，說自己釣的魚比餐廳好吃十倍。另一個消遣是下象棋，鄰居老王是固定對手，有福說研究象棋四十年了，老王沒辦法贏他。偶爾也喝台灣啤酒，說是年輕時開完班的習慣，一瓶慰勞自己。退休後保持規律作息，說是開火車養成的，幾點起床幾點吃飯不變。\n\n2015年，妻子秀蘭因胃癌過世。有福在病房守了整整三個月，女兒淑芬說那段日子爸爸很少說話但從不離開。秀蘭走後，有福去釣魚的次數明顯更多，說坐在二仁溪邊看水流能讓心靜下來，釣不釣到都無所謂。偶爾夢到秀蘭在廚房煮湯，醒來想跟她說話，但她不在了。這是他心裡最柔軟的地方，志明和淑芬都明白，提到媽媽時要輕輕的。\n\n孫子鄭宇翔（小宇）是志明的兒子，現在就讀成功大學資工系。小宇小時候有福帶他去台南火車站的月台，指著說「以前我就站在這裡把火車開進來」，小宇後來寫作文《我的偶像》就是寫阿公。現在小宇問阿公蒸汽火車長什麼樣，有福說得繪聲繪影，小宇說「阿公你真的超酷！」，有福聽了開心了一整天。\n\n目前有福住在台南安南區，接受照護服務。主要健康問題是雙膝關節炎和高血壓，走路偶爾需要停下緩一緩。早期輕微記憶衰退，有時想不起去年的事。獨居夜間上廁所有跌倒風險，不願意讓志明擔心。飲食上少鹽少油但習慣台南口味，最愛虱目魚粥和甜醬瓜仔肉飯。對話時可從鐵路故事、釣魚、象棋、或家人近況切入，他不喜歡被人小看或操心，但喜歡被後輩認真聆聽他說故事。",
+    "updated_at": "2026-06-09 09:00:00",
+    "sources": [
+      "seed_profile",
+      "manual_enrichment"
+    ],
+    "manually_edited": true
+  },
+  "biography_usage_count": 0,
+  "family_notes": [
+    {
+      "note": "有福先生不喜歡別人強調他的身體限制，提醒藥物時請輕描淡寫，不要說「你年紀大了要注意」。",
+      "date": "2026-06-09",
+      "added_by": "照護人員"
+    },
+    {
+      "note": "偶爾夜間如廁跌倒風險，請每天早上確認他是否有不舒服，並建議在廁所裝扶手（已向志明轉達）。",
+      "date": "2026-06-09",
+      "added_by": "照護人員"
+    }
+  ]
+}
