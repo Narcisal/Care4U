@@ -343,7 +343,7 @@
             </div>
             <div class="sidebar-status-row">
                 <span>長者檔案</span>
-                <span class="status-pill">3 位</span>
+                <span class="status-pill" id="sidebar-elder-count">— 位</span>
             </div>
             <div class="sidebar-status-row">
                 <span>登入身分</span>
@@ -1009,6 +1009,7 @@ let DEMO_ELDERS = [
     { id: 'W001', name: '王大明' },
     { id: 'C001', name: '陳秀英' },
     { id: 'L001', name: '林月琴' },
+    { id: 'Z001', name: '鄭有福' },
 ];
 
 async function loadAllowedElders() {
@@ -1020,6 +1021,9 @@ async function loadAllowedElders() {
             id: elder.elder_id,
             name: elder.name,
         }));
+        // 更新 sidebar 長者人數
+        const countEl = document.getElementById('sidebar-elder-count');
+        if (countEl) countEl.textContent = `${DEMO_ELDERS.length} 位`;
         // 更新所有長者下拉選單（含原本 hardcode 的 6 個）
         const plainSelectIds = [
             'elder-select', 'dash-elder-select', 'isafe-elder-select',

@@ -1649,7 +1649,7 @@ async def upload_voice(
         if persona is None:
             raise HTTPException(status_code=404, detail="找不到此人格")
 
-        voices_dir = Path(f"backend/data/elders/{elder_id}_voices")
+        voices_dir = (Path(__file__).parent / "data" / "elders" / f"{elder_id}_voices").resolve()
         voices_dir.mkdir(parents=True, exist_ok=True)
         voice_path = voices_dir / f"{persona_id}.wav"
         temp_path = voice_path.with_name(
