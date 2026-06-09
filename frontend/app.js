@@ -236,6 +236,20 @@ class StreamingTTSQueue {
 // ── 主對話流程 ──────────────────────────────────────────────────────────────
 
 async function processAndRespond(message, speedEmotion = "normal") {
+    // 新訊息送出時清除上一輪的回憶圖片，恢復頭像置中
+    const prevFrame = document.getElementById("image-frame");
+    if (prevFrame && prevFrame.style.display !== "none") {
+        prevFrame.style.display = "none";
+        const prevPanel = document.querySelector(".persona-panel");
+        if (prevPanel) prevPanel.classList.remove("with-image");
+        const prevMain = document.querySelector(".main-body");
+        if (prevMain) prevMain.classList.remove("has-image");
+        const r1 = document.getElementById("speaking-ring-1");
+        const r2 = document.getElementById("speaking-ring-2");
+        if (r1) r1.classList.remove("active");
+        if (r2) r2.classList.remove("active");
+    }
+
     document.getElementById("text-input").disabled = true;
     document.getElementById("send-btn").disabled = true;
     document.getElementById("hold-talk-btn").disabled = true;
@@ -377,16 +391,19 @@ async function readChatResponse(response, thinkingId, ttsQueue = null) {
 async function pollChatBackground(taskId) {
     let imageShown = false;
     let healthShown = false;
-    for (let attempt = 0; attempt < 15; attempt++) {
+    console.log(`[圖片] 開始輪詢 task=${taskId}`);
+    for (let attempt = 0; attempt < 60; attempt++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         try {
             const res = await elderFetch(elderQueryPath(`/api/elder/chat/background/${encodeURIComponent(taskId)}`));
             if (!res.ok) return;
             const data = await res.json();
+            console.log(`[圖片] attempt=${attempt+1} image_status=${data.image_status} health_status=${data.health_status}`);
             if (!imageShown && data.image_status !== "pending" && data.image) {
                 if (data.image_caption) addMessage("ai", data.image_caption);
                 addImageMessage(data.image);
                 imageShown = true;
+                console.log("[圖片] 顯示成功");
             }
             if (!healthShown && data.health_status !== "pending" && data.health_info) {
                 addHealthCard(data.health_info);
@@ -398,6 +415,7 @@ async function pollChatBackground(taskId) {
             return;
         }
     }
+    console.log("[圖片] 輪詢超時（60秒）");
 }
 
 async function toggleRecording() {
@@ -569,9 +587,7 @@ function removeThinking(id) {
 function addImageMessage(imageBase64) {
     const frame = document.getElementById("image-frame");
     const img = document.getElementById("image-frame-img");
-    const wrap = document.querySelector(".speaking-wrap");
-    const info = document.querySelector(".persona-info");
-    const statusLbl = document.getElementById("status-label");
+    const panel = document.querySelector(".persona-panel");
 
     img.src = imageBase64;
 
@@ -582,10 +598,16 @@ function addImageMessage(imageBase64) {
     frame.style.animation = "";
     frame.style.display = "block";
 
-    // 人像滑左
-    wrap.classList.add("with-image");
-    if (info) info.style.display = "none";
-    if (statusLbl) statusLbl.style.display = "none";
+    // 整個 panel（頭像＋名字＋稱位＋狀態）略左移，圖片從右下 overlap
+    if (panel) panel.classList.add("with-image");
+    const mainBody = document.querySelector(".main-body");
+    if (mainBody) mainBody.classList.add("has-image");
+
+    // 圖片出現時重啟呼吸光暈
+    const ring1 = document.getElementById("speaking-ring-1");
+    const ring2 = document.getElementById("speaking-ring-2");
+    if (ring1) { ring1.classList.remove("active"); void ring1.offsetWidth; ring1.classList.add("active"); }
+    if (ring2) { ring2.classList.remove("active"); void ring2.offsetWidth; ring2.classList.add("active"); }
 }
 
 function addHealthCard(info) {
@@ -652,12 +674,10 @@ function clearChat() {
     document.getElementById("start-btn").textContent = "開始聊天";
     document.getElementById("start-btn").disabled = false;
     document.getElementById("image-frame").style.display = "none";
-    const wrap = document.querySelector(".speaking-wrap");
-    if (wrap) wrap.classList.remove("with-image");
-    const info = document.querySelector(".persona-info");
-    if (info) info.style.display = "";
-    const statusLbl = document.getElementById("status-label");
-    if (statusLbl) statusLbl.style.display = "";
+    const panel = document.querySelector(".persona-panel");
+    if (panel) panel.classList.remove("with-image");
+    const mainBody = document.querySelector(".main-body");
+    if (mainBody) mainBody.classList.remove("has-image");
 }
 
 try {

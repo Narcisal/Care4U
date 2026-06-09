@@ -330,13 +330,19 @@ class VectorMemoryStore(MemoryManager):
                 with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
                     cursor.execute(
                         f"""
-                        SELECT content AS event, sentiment, importance,
-                               memory_type, topic_tags, date,
-                               embedding <=> %s::vector AS distance
-                        FROM elder_memories
-                        WHERE elder_id = %s
-                          AND embedding IS NOT NULL
-                          {persona_clause}
+                        SELECT event, sentiment, importance,
+                               memory_type, topic_tags, date, distance
+                        FROM (
+                            SELECT DISTINCT ON (content)
+                                   content AS event, sentiment, importance,
+                                   memory_type, topic_tags, date,
+                                   embedding <=> %s::vector AS distance
+                            FROM elder_memories
+                            WHERE elder_id = %s
+                              AND embedding IS NOT NULL
+                              {persona_clause}
+                            ORDER BY content, distance ASC
+                        ) deduped
                         ORDER BY distance ASC
                         LIMIT %s
                         """,

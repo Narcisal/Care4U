@@ -541,16 +541,18 @@
         #image-frame {
             display: none;
             position: absolute;
-            right: 5%;
+            right: 4%;
             top: 50%;
             transform: translateY(-50%);
-            border: 8px solid var(--brown-frame);
-            border-radius: 12px;
+            border: 6px solid var(--brown-frame);
+            border-radius: 16px;
             overflow: hidden;
-            width: 42%;
+            width: 34%;
             aspect-ratio: 4/3;
             animation: frameSlideIn 0.8s ease-out both;
             z-index: 5;
+            background: #f0e8de;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
         }
 
         @keyframes frameSlideIn {
@@ -562,16 +564,12 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center;
             display: block;
         }
 
         .memory-frame-caption {
-            background: var(--brown-frame);
-            color: rgba(255,255,255,0.85);
-            font-size: 14px;
-            text-align: center;
-            padding: 8px 12px;
-            letter-spacing: 1px;
+            display: none;
         }
 
         /* 錄音指示 */
@@ -686,25 +684,56 @@
         }
 
         /* 人像滑左狀態 */
-        .speaking-wrap.with-image {
+        .persona-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.5s ease;
+        }
+
+        /* ── 有圖片時：人像略左移為主角，圖片從右下 overlap ── */
+        .persona-panel.with-image {
             position: absolute;
-            left: 5%;
+            left: 35%;
             top: 50%;
-            transform: translateY(-50%);
-            transition: all 0.6s ease;
+            transform: translate(-50%, -50%);
+            gap: 16px;
+            z-index: 4;
         }
 
-        .speaking-wrap.with-image #persona-portrait {
-            width: 380px;
-            height: 380px;
+        .persona-panel.with-image #persona-portrait {
+            width: 500px;
+            height: 500px;
         }
 
-        .speaking-wrap.with-image .speaking-ring {
-            width: 420px; height: 420px;
+        .persona-panel.with-image .speaking-ring {
+            width: 540px; height: 540px;
         }
 
-        .speaking-wrap.with-image #speaking-ring-2 {
-            width: 470px; height: 470px;
+        .persona-panel.with-image #speaking-ring-2 {
+            width: 590px; height: 590px;
+        }
+
+        .persona-panel.with-image #persona-portrait-name {
+            font-size: 34px;
+        }
+
+        .persona-panel.with-image #persona-portrait-rel {
+            font-size: 24px;
+        }
+
+        .persona-panel.with-image .status-label {
+            font-size: 24px;
+        }
+
+        /* 圖片：在人像右下方 overlap */
+        .main-body.has-image #image-frame {
+            left: 46%;
+            right: auto;
+            top: 54%;
+            width: 38%;
+            z-index: 2;
         }
 
         @media (max-width: 900px) {
@@ -799,20 +828,22 @@
     </div>
 
     <div class="main-body">
-        <div class="speaking-wrap">
-            <div class="speaking-ring" id="speaking-ring-1"></div>
-            <div class="speaking-ring" id="speaking-ring-2"></div>
-            <img id="persona-portrait"
-                 src="/static/avatars/ai_assistant_nobg.png"
-                 alt="陪伴者">
-        </div>
+        <div class="persona-panel">
+            <div class="speaking-wrap">
+                <div class="speaking-ring" id="speaking-ring-1"></div>
+                <div class="speaking-ring" id="speaking-ring-2"></div>
+                <img id="persona-portrait"
+                     src="/static/avatars/ai_assistant_nobg.png"
+                     alt="陪伴者">
+            </div>
 
-        <div class="persona-info">
-            <div id="persona-portrait-name">陪伴者</div>
-            <div id="persona-portrait-rel">陪你說說話</div>
-        </div>
+            <div class="persona-info">
+                <div id="persona-portrait-name">陪伴者</div>
+                <div id="persona-portrait-rel">陪你說說話</div>
+            </div>
 
-        <div class="status-label listening" id="status-label">可以慢慢說，我在聽</div>
+            <div class="status-label listening" id="status-label">可以慢慢說，我在聽</div>
+        </div>
 
         <div id="image-frame">
             <img id="image-frame-img" src="" alt="回憶圖片">

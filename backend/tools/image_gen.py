@@ -47,7 +47,7 @@ def detect_image_trigger(message: str) -> str | None:
     for attempt in range(3):
         try:
             response = llm.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-flash-lite-latest",
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.0,
@@ -76,24 +76,25 @@ def extract_scene(message: str) -> str:
     if llm is None:
         return message[:50]
 
-    prompt = f"""從以下長者說的話中，萃取出核心的視覺場景描述。
+    prompt = f"""從以下長者說的話中，萃取出核心的視覺場景描述，用來生成插畫。
 
 長者說：「{message}」
 
 要求：
-- 只保留有視覺意義的場景、地點、物件、氛圍
-- 去除口語贅詞（欸、啊、就是那個、跟你說喔）
+- 描述具體的地點、天氣、物件、氛圍（例如：台灣海邊、藍天、舊式重機、海浪、懷舊午後）
 - 去除人物描述（不要提到任何人的名字或樣貌）
-- 用簡短的場景描述回答，不超過 30 字
-- 只回傳場景描述，不要其他說明"""
+- 用完整的場景描述句子回答，15～40 字之間
+- 只回傳場景描述，不要其他說明或標點符號結尾
+
+範例輸出：台灣 1970 年代海邊，舊式重機停在沙灘旁，蔚藍海浪拍岸，陽光灑落，懷舊溫暖氛圍"""
 
     try:
         response = llm.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-flash-lite-latest",
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.0,
-                max_output_tokens=50,
+                max_output_tokens=200,
             )
         )
         return response.text.strip()
@@ -116,36 +117,44 @@ def generate_image(message: str, trigger_type: str) -> str | None:
         scene = extract_scene(message)
         print(f"萃取場景：{scene}")
 
-        prompt = f"""生成一張適合台灣長者欣賞的溫暖懷舊風景插畫。
+        prompt = f"""Create a warm nostalgic watercolor illustration of this scene: {scene}
 
-場景描述：{scene}
+Style: Taiwan retro landscape, soft warm colors, watercolor painting, peaceful and serene atmosphere, vintage 1970s feel.
+No human faces. No modern vehicles or electronics. No text or numbers."""
 
-風格要求：
-- 台灣早期農村或城市風情，溫暖柔和色調
-- 水彩或油畫插畫風格，帶有懷舊感
-- 光線溫暖，氛圍寧靜祥和
+        response = None
+        for attempt in range(2):
+            try:
+                response = llm.models.generate_content(
+                    model="gemini-2.5-flash-image",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE"]
+                    )
+                )
+                break
+            except Exception as e:
+                if "503" in str(e) and attempt == 0:
+                    print(f"圖片生成 503，3s 後重試一次")
+                    time.sleep(3)
+                    continue
+                raise
 
-嚴格禁止：
-- 禁止出現任何人類面孔或具體人像（可以有模糊背影但不可有臉）
-- 禁止出現現代汽車、電子產品、手機、電腦
-- 禁止出現現代建築、柏油路、現代電線桿
-- 禁止出現任何文字或數字"""
+        if response is None or not response.candidates:
+            print("圖片生成：無 candidates")
+            return None
 
-        response = llm.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE", "TEXT"]
-            )
-        )
+        cand = response.candidates[0]
+        print(f"圖片回應 finish_reason={cand.finish_reason}")
+        if not cand.content:
+            print(f"圖片生成：content 為空（可能被安全過濾），finish_reason={cand.finish_reason}")
+            return None
 
-        print(f"圖片回應 parts 數量：{len(response.candidates[0].content.parts)}")
-        for i, part in enumerate(response.candidates[0].content.parts):
-            print(f"Part {i}: has_inline_data={part.inline_data is not None}")
+        for i, part in enumerate(cand.content.parts):
             if part.inline_data is not None:
                 image_data = base64.b64encode(part.inline_data.data).decode("utf-8")
                 mime_type = part.inline_data.mime_type
-                print(f"圖片生成成功！mime_type={mime_type}")
+                print(f"圖片生成成功！mime_type={mime_type} size={len(part.inline_data.data)}")
                 return f"data:{mime_type};base64,{image_data}"
 
         print("圖片生成：沒有找到圖片資料")
