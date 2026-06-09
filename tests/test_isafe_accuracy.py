@@ -115,6 +115,7 @@ async def run(elder_id: str = "L001"):
                 f"[{status}] {current_elder_id} 預期 L{expected} / 實際 L{actual}: "
                 f"{message}"
             )
+            await asyncio.sleep(1)  # 避免連續打 API 觸發 503
 
     passed = sum(expected == actual for _, _, expected, actual in results)
     print(f"\n準確率：{passed}/{len(results)} = {passed / len(results):.1%}")

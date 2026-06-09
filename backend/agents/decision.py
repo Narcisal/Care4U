@@ -183,12 +183,13 @@ class Decision:
                 "_isafe_path": "emergency_keyword",
             }
 
+        use_rag = quick_keyword_check(user_message) != 0
         safety_future = _agent_executor.submit(
             self._run_isafe,
             user_message,
             speed_emotion,
         )
-        response_future = _agent_executor.submit(self._run_magic, user_message)
+        response_future = _agent_executor.submit(self._run_magic, user_message, use_rag)
         safety = safety_future.result()
         magic_result = response_future.result()
         response = magic_result["_text"]
@@ -271,6 +272,7 @@ class Decision:
             }
             return
 
+        use_rag = quick_keyword_check(user_message) != 0
         safety_future = _agent_executor.submit(
             self._run_isafe,
             user_message,
@@ -281,7 +283,7 @@ class Decision:
         chunks = []
 
         try:
-            for chunk in self.magic.stream_chat(user_message):
+            for chunk in self.magic.stream_chat(user_message, use_rag=use_rag):
                 if not chunk:
                     continue
                 if first_chunk_ms is None:
@@ -400,11 +402,11 @@ class Decision:
                 "_isafe_ms": round((time.perf_counter() - t0) * 1000),
             }
 
-    def _run_magic(self, message: str) -> dict:
+    def _run_magic(self, message: str, use_rag: bool = True) -> dict:
         t0 = time.perf_counter()
         self._log("Decision", "協調中", "呼叫 MagicAI 生成回應")
         try:
-            response = self.magic.chat(message)
+            response = self.magic.chat(message, use_rag=use_rag)
             self._log("MagicAI", "回應完成", "已儲存對話記憶")
             return {
                 "_text": response,

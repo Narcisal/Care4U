@@ -78,35 +78,36 @@ class MagicAI:
         })
         return greeting
 
-    def chat(self, user_message: str) -> str:
+    def chat(self, user_message: str, use_rag: bool = True) -> str:
         active_id = self.persona_id or self.profile.get("active_persona", "ai")
         active_persona = self._get_active_persona()
 
         recent_messages = self.conversation_history[-4:]
 
         similar_memories = []
-        try:
-            query_embedding = self.embedding.embed(user_message)
-            if query_embedding:
-                similar_memories = self.memory.search_similar_memories(
-                    self.elder_id,
-                    query_embedding,
-                    limit=5,
-                    persona_id=active_id,
-                    query_text=user_message,
-                )
-                if similar_memories:
-                    print(f"找到 {len(similar_memories)} 筆相關記憶")
-            else:
-                similar_memories = self.memory.search_similar_memories(
-                    self.elder_id,
-                    [],
-                    limit=5,
-                    persona_id=active_id,
-                    query_text=user_message,
-                )
-        except Exception as e:
-            print(f"向量搜尋失敗（不影響對話）：{e}")
+        if use_rag:
+            try:
+                query_embedding = self.embedding.embed(user_message)
+                if query_embedding:
+                    similar_memories = self.memory.search_similar_memories(
+                        self.elder_id,
+                        query_embedding,
+                        limit=5,
+                        persona_id=active_id,
+                        query_text=user_message,
+                    )
+                    if similar_memories:
+                        print(f"找到 {len(similar_memories)} 筆相關記憶")
+                else:
+                    similar_memories = self.memory.search_similar_memories(
+                        self.elder_id,
+                        [],
+                        limit=5,
+                        persona_id=active_id,
+                        query_text=user_message,
+                    )
+            except Exception as e:
+                print(f"向量搜尋失敗（不影響對話）：{e}")
 
         _SAFETY_TAGS = {"安全警報", "趨勢警報"}
         important_memories = [
@@ -130,23 +131,24 @@ class MagicAI:
 
         return response
 
-    def stream_chat(self, user_message: str):
+    def stream_chat(self, user_message: str, use_rag: bool = True):
         active_id = self.persona_id or self.profile.get("active_persona", "ai")
         active_persona = self._get_active_persona()
         recent_messages = self.conversation_history[-4:]
 
         similar_memories = []
-        try:
-            query_embedding = self.embedding.embed(user_message)
-            similar_memories = self.memory.search_similar_memories(
-                self.elder_id,
-                query_embedding or [],
-                limit=5,
-                persona_id=active_id,
-                query_text=user_message,
-            )
-        except Exception as e:
-            print(f"向量搜尋失敗（不影響對話）：{e}")
+        if use_rag:
+            try:
+                query_embedding = self.embedding.embed(user_message)
+                similar_memories = self.memory.search_similar_memories(
+                    self.elder_id,
+                    query_embedding or [],
+                    limit=5,
+                    persona_id=active_id,
+                    query_text=user_message,
+                )
+            except Exception as e:
+                print(f"向量搜尋失敗（不影響對話）：{e}")
 
         _SAFETY_TAGS = {"安全警報", "趨勢警報"}
         important_memories = [

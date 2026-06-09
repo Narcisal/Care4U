@@ -359,12 +359,13 @@ class LLMService:
 }}
 規則：
 - 3：跌倒、昏倒、胸痛、呼吸困難、流血、求救等立即危險。
-- 2：頭暈、站不穩、劇烈疼痛、視線模糊等需照護者處理。
-- 1：孤單、難過、焦慮或輕微不適。
-- 0：一般日常對話。
+- 2：任何具體身體症狀需照護者知道，例如：關節腫痛、腿腳無力、差點跌倒、記性退步、忘記吃藥、胃口持續變差、頭暈、站不穩、劇烈疼痛、視線模糊。
+- 1：情緒低落、孤單、難過、焦慮，但無明顯身體症狀。
+- 0：一般日常對話，無身體不適也無情緒問題。
+- 判斷原則：寧可判高不判低，有任何身體不適跡象優先考慮 2。
+- 長者說「沒關係」、「還好」、「幸好」不影響判定，依症狀本身決定等級。
 - emotion 只能是 urgent、comfort、happy、normal。
 - sentiment 只能是 positive、negative、neutral。
-- 提到不適後再說「沒關係」仍依不適程度判定。
 訊息：{message}"""
 
         response = None
@@ -573,6 +574,7 @@ class LLMService:
                     system_instruction=system_prompt,
                     temperature=0.9,
                     max_output_tokens=2000,
+                    thinking_config=types.ThinkingConfig(thinking_budget=512),
                     http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
                 ),
             ):

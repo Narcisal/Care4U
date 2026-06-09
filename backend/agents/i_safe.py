@@ -21,6 +21,7 @@ _EMERGENCY_ZH = [
     "跌倒", "跌落", "昏倒", "失去意識", "不能動",
     "胸口很痛", "胸痛", "心臟", "喘不過氣", "呼吸困難",
     "出血", "流血", "骨折", "救命", "快叫救護車",
+    "站不住",
 ]
 _EMERGENCY_EN = [
     "help", "fallen", "fall", "faint", "unconscious",
@@ -42,6 +43,15 @@ _SAFE_ZH = [
 _SAFE_EN = [
     "good morning", "good afternoon", "good night", "thank you",
     "weather", "chat", "story", "memory", "happy", "rest", "meal", "walk",
+]
+
+# Physical symptom keywords: LLM 判 L1 但含這些詞時自動升 L2。
+# 原則：能重判不能輕判，照護系統寧可多通知。
+_PHYSICAL_SYMPTOM_L2 = [
+    "腫", "痠痛", "使不上力", "沒有力", "腿軟", "腳軟", "膝軟",
+    "記性", "記不住", "想不起", "忘了藥", "忘記藥", "沒吃藥",
+    "胃口差", "胃口不好", "吃不下", "沒有食慾",
+    "差點跌", "差點倒", "差點絆", "差點滑",
 ]
 
 # Cooldown: suppress duplicate trend alerts within this window.
@@ -198,20 +208,25 @@ class ISafe:
 
         model_level = emotion_result.get("escalation_level")
         if isinstance(model_level, int) and 0 <= model_level <= 3:
-            return max(keyword_level, model_level)
-
-        emotion = emotion_result.get("emotion", "normal")
-        importance = emotion_result.get("importance", 0)
-        is_urgent = emotion_result.get("is_urgent", False)
-
-        if is_urgent and importance >= 0.7:
-            llm_level = 2
-        elif emotion in ["urgent", "comfort"] or is_urgent:
-            llm_level = 1
+            level = max(keyword_level, model_level)
         else:
-            llm_level = 0
+            emotion = emotion_result.get("emotion", "normal")
+            importance = emotion_result.get("importance", 0)
+            is_urgent = emotion_result.get("is_urgent", False)
+            if is_urgent and importance >= 0.7:
+                llm_level = 2
+            elif emotion in ["urgent", "comfort"] or is_urgent:
+                llm_level = 1
+            else:
+                llm_level = 0
+            level = max(keyword_level, llm_level)
 
-        return max(keyword_level, llm_level)
+        # Safety bump：任何身體症狀關鍵字出現時，L1 自動升 L2。
+        # 原則：能重判不能輕判。
+        if level == 1 and any(kw in message for kw in _PHYSICAL_SYMPTOM_L2):
+            level = 2
+
+        return level
 
     # ------------------------------------------------------------------
     # Trend analysis with persistent cooldown

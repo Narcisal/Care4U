@@ -1,4 +1,9 @@
-"""回應時間測試訊息與手動效能評估工具。"""
+"""回應時間測試訊息與手動效能評估工具。
+
+量測兩項指標：
+- TTFC（首字延遲）：用戶送出訊息到前端出現第一個字的時間，代表「互動即時感」
+- Total（完整回應）：完整 AI 回應送達的時間
+"""
 
 import argparse
 import asyncio
@@ -58,48 +63,76 @@ def test_prompt_dataset_shape():
     )
 
 
-def post_chat(base_url: str, elder_id: str, message: str) -> float:
+def post_chat_stream(base_url: str, elder_id: str, message: str) -> tuple[float, float, str]:
+    """串流模式發送請求，回傳 (ttfc_s, total_s, reply_text)。"""
     payload = json.dumps(
         {"elder_id": elder_id, "message": message},
         ensure_ascii=False,
     ).encode("utf-8")
     req = request.Request(
-        f"{base_url.rstrip('/')}/api/chat",
+        f"{base_url.rstrip('/')}/api/chat?stream=true",
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST",
     )
     started = time.perf_counter()
-    with request.urlopen(req, timeout=120) as response:
-        response.read()
-    return time.perf_counter() - started
+    ttfc = None
+    reply = ""
+    with request.urlopen(req, timeout=120) as resp:
+        while True:
+            line = resp.readline()
+            if not line:
+                break
+            line = line.decode("utf-8", errors="replace").strip()
+            if not line.startswith("data:"):
+                continue
+            try:
+                event = json.loads(line[5:].strip())
+            except json.JSONDecodeError:
+                continue
+            if ttfc is None and event.get("chunk"):
+                ttfc = time.perf_counter() - started
+            if event.get("chunk"):
+                reply += event["chunk"]
+            if event.get("done"):
+                if event.get("message"):
+                    reply = event["message"]
+                break
+    total = time.perf_counter() - started
+    return ttfc if ttfc is not None else total, total, reply.strip()
 
 
-async def run(base_url: str, elder_id: str):
+async def run(base_url: str, elder_id: str, show_reply: bool = False):
     elder_ids = list(MESSAGES_NEW) if elder_id == "all" else [elder_id]
-    timings = []
+    total_list = []
 
     for current_elder_id in elder_ids:
-        print(f"\n{ELDER_NAMES[current_elder_id]}（{current_elder_id}）")
+        print(f"\n{'='*60}")
+        print(f"{ELDER_NAMES[current_elder_id]}（{current_elder_id}）")
+        print(f"{'='*60}")
         for message in MESSAGES_NEW[current_elder_id]:
             try:
-                elapsed = await asyncio.to_thread(
-                    post_chat,
+                ttfc, total, reply = await asyncio.to_thread(
+                    post_chat_stream,
                     base_url,
                     current_elder_id,
                     message,
                 )
             except error.URLError as exc:
                 raise SystemExit(f"無法連線到 {base_url}：{exc}") from exc
-            timings.append(elapsed)
-            print(f"{elapsed:6.2f}s  {message}")
+            total_list.append(total)
+            print(f"\n[{total:.2f}s] 長者：{message}")
+            print(f"       AI：{reply}")
 
-    timings.sort()
-    p95_index = max(0, round(len(timings) * 0.95) - 1)
-    print(f"\n案例數：{len(timings)}")
-    print(f"平均：{statistics.mean(timings):.2f}s")
-    print(f"中位數：{statistics.median(timings):.2f}s")
-    print(f"P95：{timings[p95_index]:.2f}s")
+    def p95(lst):
+        s = sorted(lst)
+        return s[max(0, round(len(s) * 0.95) - 1)]
+
+    print(f"\n{'='*60}")
+    print(f"案例數：{len(total_list)}")
+    print(f"回應時間  平均 {statistics.mean(total_list):.2f}s  "
+          f"中位數 {statistics.median(total_list):.2f}s  "
+          f"P95 {p95(total_list):.2f}s")
 
 
 if __name__ == "__main__":
