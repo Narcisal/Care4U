@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import shutil
 import traceback
@@ -26,6 +27,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, field_validator
 
 load_dotenv(override=True)
+logger = logging.getLogger(__name__)
 
 from backend.agents.decision import Decision, clear_agent, flush_agent_conversations
 from backend.services.tts_service import TTSService
@@ -117,15 +119,12 @@ if not ALLOWED_ELDER_IDS:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    print(
-        f"STT worker pool 延遲初始化：size={STT_POOL_SIZE}, "
-        f"model={STT_MODEL_SIZE}, device={STT_DEVICE}"
-    )
     _db_enabled_val = os.getenv("DB_ENABLED", "false")
     print(f"[startup] DB_ENABLED={_db_enabled_val!r}  CARE4U_DEMO_MODE={os.getenv('CARE4U_DEMO_MODE','?')!r}")
     if _db_enabled_val.lower() == "true":
         from backend.memory.vector_store import _init_pool
         _init_pool()
+    await ensure_stt_pool()
     yield
     flush_agent_conversations()
     close_db_pool()
@@ -174,6 +173,7 @@ stt_pool_lock: asyncio.Queue = asyncio.Queue()
 stt_init_lock = asyncio.Lock()
 tts = TTSService(voice="zh-TW-HsiaoChenNeural")
 decisions: dict[str, Decision] = {}
+_decisions_lock = threading.Lock()
 chat_background_results: dict[str, dict] = {}
 chat_background_results_lock = threading.Lock()
 BACKGROUND_RESULTS_MAX = 200
@@ -364,6 +364,7 @@ class PersonaAddRequest(ValidatedRequest):
     name: str
     relation: str
     honorific: str
+    gender: str = "female"
     language: str = "mandarin"
     personality: list = []
     habits: list = []
@@ -383,7 +384,6 @@ class PersonaSwitchRequest(ValidatedRequest):
     persona_id: str
 
 class LanguageRequest(ValidatedRequest):
-    elder_id: str
     language: str
 
 class FamilyNoteRequest(ValidatedRequest):
@@ -564,23 +564,31 @@ def _session_key(elder_id: str, session_id: str = "default", persona_id: str = N
 
 def get_decision(elder_id: str, session_id: str = "default", persona_id: str = None) -> Decision:
     key = _session_key(elder_id, session_id, persona_id)
-    if key not in decisions:
-        decisions[key] = Decision(elder_id, session_id=session_id, persona_id=persona_id)
-    return decisions[key]
+    with _decisions_lock:
+        if key not in decisions:
+            decisions[key] = Decision(
+                elder_id,
+                session_id=session_id,
+                persona_id=persona_id,
+            )
+        return decisions[key]
 
 
 def _reset_elder_state(elder_id: str, session_id: str = None):
     """Clear cached agents so the next request picks up fresh profile data."""
-    clear_agent(elder_id, session_id=session_id)
-    prefix = f"{elder_id}:{session_id or ''}"
-    for key in list(decisions):
-        if key.startswith(prefix):
+    prefix = f"{elder_id}:{session_id}:" if session_id else f"{elder_id}:"
+    with _decisions_lock:
+        keys = [key for key in decisions if key.startswith(prefix)]
+        for key in keys:
             decisions.pop(key, None)
+    clear_agent(elder_id, session_id=session_id)
 
 
 def _session_rows() -> list[dict]:
+    with _decisions_lock:
+        snapshot = list(decisions.items())
     rows = []
-    for key, decision in decisions.items():
+    for key, decision in snapshot:
         rows.append({
             "key": key,
             "elder_id": decision.elder_id,
@@ -595,24 +603,36 @@ def _session_rows() -> list[dict]:
 
 def _evict_stale_sessions(ttl_seconds: int = 3600):
     now = datetime.now()
-    stale_keys = [
-        key
-        for key, decision in decisions.items()
-        if (now - decision.last_seen).total_seconds() > ttl_seconds
-    ]
-    for key in stale_keys:
-        decision = decisions.pop(key)
-        clear_agent(decision.elder_id, session_id=decision.session_id)
+    removed: list[Decision] = []
+    with _decisions_lock:
+        stale_keys = [
+            key
+            for key, decision in decisions.items()
+            if (now - decision.last_seen).total_seconds() > ttl_seconds
+        ]
+        for key in stale_keys:
+            decision = decisions.pop(key, None)
+            if decision:
+                removed.append(decision)
 
-    overflow = len(decisions) - MAX_SESSIONS
-    if overflow > 0:
-        oldest_keys = sorted(
-            decisions,
-            key=lambda key: decisions[key].last_seen,
-        )[:overflow]
-        for key in oldest_keys:
-            decision = decisions.pop(key)
-            clear_agent(decision.elder_id, session_id=decision.session_id)
+        overflow = len(decisions) - MAX_SESSIONS
+        if overflow > 0:
+            oldest_keys = sorted(
+                decisions,
+                key=lambda key: decisions[key].last_seen,
+            )[:overflow]
+            for key in oldest_keys:
+                decision = decisions.pop(key, None)
+                if decision:
+                    removed.append(decision)
+
+    cleared_sessions = set()
+    for decision in removed:
+        identity = (decision.elder_id, decision.session_id)
+        if identity in cleared_sessions:
+            continue
+        cleared_sessions.add(identity)
+        clear_agent(decision.elder_id, session_id=decision.session_id)
 
 
 # ------------------------------------------------------------------
@@ -907,7 +927,9 @@ def get_admin_dashboard(_: dict = Depends(require_caregiver)):
             ]),
         })
 
-        for key, decision in decisions.items():
+        with _decisions_lock:
+            decision_snapshot = list(decisions.items())
+        for key, decision in decision_snapshot:
             if not key.startswith(f"{elder_id}:"):
                 continue
             history = [
@@ -1085,6 +1107,8 @@ def greet(req: GreetRequest):
             req.session_id,
             req.persona_id,
         ).greet()
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1183,6 +1207,8 @@ async def chat(req: ChatRequest, stream: bool = Query(False)):
                 )
                 result["background_task_id"] = task_id
         return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1233,6 +1259,15 @@ async def speech_to_text(audio: UploadFile = File(...)):
         finally:
             await stt_pool_lock.put(stt_instance)
 
+        if result.get("error"):
+            logger.error("STT 辨識失敗：%s", result["error"])
+            return {
+                "text": "",
+                "success": False,
+                "speed_emotion": "normal",
+                "stt_error": True,
+                "message": "麥克風辨識服務暫時無法使用，請聯繫照護人員。",
+            }
         if not result["text"]:
             return {"text": "", "success": False, "speed_emotion": "normal"}
         return {
@@ -1251,15 +1286,23 @@ def admin_me(user: dict = Depends(require_admin)):
 
 
 def list_sessions(_: dict = Depends(require_caregiver)):
-    return {"sessions": _session_rows(), "count": len(decisions)}
+    sessions = _session_rows()
+    return {"sessions": sessions, "count": len(sessions)}
 
 
 def clear_sessions(req: SessionClearRequest, _: dict = Depends(require_system_admin)):
     if req.elder_id:
         _reset_elder_state(req.elder_id, req.session_id)
     else:
-        for key in list(decisions):
-            decision = decisions.pop(key)
+        with _decisions_lock:
+            removed = list(decisions.values())
+            decisions.clear()
+        cleared_sessions = set()
+        for decision in removed:
+            identity = (decision.elder_id, decision.session_id)
+            if identity in cleared_sessions:
+                continue
+            cleared_sessions.add(identity)
             clear_agent(decision.elder_id, session_id=decision.session_id)
     return {"success": True, "sessions": _session_rows()}
 
@@ -1318,7 +1361,9 @@ async def _synthesize_speech(req: TTSRequest, elder_id: str | None):
                 active.get("voice_engine", "xtts")
             )
 
-            service = TTSService(voice="zh-TW-HsiaoChenNeural")
+            persona_gender = active.get("gender", "female")
+            edge_voice = "zh-TW-YunJheNeural" if persona_gender == "male" else "zh-TW-HsiaoChenNeural"
+            service = TTSService(voice=edge_voice)
             if engine != "edge":
                 service.set_engine(engine, voice_path)
             else:
@@ -1395,9 +1440,17 @@ def get_profile(elder_id: str, _: dict = Depends(require_admin)):
 
 def get_history(elder_id: str, _: dict = Depends(require_caregiver)):
     # Prefer live in-memory history (active session).
-    key = next((k for k in decisions if k.startswith(f"{elder_id}:")), None)
-    if key:
-        return {"history": decisions[key].get_history()}
+    with _decisions_lock:
+        decision = next(
+            (
+                value
+                for key, value in decisions.items()
+                if key.startswith(f"{elder_id}:")
+            ),
+            None,
+        )
+    if decision:
+        return {"history": decision.get_history()}
     # Fallback: read persisted conversation from JSON so admin can see history
     # even when no elder session is currently active.
     try:
@@ -1556,6 +1609,7 @@ async def add_persona(req: PersonaAddRequest, _: dict = Depends(require_caregive
         persona = {
             "name": req.name,
             "relation": req.relation,
+            "gender": req.gender,
             "voice_engine": req.voice_engine,
             "voice_path": req.voice_path,
             "honorific": req.honorific,

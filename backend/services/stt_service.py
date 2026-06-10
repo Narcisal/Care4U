@@ -217,6 +217,10 @@ class STTService:
         except Exception as e:
             print(f"Breeze ASR 26 辨識失敗：{e}")
             traceback.print_exc()
+            if not self.model:
+                raise RuntimeError(
+                    "Breeze ASR 辨識失敗，且 Whisper 未載入"
+                ) from e
             return self._transcribe_whisper(audio_bytes)
 
     def status(self) -> dict:
@@ -257,6 +261,15 @@ class STTService:
                     "duration": 0.0,
                 }
 
+            if not self.model:
+                return {
+                    "text": "",
+                    "speech_rate": 0.0,
+                    "speed_emotion": "normal",
+                    "duration": 0.0,
+                    "error": self.whisper_error or "Whisper model 未載入",
+                }
+
             result = self._transcribe_whisper_with_timestamps(audio_bytes)
             text = result["text"].strip()
             total_duration = result["segments"][-1]["end"] if result["segments"] else 0.0
@@ -287,4 +300,5 @@ class STTService:
                 "speech_rate": 0.0,
                 "speed_emotion": "normal",
                 "duration": 0.0,
+                "error": str(e),
             }

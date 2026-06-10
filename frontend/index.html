@@ -28,6 +28,12 @@
             --brown-frame:  #8B6E52;
             --green:        #7B9E87;
             --green-pale:   #E8F5EC;
+            --portrait-size: clamp(280px, min(45vw, 48vh), 600px);
+            --ring-1-size: calc(var(--portrait-size) + 40px);
+            --ring-2-size: calc(var(--portrait-size) + 100px);
+            --portrait-image-size: clamp(240px, calc(var(--portrait-size) - 80px), 500px);
+            --ring-image-1-size: calc(var(--portrait-image-size) + 40px);
+            --ring-image-2-size: calc(var(--portrait-image-size) + 90px);
         }
 
         body {
@@ -382,6 +388,7 @@
         /* 主體 */
         .main-body {
             flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -390,7 +397,7 @@
             position: relative;
             padding: 38px 24px 58px;
             background: linear-gradient(135deg, #FDF7F2 0%, #F5ECE2 100%);
-            position: relative;
+            overflow-y: auto;
         }
 
 
@@ -404,14 +411,18 @@
 
         .speaking-ring {
             position: absolute;
-            width: 640px; height: 640px;
+            width: var(--ring-1-size);
+            height: var(--ring-1-size);
             border-radius: 50%;
             border: 3px solid var(--orange);
             opacity: 0;
             pointer-events: none;
         }
 
-        #speaking-ring-2 { width: 700px; height: 700px; }
+        #speaking-ring-2 {
+            width: var(--ring-2-size);
+            height: var(--ring-2-size);
+        }
 
         .speaking-ring.active {
             animation: pulseRing 1.6s ease-out infinite;
@@ -428,7 +439,8 @@
 
         /* 人像 */
         #persona-portrait {
-            width: 600px; height: 600px;
+            width: var(--portrait-size);
+            height: var(--portrait-size);
             border-radius: 50%;
             object-fit: cover;
             position: relative;
@@ -463,6 +475,15 @@
             color: var(--text-mid);
             letter-spacing: 0;
             opacity: 0.85;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: min(820px, 92vw);
+            max-height: 36vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .msg-row {
@@ -507,18 +528,6 @@
             border-top-right-radius: 6px;
         }
 
-        .chat-empty {
-            text-align: center;
-            color: var(--text-mid);
-            font-size: 26px;
-            line-height: 1.6;
-            padding: 28px;
-        }
-
-        .chat-empty-icon {
-            font-size: 44px;
-            margin-bottom: 12px;
-        }
 
         .status-label.listening::before {
             content: '● ';
@@ -566,6 +575,20 @@
             object-fit: cover;
             object-position: center;
             display: block;
+        }
+
+        #image-frame.loading::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, #e5d9cd 20%, #f7f0e8 40%, #e5d9cd 60%);
+            background-size: 220% 100%;
+            animation: frameSkeleton 1.4s ease-in-out infinite;
+        }
+
+        @keyframes frameSkeleton {
+            from { background-position: 100% 0; }
+            to { background-position: -100% 0; }
         }
 
         .memory-frame-caption {
@@ -703,16 +726,18 @@
         }
 
         .persona-panel.with-image #persona-portrait {
-            width: 500px;
-            height: 500px;
+            width: var(--portrait-image-size);
+            height: var(--portrait-image-size);
         }
 
         .persona-panel.with-image .speaking-ring {
-            width: 540px; height: 540px;
+            width: var(--ring-image-1-size);
+            height: var(--ring-image-1-size);
         }
 
         .persona-panel.with-image #speaking-ring-2 {
-            width: 590px; height: 590px;
+            width: var(--ring-image-2-size);
+            height: var(--ring-image-2-size);
         }
 
         .persona-panel.with-image #persona-portrait-name {
@@ -737,6 +762,9 @@
         }
 
         @media (max-width: 900px) {
+            :root {
+                --portrait-size: clamp(260px, min(72vw, 50vh), 430px);
+            }
             body { overflow: auto; height: auto; min-height: 100dvh; }
             #welcome-screen { flex-direction: column; min-height: 100dvh; }
             .welcome-left { width: 100%; height: 34dvh; min-height: 260px; }
@@ -747,9 +775,6 @@
             .persona-cell { border-radius: 18px; padding: 22px 12px 18px; }
             .persona-cell-name { font-size: 24px; }
             .persona-cell-rel { font-size: 18px; }
-            #persona-portrait { width: min(72vw, 430px); height: min(72vw, 430px); }
-            .speaking-ring { width: min(78vw, 480px); height: min(78vw, 480px); }
-            #speaking-ring-2 { width: min(84vw, 530px); height: min(84vw, 530px); }
             .main-body { justify-content: flex-start; padding-top: 24px; overflow-y: auto; }
             .demo-controls {
                 position: fixed;
@@ -776,6 +801,32 @@
                 font-size: 17px;
             }
         }
+
+        @media (max-height: 700px) {
+            :root {
+                --portrait-size: clamp(250px, min(42vw, 44vh), 420px);
+            }
+            .top-bar {
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+            .top-title { font-size: 24px; }
+            .btn-switch-top {
+                min-height: 44px;
+                padding-top: 6px;
+                padding-bottom: 6px;
+                font-size: 18px;
+            }
+            .main-body {
+                gap: 16px;
+                padding-top: 18px;
+                padding-bottom: 24px;
+            }
+            .persona-panel { gap: 12px; }
+            #persona-portrait-name { font-size: 30px; }
+            #persona-portrait-rel { font-size: 22px; }
+            .status-label { font-size: 26px; }
+        }
     </style>
 </head>
 <body>
@@ -796,7 +847,7 @@
     <div class="welcome-left">
         <div class="left-base"></div>
         <div class="left-texture"></div>
-        <button class="agent-portrait-wrap" type="button" onclick="startGuideChat()" aria-label="開始聊天">
+        <button id="welcome-start-btn" class="agent-portrait-wrap" type="button" onclick="startGuideChat()" aria-label="開始聊天">
             <img class="agent-portrait"
                  id="welcome-active-portrait"
                  src="/static/avatars/ai_assistant_nobg.png"
@@ -823,7 +874,7 @@
             <div class="top-title">陪你說說話</div>
         </div>
         <div class="top-right">
-            <button class="btn-switch-top" onclick="showPersonaSwitcher()">換人陪我</button>
+            <button id="persona-switcher-btn" class="btn-switch-top" onclick="showPersonaSwitcher()">換人陪我</button>
         </div>
     </div>
 
@@ -844,6 +895,8 @@
 
             <div class="status-label listening" id="status-label">可以慢慢說，我在聽</div>
         </div>
+
+        <div id="chat-container" style="display:none;"></div>
 
         <div id="image-frame">
             <img id="image-frame-img" src="" alt="回憶圖片">

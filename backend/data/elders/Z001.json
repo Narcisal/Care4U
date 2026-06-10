@@ -34,8 +34,8 @@
     "son": {
       "name": "志明",
       "relation": "大兒子",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\Z001_voices\\son.wav",
       "honorific": "爸",
       "language": "mandarin",
       "personality": [
@@ -49,7 +49,7 @@
         "聊鐵路局往事"
       ],
       "tone": "你是鄭有福的大兒子鄭志明，個性穩重踏實，繼承父親不多話但說出來都算數的風格。語氣直接親切，常提到小時候跟爸爸去看火車的回憶，也會輕輕提醒爸爸不要走太久或膝蓋不舒服要說。",
-      "avatar_path": "son_bg.png",
+      "avatar_path": "personas/Z001_son.png",
       "is_deceased": false,
       "shared_memories": "小時候爸爸開完夜班回來，會帶一個台南鹹粥給志明，說是火車站旁邊買的。志明高中時還偷偷去臺鐵旁邊幫爸爸加班站，被發現後不罵只說「等你長大就懂了」。",
       "current_status": "住台南，在建設公司做工程監理，週末幾乎固定回來陪爸爸。",
@@ -58,8 +58,8 @@
     "daughter": {
       "name": "淑芬",
       "relation": "女兒",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\Z001_voices\\daughter.wav",
       "honorific": "爸",
       "language": "mandarin",
       "personality": [
@@ -73,7 +73,7 @@
         "分享台北的生活趣事"
       ],
       "tone": "你是鄭有福的女兒鄭淑芬，個性細心，說話帶台南腔但住台北很久了。常關心爸爸血壓有沒有量、藥有沒有吃，語氣溫柔但有時會碎念，遇到爸爸說沒事會半開玩笑說「沒事最好啦，你都這樣說」。",
-      "avatar_path": "daughter_bg.png",
+      "avatar_path": "personas/Z001_daughter.png",
       "is_deceased": false,
       "shared_memories": "淑芬國小時爸爸帶她去看火車進站，她說很吵想跑，爸爸說「這是爸爸在工作，要尊重」。長大後淑芬說那是她印象最深的童年片段。媽媽秀蘭生病的時候，爸爸在病房守了整整三個月，淑芬說那時才知道爸爸有多深情。",
       "current_status": "住台北，在醫院做行政工作，每季回台南一次，常寄虱目魚罐頭給爸爸。",
@@ -82,8 +82,8 @@
     "grandson": {
       "name": "小宇",
       "relation": "孫子",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\Z001_voices\\grandson.wav",
       "honorific": "阿公",
       "language": "mandarin",
       "personality": [
@@ -97,7 +97,7 @@
         "一起看棒球轉播"
       ],
       "tone": "你是鄭有福的孫子鄭宇翔（小宇），大學二年級，個性開朗愛科技，和阿公說話有時代隔閡但很好笑，會用現代語氣問老故事，比如「阿公你那個年代真的有蒸氣火車嗎？超酷的！」。遇到阿公說關節痛，要表現出真心擔心。",
-      "avatar_path": "grandson_bg.png",
+      "avatar_path": "personas/Z001_grandson.png",
       "is_deceased": false,
       "shared_memories": "小宇小時候阿公帶他去台南火車站看火車，阿公一邊指著月台說「那裡那裡，以前我就站在那個位置把火車開進來」。小宇說那天是他第一次覺得阿公很厲害。後來寫作文《我的偶像》就是寫阿公。",
       "current_status": "就讀成功大學資工系大二，住宿，週末偶爾回台南，和阿公會看棒球轉播。",
@@ -163,7 +163,8 @@
       "id": "78ac734b",
       "date": "2026-06-09",
       "time": "16:57:20",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "志明小時候爸爸開完夜班回來，會帶一個台南鹹粥給他，說是火車站旁邊買的；鄭有福每次開完夜班都趁天亮去買，說「那時候累歸累，看到孩子還沒起床就覺得值得」。",
@@ -202,7 +203,8 @@
       "id": "02b31bcc",
       "date": "2026-06-09",
       "time": "16:29:04",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "小宇小時候阿公帶他去台南火車站月台看火車，鄭有福指著月台說「以前我就站在那個位置把火車開進來」；小宇後來寫作文《我的偶像》就是寫阿公。",
@@ -241,7 +243,8 @@
       "id": "96c3104e",
       "date": "2026-06-09",
       "time": "11:18:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:27"
     },
     {
       "event": "說了：以前蒸汽火車還在跑的時候，那個聲音和氣味跟現在的電車完全不一樣，煙一出來整個月台都是，老司機們說那才叫開火車，現在的年輕人沒辦法體會。",
@@ -300,7 +303,8 @@
       "id": "a9b90814",
       "date": "2026-06-09",
       "time": "17:06:12",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：台南的虱目魚粥就是要早上吃，新鮮的虱目魚配上白粥，撒一點薑絲和芹菜，那個味道在台北吃不到，每次淑芬回來我都要帶她去那家吃。",
@@ -339,7 +343,8 @@
       "id": "48f98c3a",
       "date": "2026-06-09",
       "time": "16:33:19",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：最近膝蓋走路有點不方便，以前可以一口氣爬上台南鹿耳門的堤防，現在走個幾步就要停下來緩一緩，有點失落。",
@@ -378,7 +383,8 @@
       "id": "95d688fd",
       "date": "2026-06-09",
       "time": "11:19:00",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:37"
     },
     {
       "event": "說了：秀蘭以前每次我出班回來都會在桌上留一碗湯，說是怕我夜班太冷，那個湯其實也沒什麼，就是豬骨熬的，但我覺得比什麼都補。",
@@ -437,7 +443,8 @@
       "id": "1fc2b229",
       "date": "2026-06-09",
       "time": "18:09:17",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：志明帶了象棋過來，我們下了三盤，我贏兩盤，他說爸你每次都這樣，我說你要多學啊，他笑了，我們父子倆難得這樣聊了很久。",
@@ -475,7 +482,8 @@
       "id": "b8fe12a0",
       "date": "2026-06-09",
       "time": "16:38:24",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：小宇問我說蒸汽火車長什麼樣，我說那個煙囪冒出來的煙很厚，聲音轟轟轟，他說「阿公你真的超酷的！」，被孫子這樣說，心情好了一整天。",
@@ -514,7 +522,8 @@
       "id": "2c68dca5",
       "date": "2026-06-09",
       "time": "16:25:04",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：今天二仁溪邊有霧，釣了快兩個鐘頭一條都沒有，回來腳有點痠，但坐在那裡看霧散開、鳥叫聲、水聲，還是很值得。",
@@ -552,7 +561,8 @@
       "id": "322db5f3",
       "date": "2026-06-09",
       "time": "11:18:47",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：秀蘭，你在嗎？我剛才夢到你了，你在廚房煮湯，我一醒來想跟你說話，但你不在了。",
@@ -573,7 +583,9 @@
       "spoken_at": "2026-06-09 06:00:00",
       "id": "z001-dream-wife",
       "date": "2026-06-09",
-      "time": "06:00:00"
+      "time": "06:00:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：上次臺鐵博物館開放，志明帶我去看，展覽裡有一張老照片是我開過的那種車頭，我站在照片前面站了很久，說不出話。",
@@ -612,7 +624,8 @@
       "id": "398be64e",
       "date": "2026-06-09",
       "time": "17:02:13",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：今天想再說說以前開自強號的事情。",
@@ -630,7 +643,8 @@
       "id": "fc981a78",
       "date": "2026-06-09",
       "time": "08:50:23",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -648,7 +662,8 @@
       "id": "974dc448",
       "date": "2026-06-09",
       "time": "16:30:18",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：今天想再說說以前開自強號的事情。",
@@ -666,7 +681,8 @@
       "id": "a868e9a9",
       "date": "2026-06-09",
       "time": "09:02:53",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我剛剛摔倒撞到頭，現在很暈也站不起來。",
@@ -684,7 +700,8 @@
       "id": "a10c437d",
       "date": "2026-06-09",
       "time": "11:18:54",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:27"
     },
     {
       "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
@@ -703,7 +720,8 @@
       "id": "7c8c2067",
       "date": "2026-06-09",
       "time": "09:03:03",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:37"
     },
     {
       "event": "說了：血壓好像比平常高，頭一直脹脹的。",
@@ -721,7 +739,8 @@
       "id": "271b8108",
       "date": "2026-06-09",
       "time": "09:03:07",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -739,7 +758,8 @@
       "id": "6b0f8f39",
       "date": "2026-06-09",
       "time": "17:58:55",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：胸口突然劇痛，呼吸很困難。",
@@ -757,7 +777,8 @@
       "id": "7f0c59be",
       "date": "2026-06-09",
       "time": "09:03:18",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:27"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -775,7 +796,8 @@
       "id": "2cb96b9d",
       "date": "2026-06-09",
       "time": "16:34:26",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
@@ -793,7 +815,8 @@
       "id": "151f71eb",
       "date": "2026-06-09",
       "time": "09:10:12",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我整個人冒冷汗，眼前發黑，旁邊沒有人。",
@@ -811,7 +834,8 @@
       "id": "5c0e0559",
       "date": "2026-06-09",
       "time": "11:18:59",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:26"
     },
     {
       "event": "說了：胸口突然劇痛，呼吸很困難。",
@@ -829,7 +853,8 @@
       "id": "f229ff56",
       "date": "2026-06-09",
       "time": "09:10:43",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:26"
     },
     {
       "event": "說了：我整個人冒冷汗，眼前發黑，旁邊沒有人。",
@@ -847,7 +872,8 @@
       "id": "07c74751",
       "date": "2026-06-09",
       "time": "09:10:45",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:26"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -865,7 +891,8 @@
       "id": "d0b87013",
       "date": "2026-06-09",
       "time": "18:11:21",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
@@ -883,7 +910,8 @@
       "id": "13774643",
       "date": "2026-06-09",
       "time": "09:19:32",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -901,7 +929,8 @@
       "id": "54fdb518",
       "date": "2026-06-09",
       "time": "16:40:21",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我剛剛摔倒撞到頭，現在很暈也站不起來。",
@@ -919,7 +948,8 @@
       "id": "fed79eba",
       "date": "2026-06-09",
       "time": "09:19:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:26"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -937,7 +967,8 @@
       "id": "f3f21a81",
       "date": "2026-06-09",
       "time": "16:26:27",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我整個人冒冷汗，眼前發黑，旁邊沒有人。",
@@ -955,7 +986,8 @@
       "id": "27741f72",
       "date": "2026-06-09",
       "time": "09:19:57",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:26"
     },
     {
       "event": "說了：血壓好像比平常高，頭一直脹脹的。",
@@ -973,7 +1005,8 @@
       "id": "e351b739",
       "date": "2026-06-09",
       "time": "11:18:49",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：秀蘭以前會替我準備便當，跑完車回家還有熱湯可以喝。",
@@ -991,7 +1024,8 @@
       "id": "b2d9cde3",
       "date": "2026-06-09",
       "time": "09:21:58",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：今天想再說說以前開自強號的事情。",
@@ -1009,7 +1043,8 @@
       "id": "502155ae",
       "date": "2026-06-09",
       "time": "09:27:04",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -1027,7 +1062,8 @@
       "id": "0412a237",
       "date": "2026-06-09",
       "time": "17:03:45",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "趨勢警報：長者持續情緒低落，建議照護人員關心。",
@@ -1046,7 +1082,8 @@
       "id": "9fefea9e",
       "date": "2026-06-09",
       "time": "09:27:20",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:37"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -1064,7 +1101,8 @@
       "id": "a171591f",
       "date": "2026-06-09",
       "time": "16:31:23",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我剛剛摔倒撞到頭，現在很暈也站不起來。",
@@ -1082,7 +1120,8 @@
       "id": "a8de53ec",
       "date": "2026-06-09",
       "time": "09:27:23",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:25"
     },
     {
       "event": "說了：胸口突然劇痛，呼吸很困難。",
@@ -1100,7 +1139,8 @@
       "id": "200056ab",
       "date": "2026-06-09",
       "time": "11:18:56",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:25"
     },
     {
       "event": "說了：我整個人冒冷汗，眼前發黑，旁邊沒有人。",
@@ -1118,7 +1158,8 @@
       "id": "c377a997",
       "date": "2026-06-09",
       "time": "09:27:26",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:24"
     },
     {
       "event": "說了：我以前開自強號最在意準點，一分鐘都不能馬虎。",
@@ -1136,7 +1177,8 @@
       "id": "22def07b",
       "date": "2026-06-09",
       "time": "10:55:09",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -1154,7 +1196,8 @@
       "id": "50305766",
       "date": "2026-06-09",
       "time": "18:03:41",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我以前開自強號最在意準點，一分鐘都不能馬虎。",
@@ -1172,7 +1215,8 @@
       "id": "7f9c7f77",
       "date": "2026-06-09",
       "time": "11:03:09",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -1190,7 +1234,8 @@
       "id": "ae9a3a37",
       "date": "2026-06-09",
       "time": "16:35:25",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我以前開自強號最在意準點，一分鐘都不能馬虎。",
@@ -1208,7 +1253,8 @@
       "id": "f1150ecb",
       "date": "2026-06-09",
       "time": "11:15:53",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：年輕時和太太騎重機去海邊，那個年代台灣的海很藍，浪打過來的聲音到現在都還記得。",
@@ -1226,7 +1272,8 @@
       "id": "b155642b",
       "date": "2026-06-09",
       "time": "16:23:16",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：今天想再說說以前開自強號的事情。",
@@ -1244,7 +1291,8 @@
       "id": "930702fe",
       "date": "2026-06-09",
       "time": "11:18:27",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：想起秀蘭以前替我準備便當，心裡有點難過。",
@@ -1262,7 +1310,8 @@
       "id": "e7d5f689",
       "date": "2026-06-09",
       "time": "11:18:39",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我從年輕就喝台灣啤酒，開完班一瓶，現在醫生說不要喝，我說少喝一點應該可以吧，偶爾喝一罐慰勞自己不行嗎。",
@@ -1300,7 +1349,8 @@
       "id": "9ec70ae5",
       "date": "2026-06-09",
       "time": "09:03:00",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
@@ -1318,7 +1368,8 @@
       "id": "3b4082f1",
       "date": "2026-06-09",
       "time": "09:03:02",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
@@ -1336,7 +1387,8 @@
       "id": "6522d197",
       "date": "2026-06-09",
       "time": "09:03:05",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我忘了今天有沒有吃藥，現在不知道該怎麼辦。",
@@ -1354,7 +1406,8 @@
       "id": "5d00440c",
       "date": "2026-06-09",
       "time": "09:03:13",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
@@ -1372,7 +1425,8 @@
       "id": "81e8828a",
       "date": "2026-06-09",
       "time": "09:10:14",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
@@ -1390,7 +1444,8 @@
       "id": "dbc00506",
       "date": "2026-06-09",
       "time": "09:10:16",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
@@ -1408,7 +1463,8 @@
       "id": "323ac404",
       "date": "2026-06-09",
       "time": "09:10:17",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
@@ -1426,7 +1482,8 @@
       "id": "746eec46",
       "date": "2026-06-09",
       "time": "09:19:37",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
@@ -1444,7 +1501,8 @@
       "id": "3b3316f6",
       "date": "2026-06-09",
       "time": "09:19:42",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
@@ -1462,7 +1520,8 @@
       "id": "00d5fc24",
       "date": "2026-06-09",
       "time": "09:19:43",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我忘了今天有沒有吃藥，現在不知道該怎麼辦。",
@@ -1480,7 +1539,8 @@
       "id": "342b109f",
       "date": "2026-06-09",
       "time": "09:19:49",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
@@ -1498,7 +1558,8 @@
       "id": "0229ae35",
       "date": "2026-06-09",
       "time": "09:27:10",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
@@ -1516,7 +1577,8 @@
       "id": "c7802002",
       "date": "2026-06-09",
       "time": "09:27:14",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：兩邊膝蓋今天都很痠，上樓時使不上力。",
@@ -1534,7 +1596,8 @@
       "id": "f66ec02e",
       "date": "2026-06-09",
       "time": "09:27:16",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：我忘了今天有沒有吃藥，現在不知道該怎麼辦。",
@@ -1552,7 +1615,8 @@
       "id": "54813596",
       "date": "2026-06-09",
       "time": "09:27:22",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：退休後不用看時刻表了，有時反而覺得空虛。",
@@ -1570,7 +1634,8 @@
       "id": "426be7a9",
       "date": "2026-06-09",
       "time": "11:18:42",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     },
     {
       "event": "說了：志明和淑芬都有自己的生活，我不想一直麻煩他們。",
@@ -1588,7 +1653,8 @@
       "id": "a022384c",
       "date": "2026-06-09",
       "time": "11:18:44",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:26:40"
     }
   ],
   "memory_summary": {

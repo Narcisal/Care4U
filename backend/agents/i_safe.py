@@ -45,6 +45,16 @@ _SAFE_EN = [
     "weather", "chat", "story", "memory", "happy", "rest", "meal", "walk",
 ]
 
+_SAFE_FAST_PATH_BLOCKERS_ZH = [
+    "不舒服", "痛", "痠", "暈", "喘", "噁心", "想吐", "腫",
+    "無力", "沒力", "使不上力", "忘記", "吃不下", "睡不著",
+    "孤單", "難過", "傷心", "想念", "焦慮", "害怕", "不開心",
+]
+_SAFE_FAST_PATH_BLOCKERS_EN = [
+    "pain", "hurt", "dizzy", "breathe", "nausea", "weak", "forgot",
+    "can't eat", "can't sleep", "lonely", "sad", "anxious", "afraid",
+]
+
 # Physical symptom keywords: LLM 判 L1 但含這些詞時自動升 L2。
 # 原則：能重判不能輕判，照護系統寧可多通知。
 _PHYSICAL_SYMPTOM_L2 = [
@@ -74,7 +84,16 @@ def quick_keyword_check(message: str) -> int | None:
         return 3
     if _keyword_match(message, _URGENT_ZH, _URGENT_EN):
         return 2
-    if _keyword_match(message, _SAFE_ZH, _SAFE_EN):
+    normalized = message.strip()
+    if (
+        len(normalized) <= 10
+        and _keyword_match(normalized, _SAFE_ZH, _SAFE_EN)
+        and not _keyword_match(
+            normalized,
+            _SAFE_FAST_PATH_BLOCKERS_ZH,
+            _SAFE_FAST_PATH_BLOCKERS_EN,
+        )
+    ):
         return 0
     return None
 
@@ -195,7 +214,7 @@ class ISafe:
             "trend_alerts": len(trend_unacked),
             "negative_count": negative_count,
             # high = 有任何未確認的安全/趨勢警報；全部確認後自動回正
-            "hazard_level": "high" if (urgent_unacked or trend_unacked) else "low",
+            "hazard_level": "high" if urgent_unacked else "medium" if trend_unacked else "low",
             "last_checked": datetime.now().strftime("%Y-%m-%d %H:%M"),
         }
 
@@ -295,6 +314,26 @@ class ISafe:
     # ------------------------------------------------------------------
     # Storage helpers
     # ------------------------------------------------------------------
+
+    def record_emergency(self, message: str):
+        """Level 3 fast-path 專用：直接寫入緊急安全事件，不走 LLM 分析。"""
+        spoken_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        profile = self.memory.get_profile(self.elder_id)
+        self.active_persona_id = self.persona_id or (
+            profile.get("active_persona", "ai") if profile else "ai"
+        )
+        self._save_event({
+            "event": f"緊急關鍵字觸發：{message[:50]}",
+            "sentiment": "negative",
+            "emotion_score": -1.0,
+            "importance": 1.0,
+            "memory_type": "long",
+            "persona_id": self.active_persona_id,
+            "topic_tags": ["安全警報"],
+            "reason": "emergency_keyword level=3",
+            "source": "voice",
+            "spoken_at": spoken_at,
+        })
 
     def _save_event(self, event: dict):
         memory_id = self.memory.add_event(elder_id=self.elder_id, event=event)

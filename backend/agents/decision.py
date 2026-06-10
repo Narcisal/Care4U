@@ -34,10 +34,13 @@ def get_logs() -> list:
 
 _magic_agents: dict[str, MagicAI] = {}
 _isafe_agents: dict[str, ISafe] = {}
+_agents_lock = threading.Lock()
 
 
 def flush_agent_conversations():
-    for magic in list(_magic_agents.values()):
+    with _agents_lock:
+        snapshot = list(_magic_agents.values())
+    for magic in snapshot:
         try:
             if not magic.flush_conversation():
                 print(f"對話歷史儲存失敗：{magic.elder_id}")
@@ -51,32 +54,38 @@ def _agent_key(elder_id: str, session_id: str = "default", persona_id: str = Non
 
 def _get_magic(elder_id: str, session_id: str = "default", persona_id: str = None) -> MagicAI:
     key = _agent_key(elder_id, session_id, persona_id)
-    if key not in _magic_agents:
-        _magic_agents[key] = MagicAI(elder_id, persona_id=persona_id)
-    return _magic_agents[key]
+    with _agents_lock:
+        if key not in _magic_agents:
+            _magic_agents[key] = MagicAI(elder_id, persona_id=persona_id)
+        return _magic_agents[key]
 
 
 def _get_isafe(elder_id: str, session_id: str = "default", persona_id: str = None) -> ISafe:
     key = _agent_key(elder_id, session_id, persona_id)
-    if key not in _isafe_agents:
-        _isafe_agents[key] = ISafe(elder_id, persona_id=persona_id)
-    return _isafe_agents[key]
+    with _agents_lock:
+        if key not in _isafe_agents:
+            _isafe_agents[key] = ISafe(elder_id, persona_id=persona_id)
+        return _isafe_agents[key]
 
 
 def clear_agent(elder_id: str, session_id: str = None):
-    prefix = f"{elder_id}:{session_id or ''}"
-    for key in list(_magic_agents):
-        if key.startswith(prefix):
-            magic = _magic_agents.pop(key, None)
-            if magic:
-                try:
-                    if not magic.flush_conversation():
-                        print(f"對話歷史儲存失敗：{elder_id}")
-                except Exception as e:
-                    print(f"對話歷史儲存失敗：{e}")
-    for key in list(_isafe_agents):
-        if key.startswith(prefix):
-            _isafe_agents.pop(key, None)
+    prefix = f"{elder_id}:{session_id}:" if session_id else f"{elder_id}:"
+    with _agents_lock:
+        magic_to_flush = []
+        for key in list(_magic_agents):
+            if key.startswith(prefix):
+                magic = _magic_agents.pop(key, None)
+                if magic:
+                    magic_to_flush.append(magic)
+        for key in list(_isafe_agents):
+            if key.startswith(prefix):
+                _isafe_agents.pop(key, None)
+    for magic in magic_to_flush:
+        try:
+            if not magic.flush_conversation():
+                print(f"對話歷史儲存失敗：{elder_id}")
+        except Exception as e:
+            print(f"對話歷史儲存失敗：{e}")
 
 
 class Decision:
@@ -160,6 +169,10 @@ class Decision:
 
         if quick_keyword_check(user_message) == 3:
             self._log("Decision", "緊急回應", "關鍵字判定 level=3，跳過一般對話生成")
+            try:
+                self.isafe.record_emergency(user_message)
+            except Exception as e:
+                self._log("Decision", "事件儲存失敗", str(e))
             return {
                 "message": (
                     "這可能是緊急狀況。請先不要移動，立即呼叫附近照護人員"
@@ -243,6 +256,10 @@ class Decision:
         self.chat_count += 1
 
         if quick_keyword_check(user_message) == 3:
+            try:
+                self.isafe.record_emergency(user_message)
+            except Exception as e:
+                self._log("Decision", "事件儲存失敗", str(e))
             message = (
                 "這可能是緊急狀況，請先保持安全並立即通知照護人員，"
                 "必要時撥打 119。"
@@ -345,7 +362,7 @@ class Decision:
 
     def _patch_last_model_message(self, escalation_level: int, sentiment: str) -> None:
         """Write iSafe results back into the most recent model message in conversation_history."""
-        for msg in reversed(self.magic.conversation_history):
+        for msg in reversed(self.magic.get_history()):
             if msg.get("role") == "model":
                 msg["escalation_level"] = escalation_level
                 msg["sentiment"] = sentiment

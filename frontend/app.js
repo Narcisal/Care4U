@@ -18,6 +18,12 @@ let audioChunks = [];
 let isRecording = false;
 let currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
 let currentElderAvatar = "/static/avatars/elder_male_nobg.png";
+let isBusy = false;
+let isLoadingSwitcher = false;
+let isEnteringChat = false;
+let backgroundPollSeq = 0;
+let ttsErrorTimer = null;
+const TTS_ERROR_MESSAGE = "聲音暫時無法播放，請閱讀對話文字";
 
 async function elderFetch(path, options = {}) {
     return fetch(`${API_BASE}${path}`, options);
@@ -79,6 +85,26 @@ function enableButtons() {
     document.getElementById("text-input").removeAttribute("disabled");
     document.getElementById("send-btn").removeAttribute("disabled");
     document.getElementById("hold-talk-btn").removeAttribute("disabled");
+}
+
+function clearBusyPrompt() {
+    const label = document.getElementById("status-label");
+    if (label?.textContent === "等我說完再說吧") {
+        label.textContent = "可以慢慢說，我在聽";
+        label.className = "status-label listening";
+    }
+}
+
+function showTtsError() {
+    const label = document.getElementById("status-label");
+    if (!label) return;
+    if (ttsErrorTimer) clearTimeout(ttsErrorTimer);
+    label.textContent = TTS_ERROR_MESSAGE;
+    label.className = "status-label speaking";
+    ttsErrorTimer = setTimeout(() => {
+        if (label.textContent === TTS_ERROR_MESSAGE) setListeningStatus();
+        ttsErrorTimer = null;
+    }, 3000);
 }
 
 async function loadElderProfile() {
@@ -161,7 +187,13 @@ function fetchTTSBlob(text) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: elderBody({ text, emotion: "normal", persona_id: SELECTED_PERSONA })
-    }).then(r => r.ok ? r.blob() : null).catch(() => null);
+    }).then(response => {
+        if (!response.ok) throw new Error("tts");
+        return response.blob();
+    }).catch(() => {
+        showTtsError();
+        return null;
+    });
 }
 
 /** 從 buffer 抽取所有「句尾符號結尾」的完整句子，回傳 [sentences, remaining] */
@@ -184,8 +216,16 @@ function playAudioBlob(blob) {
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-        audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
-        audio.play().catch(resolve);
+        audio.onerror = () => {
+            URL.revokeObjectURL(url);
+            showTtsError();
+            resolve();
+        };
+        audio.play().catch(() => {
+            URL.revokeObjectURL(url);
+            showTtsError();
+            resolve();
+        });
     });
 }
 
@@ -228,18 +268,29 @@ class StreamingTTSQueue {
         if (portrait) portrait.classList.remove("speaking");
         if (ring1) ring1.classList.remove("active");
         if (ring2) ring2.classList.remove("active");
-        if (lbl && pname) { lbl.textContent = "可以慢慢說，我在聽"; lbl.className = "status-label listening"; }
+        if (lbl && pname && lbl.textContent !== TTS_ERROR_MESSAGE) {
+            lbl.textContent = "可以慢慢說，我在聽";
+            lbl.className = "status-label listening";
+        }
     }
     get isEmpty() { return this._pending.length === 0; }
 }
 
 // ── 主對話流程 ──────────────────────────────────────────────────────────────
 
-async function processAndRespond(message, speedEmotion = "normal") {
+async function processAndRespond(message, speedEmotion = "normal", busyOwnedByCaller = false) {
+    if (isBusy && !busyOwnedByCaller) return;
+    if (!busyOwnedByCaller) isBusy = true;
+    backgroundPollSeq++;
+
     // 新訊息送出時清除上一輪的回憶圖片，恢復頭像置中
     const prevFrame = document.getElementById("image-frame");
     if (prevFrame && prevFrame.style.display !== "none") {
         prevFrame.style.display = "none";
+        prevFrame.classList.remove("loading");
+        delete prevFrame.dataset.pollSeq;
+        const prevImage = document.getElementById("image-frame-img");
+        if (prevImage) prevImage.style.display = "block";
         const prevPanel = document.querySelector(".persona-panel");
         if (prevPanel) prevPanel.classList.remove("with-image");
         const prevMain = document.querySelector(".main-body");
@@ -327,6 +378,10 @@ async function processAndRespond(message, speedEmotion = "normal") {
         document.getElementById("text-input").disabled = false;
         document.getElementById("send-btn").disabled = false;
         document.getElementById("hold-talk-btn").disabled = false;
+        if (!busyOwnedByCaller) {
+            isBusy = false;
+            clearBusyPrompt();
+        }
     }
 }
 
@@ -348,7 +403,12 @@ async function readChatResponse(response, thinkingId, ttsQueue = null) {
             .split(/\r?\n/)
             .find(line => line.startsWith("data:"));
         if (!dataLine) return;
-        const event = JSON.parse(dataLine.slice(5).trim());
+        let event;
+        try {
+            event = JSON.parse(dataLine.slice(5).trim());
+        } catch {
+            return;
+        }
         if (event.done) {
             metadata = event;
             return;
@@ -389,32 +449,58 @@ async function readChatResponse(response, thinkingId, ttsQueue = null) {
 }
 
 async function pollChatBackground(taskId) {
+    const pollSeq = ++backgroundPollSeq;
     let imageShown = false;
     let healthShown = false;
+    let imagePending = true;
+    const skeletonTimer = setTimeout(() => {
+        if (pollSeq === backgroundPollSeq && imagePending) {
+            showImageSkeleton(pollSeq);
+        }
+    }, 2000);
+
+    const finishImage = () => {
+        imagePending = false;
+        clearTimeout(skeletonTimer);
+        hideImageSkeleton(pollSeq);
+    };
+
     console.log(`[圖片] 開始輪詢 task=${taskId}`);
     for (let attempt = 0; attempt < 60; attempt++) {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        if (pollSeq !== backgroundPollSeq) {
+            clearTimeout(skeletonTimer);
+            return;
+        }
         try {
             const res = await elderFetch(elderQueryPath(`/api/elder/chat/background/${encodeURIComponent(taskId)}`));
-            if (!res.ok) return;
+            if (!res.ok) {
+                finishImage();
+                return;
+            }
             const data = await res.json();
             console.log(`[圖片] attempt=${attempt+1} image_status=${data.image_status} health_status=${data.health_status}`);
-            if (!imageShown && data.image_status !== "pending" && data.image) {
-                if (data.image_caption) addMessage("ai", data.image_caption);
-                addImageMessage(data.image);
-                imageShown = true;
-                console.log("[圖片] 顯示成功");
+            if (data.image_status !== "pending") {
+                finishImage();
+                if (!imageShown && data.image && pollSeq === backgroundPollSeq) {
+                    if (data.image_caption) addMessage("ai", data.image_caption);
+                    addImageMessage(data.image);
+                    imageShown = true;
+                    console.log("[圖片] 顯示成功");
+                }
             }
-            if (!healthShown && data.health_status !== "pending" && data.health_info) {
+            if (!healthShown && data.health_status !== "pending" && data.health_info && pollSeq === backgroundPollSeq) {
                 addHealthCard(data.health_info);
                 healthShown = true;
             }
             if (data.image_status !== "pending" && data.health_status !== "pending") return;
         } catch (e) {
             console.error("背景結果查詢失敗", e);
+            finishImage();
             return;
         }
     }
+    finishImage();
     console.log("[圖片] 輪詢超時（60秒）");
 }
 
@@ -463,6 +549,8 @@ function stopRecording() {
 }
 
 async function sendAudioToSTT(audioBlob) {
+    if (isBusy) return;
+    isBusy = true;
     try {
         const formData = new FormData();
         formData.append("audio", audioBlob, "recording.webm");
@@ -471,41 +559,29 @@ async function sendAudioToSTT(audioBlob) {
             body: formData
         });
         const data = await res.json();
-            document.getElementById("recording-indicator").classList.remove("active");        
-            if (data.success && data.text) {
+        document.getElementById("recording-indicator").classList.remove("active");
+        if (data.stt_error === true) {
+            addMessage(
+                "system",
+                data.message || "麥克風無法辨識，請聯繫照護人員。"
+            );
+        } else if (data.success && data.text) {
             addMessage("user", data.text);
-            await processAndRespond(data.text, data.speed_emotion || "normal");
+            await processAndRespond(
+                data.text,
+                data.speed_emotion || "normal",
+                true
+            );
         } else {
             addMessage("system", "剛剛沒聽清楚，我們再說一次。");
         }
     } catch (e) {
         document.getElementById("recording-indicator").classList.remove("active");
         addMessage("system", "聲音沒有送出去，我們再試一次。");
+    } finally {
+        isBusy = false;
+        clearBusyPrompt();
     }
-}
-
-async function speakText(text, emotion = "normal") {
-    return new Promise(async (resolve) => {
-        try {
-            const res = await elderFetch("/api/elder/tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: elderBody({
-                text: text,
-                emotion: emotion,
-                persona_id: SELECTED_PERSONA
-                })
-            });
-            const audioBlob = await res.blob();
-            const audio = new Audio(URL.createObjectURL(audioBlob));
-            audio.onended = resolve;
-            audio.onerror = resolve;
-            audio.play();
-        } catch (e) {
-            console.error("TTS 失敗：", e);
-            resolve();
-        }
-    });
 }
 
 function addMessage(role, text) {
@@ -589,6 +665,9 @@ function addImageMessage(imageBase64) {
     const img = document.getElementById("image-frame-img");
     const panel = document.querySelector(".persona-panel");
 
+    frame.classList.remove("loading");
+    delete frame.dataset.pollSeq;
+    img.style.display = "block";
     img.src = imageBase64;
 
     // 重設動畫
@@ -610,8 +689,35 @@ function addImageMessage(imageBase64) {
     if (ring2) { ring2.classList.remove("active"); void ring2.offsetWidth; ring2.classList.add("active"); }
 }
 
+function showImageSkeleton(pollSeq) {
+    const frame = document.getElementById("image-frame");
+    const image = document.getElementById("image-frame-img");
+    const panel = document.querySelector(".persona-panel");
+    const mainBody = document.querySelector(".main-body");
+    if (!frame || !image || pollSeq !== backgroundPollSeq) return;
+    frame.dataset.pollSeq = String(pollSeq);
+    frame.classList.add("loading");
+    image.style.display = "none";
+    frame.style.display = "block";
+    panel?.classList.add("with-image");
+    mainBody?.classList.add("has-image");
+}
+
+function hideImageSkeleton(pollSeq) {
+    const frame = document.getElementById("image-frame");
+    if (!frame || frame.dataset.pollSeq !== String(pollSeq)) return;
+    const image = document.getElementById("image-frame-img");
+    frame.classList.remove("loading");
+    frame.style.display = "none";
+    delete frame.dataset.pollSeq;
+    if (image) image.style.display = "block";
+    document.querySelector(".persona-panel")?.classList.remove("with-image");
+    document.querySelector(".main-body")?.classList.remove("has-image");
+}
+
 function addHealthCard(info) {
     const container = document.getElementById("chat-container");
+    if (!container) return;
     const wrapper = document.createElement("div");
     wrapper.className = "flex items-start gap-2";
     const icon = document.createElement("div");
@@ -647,6 +753,7 @@ function addHealthCard(info) {
 
 function addTrendAlert(alertMsg) {
     const container = document.getElementById("chat-container");
+    if (!container) return;
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "text-align: center; margin: 8px 0;";
     const alert = document.createElement("div");
@@ -663,8 +770,9 @@ function updateEmotionStatus(emoji, text) {
 }
 
 function clearChat() {
-    document.getElementById("chat-container").innerHTML =
-        `<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">可以慢慢說<br>我會在這裡陪你</div></div>`;
+    stopVAD();
+    const chatContainer = document.getElementById("chat-container");
+    if (chatContainer) chatContainer.innerHTML = '';
     chatCount = 0;
     document.getElementById("chat-count").textContent = "0";
     document.getElementById("emotion-display").textContent = "💛 等你說話";
@@ -699,6 +807,7 @@ try {
 async function loadWelcomePersonas(elderId) {
     try {
         const res = await elderFetch(elderQueryPath("/api/elder/personas"));
+        if (!res.ok) throw new Error("personas");
         const data = await res.json();
         const personas = data.personas || {};
         const visiblePersonas = Object.entries(personas).filter(([id]) => id !== 'ai');
@@ -719,7 +828,8 @@ async function loadWelcomePersonas(elderId) {
 
         visiblePersonas.forEach(([id, persona]) => {
             const isSelected = id === activeId;
-            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || '/static/avatars/ai_assistant_nobg.png');
+            const genderFallback = persona.gender === 'male' ? '/static/avatars/son_bg.png' : '/static/avatars/granddaughter_bg.png';
+            const avatarSrc = safeAvatarSrc(persona.avatar_path, avatarMap[id] || genderFallback);
 
             const div = document.createElement('div');
             div.id = `persona-btn-${id}`;
@@ -728,6 +838,7 @@ async function loadWelcomePersonas(elderId) {
             div.setAttribute('role', 'button');
             div.setAttribute('aria-label', `和${persona.name || '家人'}說話`);
             const choose = () => {
+                if (isEnteringChat) return;
                 selectPersona(id, avatarSrc, persona.name, persona.relation);
                 enterChat();
             };
@@ -759,11 +870,20 @@ async function loadWelcomePersonas(elderId) {
         });
     } catch (e) {
         console.error('載入人格失敗', e);
+        const container = document.getElementById('welcome-persona-list');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align:center;color:#6B5E58;padding:36px;font-size:22px;grid-column:1/-1;">
+                    目前無法載入，請告知照護人員
+                </div>
+            `;
+        }
     }
 }
 
 function addEscalationAlert(level, message) {
     const container = document.getElementById("chat-container");
+    if (!container) return;
     const wrapper = document.createElement("div");
     const bgColor = level >= 3 ? "#FDECEA" : "#FEF3CD";
     const borderColor = level >= 3 ? "#E74C3C" : "#F39C12";
@@ -797,7 +917,8 @@ async function prepareActivePersona(elderId) {
         };
 
         SELECTED_PERSONA = personaId;
-        currentPersonaAvatar = safeAvatarSrc(persona.avatar_path, avatarMap[personaId] || '/static/avatars/ai_assistant_nobg.png');
+        const genderFallback = persona.gender === 'male' ? '/static/avatars/son_bg.png' : '/static/avatars/granddaughter_bg.png';
+        currentPersonaAvatar = safeAvatarSrc(persona.avatar_path, avatarMap[personaId] || genderFallback);
 
         const portrait = document.getElementById('persona-portrait');
         const nameDisplay = document.getElementById('persona-portrait-name');
@@ -836,11 +957,17 @@ function selectPersona(personaId, avatarSrc, name, relation) {
 
 async function speakText(text, emotion = "normal") {
     return new Promise(async (resolve) => {
+        const portrait = document.getElementById("persona-portrait");
+        const ring1 = document.getElementById("speaking-ring-1");
+        const ring2 = document.getElementById("speaking-ring-2");
+        const resetSpeaking = () => {
+            if (portrait) portrait.classList.remove("speaking");
+            if (ring1) ring1.classList.remove("active");
+            if (ring2) ring2.classList.remove("active");
+            setListeningStatus();
+        };
         try {
             // 開始說話：加光暈
-            const portrait = document.getElementById("persona-portrait");
-            const ring1 = document.getElementById("speaking-ring-1");
-            const ring2 = document.getElementById("speaking-ring-2");
             if (portrait) portrait.classList.add("speaking");
             if (ring1) ring1.classList.add("active");
             if (ring2) ring2.classList.add("active");
@@ -860,55 +987,75 @@ async function speakText(text, emotion = "normal") {
                     persona_id: SELECTED_PERSONA
                 })
             });
+            if (!res.ok) throw new Error("tts");
             const audioBlob = await res.blob();
-            const audio = new Audio(URL.createObjectURL(audioBlob));
-            const resetSpeaking = () => {
-                if (portrait) portrait.classList.remove("speaking");
-                if (ring1) ring1.classList.remove("active");
-                if (ring2) ring2.classList.remove("active");
-                const lbl = document.getElementById("status-label");
-                const pname = document.getElementById("persona-portrait-name");
-                if (lbl && pname) {
-                    lbl.textContent = "可以慢慢說，我在聽";
-                    lbl.className = "status-label listening";
-                }
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+                resetSpeaking();
+                resolve();
             };
-            audio.onended = () => { resetSpeaking(); resolve(); };
-            audio.onerror = () => { resetSpeaking(); resolve(); };
-            audio.play();
+            audio.onerror = () => {
+                URL.revokeObjectURL(audioUrl);
+                resetSpeaking();
+                showTtsError();
+                resolve();
+            };
+            audio.play().catch(() => {
+                URL.revokeObjectURL(audioUrl);
+                resetSpeaking();
+                showTtsError();
+                resolve();
+            });
         } catch (e) {
             console.error("TTS 失敗：", e);
+            resetSpeaking();
+            showTtsError();
             resolve();
         }
     });
 }
 
 async function enterChat() {
-    document.getElementById('welcome-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'flex';
-
-    await prepareActivePersona(ELDER_ID);
+    if (isEnteringChat) return;
+    isEnteringChat = true;
+    const startButton = document.getElementById('welcome-start-btn');
+    if (startButton) startButton.disabled = true;
 
     try {
-        const res = await elderFetch(elderQueryPath("/api/elder/profile"));
-        const profile = await res.json();
-        const nameEl = document.getElementById("elder-name-display");
-        if (nameEl) nameEl.textContent = profile.name || "未知";
+        document.getElementById('welcome-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'flex';
 
-        currentElderAvatar = profile.gender === 'female'
-            ? '/static/avatars/elder_female.png'
-            : '/static/avatars/elder_male.png';
+        await prepareActivePersona(ELDER_ID);
 
-    } catch (e) {
-        console.error('載入長者資料失敗', e);
+        try {
+            const res = await elderFetch(elderQueryPath("/api/elder/profile"));
+            const profile = await res.json();
+            const nameEl = document.getElementById("elder-name-display");
+            if (nameEl) nameEl.textContent = profile.name || "未知";
+
+            currentElderAvatar = profile.gender === 'female'
+                ? '/static/avatars/elder_female.png'
+                : '/static/avatars/elder_male.png';
+
+        } catch (e) {
+            console.error('載入長者資料失敗', e);
+        }
+
+        await startSession();
+        startVAD();
+    } finally {
+        isEnteringChat = false;
+        if (startButton) startButton.disabled = false;
     }
-
-    // 自動開始對話
-    await startSession();
-    startVAD();
 }
 
 async function showPersonaSwitcher() {
+    if (isLoadingSwitcher) return;
+    isLoadingSwitcher = true;
+    const switchButton = document.getElementById('persona-switcher-btn');
+    if (switchButton) switchButton.disabled = true;
     try {
         const res = await elderFetch(elderQueryPath("/api/elder/personas"));
         const data = await res.json();
@@ -969,10 +1116,14 @@ async function showPersonaSwitcher() {
         document.getElementById('persona-switcher').style.display = 'flex';
     } catch (e) {
         console.error('載入人格失敗', e);
+    } finally {
+        isLoadingSwitcher = false;
+        if (switchButton) switchButton.disabled = false;
     }
 }
 
 async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
+    stopVAD();
     try {
         SELECTED_PERSONA = personaId;
         // 更新右側頭像
@@ -987,6 +1138,7 @@ async function switchPersonaInChat(personaId, avatarSrc, name, relation) {
         clearChat();
         addMessage('system', `已換成 ${name || '陪伴者'}，可以繼續說話。`);
         await startSession();
+        await startVAD();
 
     } catch (e) {
         console.error('切換失敗', e);
@@ -1074,6 +1226,7 @@ async function initializeApp() {
 initializeApp();
 
 async function startGuideChat() {
+    if (isEnteringChat) return;
     SELECTED_PERSONA = "ai";
     currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
     await enterChat();
@@ -1084,29 +1237,46 @@ let vadRecording = false;
 let vadStream = null;
 let vadAnalyser = null;
 let vadRecorder = null;
+let vadAudioContext = null;
 let vadChunks = [];
 let silenceTimer = null;
+let vadGeneration = 0;
 
 async function startVAD() {
     if (vadActive) return;
     vadActive = true;
+    const generation = ++vadGeneration;
 
     try {
-        vadStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const audioCtx = new AudioContext();
-        const source = audioCtx.createMediaStreamSource(vadStream);
-        vadAnalyser = audioCtx.createAnalyser();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (!vadActive || generation !== vadGeneration) {
+            stream.getTracks().forEach(t => t.stop());
+            return;
+        }
+        vadStream = stream;
+        vadAudioContext = new AudioContext();
+        const source = vadAudioContext.createMediaStreamSource(vadStream);
+        vadAnalyser = vadAudioContext.createAnalyser();
         vadAnalyser.fftSize = 512;
         source.connect(vadAnalyser);
 
         const data = new Uint8Array(vadAnalyser.frequencyBinCount);
 
         function checkVolume() {
-            if (!vadActive) return;
+            if (!vadActive || generation !== vadGeneration) return;
             vadAnalyser.getByteFrequencyData(data);
             const volume = data.reduce((a, b) => a + b) / data.length;
 
             if (volume > 15 && !vadRecording) {
+                if (isBusy) {
+                    const lbl = document.getElementById('status-label');
+                    if (lbl && lbl.textContent !== '等我說完再說吧') {
+                        lbl.textContent = '等我說完再說吧';
+                        lbl.className = 'status-label speaking';
+                    }
+                    requestAnimationFrame(checkVolume);
+                    return;
+                }
                 // 偵測到說話，開始錄音
                 vadChunks = [];
                 vadRecorder = new MediaRecorder(vadStream);
@@ -1147,11 +1317,37 @@ async function startVAD() {
 
         checkVolume();
     } catch (e) {
+        vadActive = false;
+        if (vadAudioContext) {
+            void vadAudioContext.close();
+            vadAudioContext = null;
+        }
         console.error('VAD 啟動失敗：', e);
     }
 }
 
 function stopVAD() {
     vadActive = false;
+    vadGeneration++;
+    if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+    }
+    if (vadRecorder && vadRecorder.state !== "inactive") {
+        vadRecorder.onstop = null;
+        vadRecorder.stop();
+    }
+    vadRecorder = null;
+    vadRecording = false;
     vadStream?.getTracks().forEach(t => t.stop());
+    vadStream = null;
+    vadAnalyser = null;
+    vadChunks = [];
+    if (vadAudioContext) {
+        void vadAudioContext.close();
+        vadAudioContext = null;
+    }
+    document.getElementById('recording-indicator')?.classList.remove('active');
 }
+
+window.addEventListener('beforeunload', stopVAD);

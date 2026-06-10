@@ -11,6 +11,7 @@ import backend.agents.i_safe as i_safe_module
 import backend.agents.magic_ai as magic_ai_module
 import backend.main as main_module
 import backend.services.llm_service as llm_service_module
+import backend.services.stt_service as stt_service_module
 from backend.main import app
 from backend.agents.i_safe import quick_keyword_check
 from backend.agents.magic_ai import MagicAI
@@ -56,8 +57,9 @@ def _timed_decision():
     class FakeMagic:
         def __init__(self):
             self.history = []
+            self.conversation_history = self.history
 
-        def chat(self, message):
+        def chat(self, message, use_rag=True):
             time.sleep(0.03)
             self.history.append({"role": "model", "content": message})
             return "好的，我陪你聊聊。"
@@ -127,6 +129,109 @@ def test_concurrent_family_note_mutations_preserve_both_notes(
     assert notes == {"one", "two"}
 
 
+def test_concurrent_get_decision_creates_single_session(monkeypatch):
+    created = []
+
+    class FakeDecision:
+        def __init__(self, elder_id, session_id="default", persona_id=None):
+            time.sleep(0.01)
+            self.elder_id = elder_id
+            self.session_id = session_id
+            self.persona_id = persona_id
+            self.last_seen = main_module.datetime.now()
+            created.append(self)
+
+    monkeypatch.setattr(main_module, "Decision", FakeDecision)
+    with main_module._decisions_lock:
+        main_module.decisions.clear()
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(
+            pool.map(
+                lambda _: main_module.get_decision(
+                    "T001",
+                    "concurrent",
+                    "ai",
+                ),
+                range(4),
+            )
+        )
+
+    assert len(created) == 1
+    assert all(result is created[0] for result in results)
+    with main_module._decisions_lock:
+        main_module.decisions.clear()
+
+
+def test_trim_events_preserves_important_events_and_timeline_order():
+    store = JsonMemoryStore()
+    important = [
+        {
+            "id": f"important-{index}",
+            "importance": 0.8,
+            "memory_type": "long",
+        }
+        for index in range(5)
+    ]
+    recent = [
+        {
+            "id": f"recent-{index}",
+            "importance": 0.3,
+            "memory_type": "short",
+        }
+        for index in range(80)
+    ]
+    events = important + recent
+
+    trimmed = store._trim_events(events)
+
+    assert len(trimmed) == store.MAX_EVENTS
+    assert {event["id"] for event in important}.issubset(
+        {event["id"] for event in trimmed}
+    )
+    original_positions = {event["id"]: index for index, event in enumerate(events)}
+    assert [original_positions[event["id"]] for event in trimmed] == sorted(
+        original_positions[event["id"]] for event in trimmed
+    )
+
+
+def test_trim_events_prioritizes_unacknowledged_safety_alerts():
+    store = JsonMemoryStore()
+    alerts = [
+        {
+            "id": f"alert-{index}",
+            "topic_tags": ["安全警報"],
+            "acknowledged": False,
+            "importance": 0.2,
+            "memory_type": "short",
+        }
+        for index in range(8)
+    ]
+    important = [
+        {
+            "id": f"memory-{index}",
+            "importance": 0.9,
+            "memory_type": "long",
+            "acknowledged": True,
+        }
+        for index in range(60)
+    ]
+    recent = [
+        {
+            "id": f"recent-{index}",
+            "importance": 0.2,
+            "memory_type": "short",
+        }
+        for index in range(30)
+    ]
+
+    trimmed = store._trim_events(alerts + important + recent)
+    trimmed_ids = {event["id"] for event in trimmed}
+
+    assert len(trimmed) == store.MAX_EVENTS
+    assert {event["id"] for event in alerts}.issubset(trimmed_ids)
+
+
 def test_non_demo_without_admin_credentials_fails_closed(monkeypatch):
     monkeypatch.setattr(main_module, "CARE4U_DEMO_MODE", False)
     monkeypatch.setattr(main_module, "ADMIN_PASSWORD", "")
@@ -147,6 +252,8 @@ def test_emergency_keywords_reach_level_three():
 def test_safe_keyword_fast_path_keeps_dangerous_terms_first():
     assert quick_keyword_check("早安，今天天氣很好") == 0
     assert quick_keyword_check("散步時跌倒了") == 3
+    assert quick_keyword_check("天氣好，但我膝蓋不舒服") is None
+    assert quick_keyword_check("謝謝，但我睡不著") is None
 
 
 def test_isafe_safe_keyword_skips_llm(monkeypatch):
@@ -195,6 +302,55 @@ def test_isafe_uses_configured_model(monkeypatch):
     i_safe_module.ISafe("T001")
 
     assert captured["model_name"] == "gemini-test-isafe"
+
+
+def test_stt_unavailable_returns_internal_error():
+    service = stt_service_module.STTService.__new__(
+        stt_service_module.STTService
+    )
+    service.language_mode = "zh"
+    service.breeze_model = None
+    service.model = None
+    service.whisper_error = "模型載入失敗"
+
+    result = service.transcribe_with_speed(b"audio")
+
+    assert result["text"] == ""
+    assert result["error"] == "模型載入失敗"
+
+
+def test_stt_endpoint_exposes_generic_error_flag(monkeypatch):
+    class FakeSTT:
+        def transcribe_with_speed(self, audio_bytes):
+            return {
+                "text": "",
+                "speech_rate": 0.0,
+                "speed_emotion": "normal",
+                "duration": 0.0,
+                "error": "private model path failed",
+            }
+
+    class FakeQueue:
+        async def get(self):
+            return FakeSTT()
+
+        async def put(self, item):
+            return None
+
+    async def fake_ensure_stt_pool():
+        return None
+
+    monkeypatch.setattr(main_module, "ensure_stt_pool", fake_ensure_stt_pool)
+    monkeypatch.setattr(main_module, "stt_pool_lock", FakeQueue())
+
+    response = client.post(
+        "/api/stt",
+        files={"audio": ("recording.webm", b"audio", "audio/webm")},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["stt_error"] is True
+    assert "private model path" not in response.text
 
 
 def test_safety_status_counts_only_unacknowledged_alerts():
@@ -383,11 +539,17 @@ def test_decision_stream_appends_safety_warning():
     decision.last_seen = None
 
     class FakeMagic:
-        def stream_chat(self, message):
+        def __init__(self):
+            self.conversation_history = []
+
+        def stream_chat(self, message, use_rag=True):
+            self.conversation_history.append(
+                {"role": "model", "content": "先坐下休息"}
+            )
             yield "先坐下休息"
 
         def get_history(self):
-            return []
+            return self.conversation_history
 
     class FakeISafe:
         def analyze(self, message, speed_emotion):

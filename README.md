@@ -150,7 +150,7 @@ Caregiver Admin UI
 Care4U_codex/
 ├── backend/
 │   ├── main.py                  FastAPI app entry point; session pool, admin auth lockout
-│   ├── elder_sessions.py        PIN issuance, Bearer token auth, per-IP login lockout
+│   ├── elder_sessions.py        Optional legacy PIN/token compatibility helpers
 │   ├── agents/
 │   │   ├── decision.py          Orchestrates all agents; streaming + async image/health tasks
 │   │   ├── magic_ai.py          Persona-aware LLM conversation with RAG injection (50-turn limit)
@@ -158,7 +158,7 @@ Care4U_codex/
 │   ├── routers/
 │   │   ├── admin.py             Admin dashboard + session management endpoints
 │   │   ├── chat.py              Elder chat + background task polling endpoints
-│   │   ├── elder_session.py     Elder PIN login, token validation, elder CRUD endpoints
+│   │   ├── elder_session.py     Elder-facing profile/TTS APIs and optional PIN endpoints
 │   │   ├── persona.py           Persona create/delete/switch/voice-upload endpoints
 │   │   ├── profile.py           Profile CRUD, biography draft, safety event, family notes
 │   │   └── speech.py            STT and TTS endpoints
@@ -295,29 +295,31 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
 ---
 
-## Elder Login Flow (PIN → Bearer Token)
+## Elder Selection and Browser Session Flow
 
-Elders do not use passwords. The admin generates a time-limited PIN, which the elder enters once to receive a Bearer token.
+The current elder UI is optimized for a supervised local demo. It does not require
+a PIN or Bearer token:
 
 ```
-Admin Dashboard
-  └── POST /api/admin/elder-pin   →  issues a 6-digit PIN (valid 8 hours)
-                                     PIN is shown to the caregiver to relay to the elder
-
-Elder UI
-  └── POST /api/elder-login       →  elder submits PIN
-                                     • 5 failed attempts from the same IP → locked 60 seconds
-                                     • On success: PIN marked used, Bearer token returned
-                                     • Token expiry matches original PIN expiry
-
-Subsequent requests
-  └── Authorization: Bearer <token>
-      └── GET /api/elder/profile  →  returns profile for the authenticated elder
-      └── POST /api/elder/tts     →  TTS synthesis for elder UI
-      └── GET /api/elder/personas →  list of companion personas
+Open /?elder=W001
+  └── app.js validates the elder through GET /api/elder/profile?elder_id=W001
+      └── stores care4u_elder_id in sessionStorage for the current browser tab
+          ├── elder_id is sent in chat / greet / TTS request bodies
+          └── elder_id is sent as a query parameter for profile / persona reads
 ```
 
-**Revoking access:** `POST /api/admin/elder-session/revoke` clears all active PINs and tokens for the specified elder immediately.
+Each browser tab also creates a random `session_id` in `sessionStorage`. The
+backend uses `{elder_id}:{session_id}:{persona_id}` to isolate in-memory
+conversation state. In localhost demo mode, the elder selector can replace the
+stored elder ID and reload the page.
+
+This is an identity-selection mechanism, not strong authentication. Deployments
+that expose the elder UI beyond a trusted device or local network should add an
+authenticated gateway or restore token enforcement.
+
+The backend still contains the older PIN/token endpoints
+(`/api/admin/elder-pin`, `/api/elder-login`, and revoke helpers) for compatibility
+and experiments, but the current frontend does not call them.
 
 **Elder ID auto-generation:** When an admin creates a new elder, the system derives the ID from the first character of the family name using a built-in surname table (王→W, 陳→C, 林→L, 張→Z, 黃→H, 楊→Y …) and appends a 3-digit sequence number (e.g., `W001`, `W002`).
 
@@ -349,10 +351,12 @@ Subsequent requests
    POST /api/profile/persona/upload-voice
    Recommended: mono WAV, 16 kHz, ≥ 6 seconds of clear speech
 
-6. Issue PIN for elder
-   POST /api/admin/elder-pin
-   Body: { "elder_id": "W002" }
-   → Returns 6-digit PIN for the caregiver to give to the elder
+6. Open the elder UI
+   `http://localhost:8000/?elder=W002`
+   → The selected elder ID is stored in that browser tab's sessionStorage
+
+   Optional legacy compatibility: the backend PIN/token endpoints remain
+   available, but they are not required or used by the current frontend.
 ```
 
 ---
@@ -437,21 +441,21 @@ A **2-hour cooldown** prevents the same trend alert from firing repeatedly: iSaf
 
 All endpoints are served at `http://localhost:8000`.
 
-### Elder Auth
+### Optional Legacy PIN APIs
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/api/elder-login` | Submit PIN → receive Bearer token |
+| `POST` | `/api/elder-login` | Legacy: submit PIN and receive a Bearer token |
 | `GET` | `/api/system/mode` | Returns current demo/auth mode |
 
-### Elder Session (requires Bearer token)
+### Elder-Facing APIs (elder_id scoped)
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/elder/profile` | Fetch authenticated elder's profile |
-| `GET` | `/api/elder/personas` | List companion personas |
-| `POST` | `/api/elder/tts` | TTS synthesis for elder UI |
-| `GET` | `/api/elder/chat/background/{task_id}` | Poll image-gen / health-search task result |
+| `GET` | `/api/elder/profile?elder_id=...` | Fetch the selected elder's profile |
+| `GET` | `/api/elder/personas?elder_id=...` | List the selected elder's personas |
+| `POST` | `/api/elder/tts` | TTS synthesis; `elder_id` is supplied in the body |
+| `GET` | `/api/elder/chat/background/{task_id}?elder_id=...` | Poll the selected elder's background task |
 
 ### Chat
 
@@ -504,8 +508,8 @@ All endpoints are served at `http://localhost:8000`.
 | `GET` | `/api/admin/elders` | List allowed elders |
 | `GET` | `/api/admin/elders/preview-id` | Preview auto-generated elder ID |
 | `POST` | `/api/admin/elders` | Create new elder |
-| `POST` | `/api/admin/elder-pin` | Issue PIN for elder |
-| `POST` | `/api/admin/elder-session/revoke` | Revoke elder PIN + token |
+| `POST` | `/api/admin/elder-pin` | Legacy: issue a PIN for an elder |
+| `POST` | `/api/admin/elder-session/revoke` | Legacy: revoke elder PINs and tokens |
 | `GET` | `/api/admin/sessions` | List active sessions |
 | `POST` | `/api/admin/sessions/clear` | Clear all sessions |
 

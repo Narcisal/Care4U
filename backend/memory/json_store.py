@@ -276,7 +276,7 @@ class JsonMemoryStore(MemoryManager):
     def save_conversation(self, elder_id: str, history: list, persona_id: str = "ai") -> bool:
         path = self._get_conv_path(elder_id, persona_id)
         lock = _get_file_lock(str(path))
-        tmp = path.with_suffix(".tmp")
+        tmp = path.with_suffix(f".{uuid.uuid4().hex[:8]}.tmp")
         try:
             data = {
                 "elder_id": elder_id,
@@ -418,16 +418,45 @@ class JsonMemoryStore(MemoryManager):
     def _trim_events(self, events: list) -> list:
         if len(events) <= self.MAX_EVENTS:
             return events
-        important = [
-            e for e in events
-            if e.get("importance", 0) >= 0.7 or e.get("memory_type") == "long"
-        ][-self.IMPORTANT_KEEP_LIMIT:]
-        important_ids = {e.get("id") for e in important if e.get("id")}
-        recent = [
-            e for e in events[-self.MAX_EVENTS:]
-            if not e.get("id") or e.get("id") not in important_ids
-        ]
-        return (important + recent)[-self.MAX_EVENTS:]
+
+        def is_unacknowledged_alert(event: dict) -> bool:
+            tags = set(event.get("topic_tags") or [])
+            return event.get("acknowledged") is not True and (
+                event.get("escalation_level", 0) >= 2
+                or bool(tags & {"安全警報", "緊急警報", "趨勢警報"})
+            )
+
+        selected: set[int] = set()
+        alert_indexes = [
+            index
+            for index, event in enumerate(events)
+            if is_unacknowledged_alert(event)
+        ][-self.MAX_EVENTS:]
+        selected.update(alert_indexes)
+
+        remaining = self.MAX_EVENTS - len(selected)
+        if remaining > 0:
+            important_indexes = [
+                index
+                for index, event in enumerate(events)
+                if index not in selected
+                and (
+                    event.get("importance", 0) >= 0.7
+                    or event.get("memory_type") == "long"
+                )
+            ][-min(self.IMPORTANT_KEEP_LIMIT, remaining):]
+            selected.update(important_indexes)
+
+        remaining = self.MAX_EVENTS - len(selected)
+        if remaining > 0:
+            recent_indexes = [
+                index
+                for index in range(len(events))
+                if index not in selected
+            ][-remaining:]
+            selected.update(recent_indexes)
+
+        return [event for index, event in enumerate(events) if index in selected]
 
     def get_recent_events(self, elder_id: str, limit: int = 5) -> list:
         profile = self.get_profile(elder_id)

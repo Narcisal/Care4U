@@ -7,10 +7,53 @@ import os
 import requests
 import subprocess
 import tempfile
+import threading
+import time
 
 BREEZYVOICE_URL = os.getenv("BREEZYVOICE_URL", "http://localhost:8080")
 LUXTTS_URL = os.getenv("LUXTTS_URL", "http://localhost:8081")
 XTTS_URL = os.getenv("XTTS_URL", "http://localhost:8082")
+
+# XTTS circuit breaker — module-level so all TTSService instances share state
+_xtts_lock = threading.Lock()
+_xtts_fail_count: int = 0
+_xtts_broken_until: float = 0.0
+XTTS_FAIL_THRESHOLD = 2   # trip after this many consecutive failures
+XTTS_COOLDOWN_SEC = 90    # seconds to skip XTTS after tripping
+
+
+def _record_xtts_failure() -> bytes:
+    global _xtts_fail_count, _xtts_broken_until
+    should_restart = False
+    with _xtts_lock:
+        _xtts_fail_count += 1
+        if _xtts_fail_count >= XTTS_FAIL_THRESHOLD:
+            _xtts_broken_until = time.time() + XTTS_COOLDOWN_SEC
+            print(f"XTTS 連續失敗 {_xtts_fail_count} 次，冷卻 {XTTS_COOLDOWN_SEC}s")
+            _xtts_fail_count = 0
+            should_restart = True
+    if should_restart:
+        _trigger_xtts_restart()
+    return b""
+
+
+def _trigger_xtts_restart():
+    script = os.getenv("XTTS_RESTART_SCRIPT", "")
+    if not script:
+        return
+
+    def _run():
+        try:
+            subprocess.run(
+                ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script],
+                timeout=15,
+                capture_output=True,
+            )
+            print(f"XTTS 重啟腳本執行完畢：{script}")
+        except Exception as e:
+            print(f"XTTS 重啟腳本失敗：{e}")
+
+    threading.Thread(target=_run, daemon=True).start()
 
 # (rate, pitch, volume) per emotion — extend here to add new emotions
 EMOTION_PROSODY: dict[str, tuple[str, str, str]] = {
@@ -103,6 +146,13 @@ class TTSService:
 
     def _xtts_synthesize(self, text: str) -> bytes:
         """Generate speech via XTTS v2 voice-cloning server."""
+        global _xtts_fail_count, _xtts_broken_until
+        with _xtts_lock:
+            remaining = _xtts_broken_until - time.time()
+            if remaining > 0:
+                print(f"XTTS 冷卻中，跳過（剩 {int(remaining)}s）")
+                return b""
+
         if not self.voice_path:
             print("XTTS 未設定聲音樣本，降級到 edge-tts")
             return b""
@@ -120,12 +170,14 @@ class TTSService:
             )
             if res.status_code == 200:
                 print(f"XTTS 生成成功，長度：{len(res.content)} bytes")
+                with _xtts_lock:
+                    _xtts_fail_count = 0
                 return res.content
-            print(f"XTTS 失敗：{res.status_code} {res.text}")
-            return b""
+            print(f"XTTS 失敗：{res.status_code}")
+            return _record_xtts_failure()
         except Exception as e:
             print(f"XTTS 錯誤：{e}")
-            return b""
+            return _record_xtts_failure()
 
     # ------------------------------------------------------------------
     # Edge-TTS (emotion-aware fallback)

@@ -414,7 +414,7 @@
                 <div style="grid-column: 1 / -1;"><label>興趣愛好 <span style="color: var(--palette-bdc3c7);">（用「、」分隔）</span></label><input id="field-hobbies" type="text" placeholder="聽鄧麗君、下象棋"></div>
                 <!-- 語音辨識語言設定（只在基本資料 tab 顯示） -->
                 <div style="grid-column: 1 / -1; padding: 14px 16px; background: var(--palette-f7f3ee); border-radius: 12px; border: 1px solid var(--palette-d6cec7);">
-                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 10px;">語音辨識語言設定</div>
+                    <div style="font-size: 13px; color: var(--palette-7f8c8d); margin-bottom: 10px;">語音辨識語言設定（套用所有長者）</div>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="setLanguage('zh')" id="btn-lang-zh"
                             style="flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--palette-c17f5a);
@@ -513,7 +513,7 @@
             <!-- 全表單操作按鈕（固定在卡片底部，所有 tab 共用） -->
             <div style="border-top: 1px solid var(--line); padding-top: 16px; margin-top: 20px; display: flex; gap: 12px;">
                 <button onclick="loadElderData(document.getElementById('elder-select').value)" style="flex: 1; padding: 14px; font-size: 17px; background: var(--palette-d6cec7); color: var(--palette-3d3530); border: none; border-radius: 12px; cursor: pointer; font-family: inherit;">重新載入</button>
-                <button onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit;">儲存資料</button>
+                <button id="profile-save-btn" onclick="saveElderProfile()" class="btn-primary" style="flex: 2; padding: 14px; font-size: 18px; border: none; border-radius: 12px; cursor: pointer; font-family: inherit;">儲存資料</button>
             </div>
             <div id="save-message" style="display: none; text-align: center; margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 15px;"></div>
         </div>
@@ -814,7 +814,7 @@
 
         <div class="card" style="margin-bottom: 16px;">
             <h2 style="font-size:18px;font-weight:500;margin-bottom:14px;">錄音辨識測試</h2>
-            <label>語言模式</label>
+            <label>語言模式 <span style="font-size:12px;color:var(--muted);">（套用所有長者）</span></label>
             <div class="tool-two-col">
                 <button onclick="setSttVerifyLanguage('zh')" id="btn-stt-verify-zh" style="padding:12px;border-radius:8px;border:1px solid var(--palette-d6cec7);background:white;font-size:15px;cursor:pointer;font-family:inherit;">華語模式</button>
                 <button onclick="setSttVerifyLanguage('tai')" id="btn-stt-verify-tai" style="padding:12px;border-radius:8px;border:1px solid var(--palette-d6cec7);background:white;font-size:15px;cursor:pointer;font-family:inherit;">台語模式</button>
@@ -886,6 +886,13 @@
                 <div>
                     <label>關係</label>
                     <input id="persona-relation" type="text" placeholder="女兒">
+                </div>
+                <div>
+                    <label>性別</label>
+                    <select id="persona-gender" style="height: 52px;">
+                        <option value="female">女</option>
+                        <option value="male">男</option>
+                    </select>
                 </div>
                 <div>
                     <label>長者稱呼他/她</label>
@@ -1004,6 +1011,60 @@
 </div>
 <script>
 const API_BASE = "http://127.0.0.1:8000";
+
+// ── Admin Basic-Auth interceptor ───────────────────────────────────────────────
+// All fetch() calls to API_BASE automatically include the stored Basic token.
+const _rawFetch = window.fetch.bind(window);
+window.fetch = function (url, opts = {}) {
+    const token = sessionStorage.getItem('care4u_admin_token');
+    if (token && String(url).startsWith(API_BASE)) {
+        const h = new Headers(opts.headers || {});
+        h.set('Authorization', `Basic ${token}`);
+        opts = { ...opts, headers: h };
+    }
+    return _rawFetch(url, opts);
+};
+
+function _checkAdminMe(token) {
+    const headers = token ? { 'Authorization': `Basic ${token}` } : {};
+    return _rawFetch(`${API_BASE}/api/admin/me`, { headers });
+}
+
+function showLoginModal() {
+    document.getElementById('admin-login-modal').style.display = 'flex';
+}
+
+async function doAdminLogin() {
+    const user = (document.getElementById('login-username').value || '').trim();
+    const pass = document.getElementById('login-password').value || '';
+    const errEl = document.getElementById('login-error');
+    errEl.style.display = 'none';
+    const token = btoa(user + ':' + pass);
+    const res = await _checkAdminMe(token);
+    if (!res.ok) {
+        errEl.textContent = '帳號或密碼錯誤，請重試。';
+        errEl.style.display = 'block';
+        return;
+    }
+    sessionStorage.setItem('care4u_admin_token', token);
+    document.getElementById('admin-login-modal').style.display = 'none';
+    await _initPageContent();
+}
+
+let _emergencyInterval = null;
+async function _initPageContent() {
+    loadAdminIdentity();
+    const elders = await loadAllowedElders();
+    const firstElderId = elders[0]?.id || 'W001';
+    loadElderData(firstElderId);
+    loadDemoOverview();
+    initTagLimits();
+    updateEmergencyBanner();
+    if (_emergencyInterval) clearInterval(_emergencyInterval);
+    _emergencyInterval = setInterval(updateEmergencyBanner, 60000);
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 let agentLogInterval = null;
 let DEMO_ELDERS = [
     { id: 'W001', name: '王大明' },
@@ -1061,8 +1122,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function safeAvatarSrc(path) {
-    if (!path) return '/static/avatars/ai_assistant_nobg.png';
+function safeAvatarSrc(path, fallback = '/static/avatars/ai_assistant_nobg.png') {
+    if (!path) return fallback;
     const value = String(path).trim().replaceAll('\\', '/');
     if (/^personas\/[A-Za-z0-9_-]+\.(png|jpg|jpeg|webp)$/i.test(value)) {
         return `/static/avatars/${value}`;
@@ -1071,7 +1132,7 @@ function safeAvatarSrc(path) {
     if (/^[A-Za-z0-9_-]+(?:_bg|_nobg)?\.png$/.test(filename)) {
         return `/static/avatars/${filename}`;
     }
-    return '/static/avatars/ai_assistant_nobg.png';
+    return fallback;
 }
 
 function safetyLevelFromText(text = '') {
@@ -1185,7 +1246,7 @@ async function loadDemoOverview() {
                 `${p.name}${p.relation ? `（${p.relation}）` : ''}`
             ).join('、');
             const active = personas[personaData.active_persona]?.name || '預設陪伴者';
-            const hazardHigh = safety.hazard_level === 'high';
+            const hazardLevel = safety.hazard_level || 'low';
             const card = document.createElement('div');
             card.style.cssText = `
                 background:var(--palette-ffffff); border:1px solid var(--line); border-radius:8px;
@@ -1197,7 +1258,7 @@ async function loadDemoOverview() {
                         <div style="font-size:18px;font-weight:700;color:var(--ink);">${escapeHtml(profile.name || elder.name)}</div>
                         <div style="font-size:13px;color:var(--muted);margin-top:2px;">${escapeHtml(profile.persona?.former_job || '')}</div>
                     </div>
-                    <span class="badge ${hazardHigh ? 'badge-high' : 'badge-low'}">${hazardHigh ? '高風險' : '正常'}</span>
+                    <span class="badge ${hazardLevel === 'high' ? 'badge-high' : hazardLevel === 'medium' ? 'badge-warn' : 'badge-low'}">${hazardLevel === 'high' ? '高風險' : hazardLevel === 'medium' ? '須注意' : '正常'}</span>
                 </div>
                 <div style="font-size:13px;color:var(--muted);line-height:1.6;">
                     <strong style="color:var(--ink);">陪伴者</strong><br>
@@ -1425,13 +1486,14 @@ function switchProfileTab(tabName) {
     });
 }
 
-async function loadProfilePersonaOptions(elderId, selectedId = 'ai') {
+async function loadProfilePersonaOptions(elderId, selectedId = 'ai', isCurrent = () => true) {
     const select = document.getElementById('field-active-persona');
     if (!select) return;
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
         if (!res.ok) throw new Error('personas');
         const data = await res.json();
+        if (!isCurrent()) return;
         const personas = data.personas || {};
         select.innerHTML = Object.entries(personas).map(([id, persona]) =>
             `<option value="${escapeHtml(id)}">${escapeHtml(persona.name || id)}${persona.relation ? `（${escapeHtml(persona.relation)}）` : ''}</option>`
@@ -1439,16 +1501,43 @@ async function loadProfilePersonaOptions(elderId, selectedId = 'ai') {
         select.value = personas[selectedId] ? selectedId : (data.active_persona || 'ai');
         if (!select.value && select.options.length) select.value = select.options[0].value;
     } catch (e) {
+        if (!isCurrent()) return;
         select.innerHTML = '<option value="ai">AI 助理</option>';
         select.value = 'ai';
         console.error('預設陪伴者選項載入失敗', e);
     }
 }
 
+let _loadElderSeq = 0;
+
+function clearElderProfileForm() {
+    document.getElementById('field-name').value = '';
+    document.getElementById('field-gender').value = 'male';
+    document.getElementById('field-cognitive-status').value = 'normal';
+    document.getElementById('field-job').value = '';
+    document.getElementById('field-tone').value = '';
+    document.getElementById('field-hobbies').value = '';
+    document.getElementById('field-sensitivity').value = '';
+    document.getElementById('field-diet').value = '';
+    document.getElementById('field-active-persona').innerHTML = '<option value="ai">AI 助理</option>';
+    document.getElementById('biography-section').style.display = 'none';
+    document.getElementById('biography-display').textContent = '';
+    document.getElementById('biography-edit').value = '';
+    currentBiographyDraftSources = [];
+    renderFamilyNotes([]);
+}
+
 async function loadElderData(elderId) {
+    const requestSeq = ++_loadElderSeq;
+    const profileSaveButton = document.getElementById('profile-save-btn');
+    const bioSaveButton = document.getElementById('bio-save-btn');
+    if (profileSaveButton) profileSaveButton.disabled = true;
+    if (bioSaveButton) bioSaveButton.disabled = true;
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
+        if (!res.ok) throw new Error(String(res.status));
         const profile = await res.json();
+        if (requestSeq !== _loadElderSeq) return;
         document.getElementById('field-name').value = profile.name || '';
         document.getElementById('field-gender').value = profile.gender || 'male';
         document.getElementById('field-cognitive-status').value = profile.cognitive_status || 'normal';
@@ -1457,7 +1546,12 @@ async function loadElderData(elderId) {
         document.getElementById('field-hobbies').value = (profile.persona?.hobbies || []).join('、');
         document.getElementById('field-sensitivity').value = (profile.health_notes?.sensitivity || []).join('、');
         document.getElementById('field-diet').value = profile.health_notes?.diet || '';
-        await loadProfilePersonaOptions(elderId, profile.active_persona || 'ai');
+        await loadProfilePersonaOptions(
+            elderId,
+            profile.active_persona || 'ai',
+            () => requestSeq === _loadElderSeq
+        );
+        if (requestSeq !== _loadElderSeq) return;
 
 
         // 顯示生平資料
@@ -1476,7 +1570,14 @@ async function loadElderData(elderId) {
             currentBiographyDraftSources = [];
         }
         renderFamilyNotes(profile.family_notes || []);
-    } catch (e) { console.error('載入失敗', e); }
+        if (profileSaveButton) profileSaveButton.disabled = false;
+        if (bioSaveButton) bioSaveButton.disabled = false;
+    } catch (e) {
+        if (requestSeq !== _loadElderSeq) return;
+        clearElderProfileForm();
+        showToast('長者資料載入失敗，請重試', 'error');
+        console.error('載入失敗', e);
+    }
 }
 
 const FAMILY_ROLES = ["女兒", "兒子", "孫子", "孫女", "配偶", "媳婦", "女婿", "外孫", "外孫女", "其他"];
@@ -1557,6 +1658,7 @@ async function saveElderProfile() {
                 active_persona: document.getElementById('field-active-persona').value,
             })
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         msgEl.style.display = 'block';
         msgEl.style.background = 'var(--palette-e8f5ec)';
@@ -1578,6 +1680,7 @@ let emotionChartInstance = null;
 async function loadHistory(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}`);
+        if (!res.ok) throw new Error(String(res.status));
         const profile = await res.json();
         const events = profile.recent_events || [];
         const today = new Date().toISOString().split('T')[0];
@@ -1618,7 +1721,10 @@ async function loadHistory(elderId) {
         // 完整紀錄
         renderAllRecords(events);
 
-    } catch (e) { console.error('載入失敗', e); }
+    } catch (e) {
+        showToast('對話與記憶資料載入失敗，請重試', 'error');
+        console.error('載入失敗', e);
+    }
 }
 
 let conversationRowsCache = [];
@@ -2079,14 +2185,17 @@ async function saveBiography() {
                 sources: currentBiographyDraftSources
             })
         });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.success) {
             document.getElementById('biography-display').textContent = content;
             toggleBiographyEdit();
             showToast('生平資料已儲存。', 'success');
+        } else {
+            showToast('生平資料儲存失敗，請重試。', 'error');
         }
     } catch (e) {
-        showToast('生平資料儲存失敗。', 'error');
+        showToast(`生平資料儲存失敗：${e.message || '請確認後端服務'}`, 'error');
     }
 }
 
@@ -2159,13 +2268,23 @@ async function loadSafety(elderId) {
             fetch(`${API_BASE}/api/safety/${elderId}`),
             fetch(`${API_BASE}/api/profile/${elderId}`),
         ]);
+        if (!safetyRes.ok) throw new Error(String(safetyRes.status));
+        if (!profileRes.ok) throw new Error(String(profileRes.status));
         const data    = await safetyRes.json();
         const profile = await profileRes.json();
 
         // 數字卡
         const hazardEl = document.getElementById('isafe-hazard');
-        hazardEl.innerHTML = data.hazard_level === 'high' ? safetyBadge(2) : safetyBadge(0);
-        hazardEl.style.color = data.hazard_level === 'high' ? 'var(--palette-e74c3c)' : 'var(--palette-27ae60)';
+        if (data.hazard_level === 'high') {
+            hazardEl.innerHTML = safetyBadge(3);
+            hazardEl.style.color = 'var(--palette-e74c3c)';
+        } else if (data.hazard_level === 'medium') {
+            hazardEl.innerHTML = '<span class="badge badge-warn">● 須注意</span>';
+            hazardEl.style.color = 'var(--palette-9a5c00)';
+        } else {
+            hazardEl.innerHTML = safetyBadge(0);
+            hazardEl.style.color = 'var(--palette-27ae60)';
+        }
         document.getElementById('isafe-urgent-count').textContent = data.urgent_count;
         const trendEl = document.getElementById('isafe-trend-count');
         if (trendEl) {
@@ -2185,7 +2304,10 @@ async function loadSafety(elderId) {
 
         // 更新全後台緊急橫幅
         updateEmergencyBanner();
-    } catch (e) { console.error('iSafe 載入失敗', e); }
+    } catch (e) {
+        showToast('安全觀察資料載入失敗，請重試', 'error');
+        console.error('iSafe 載入失敗', e);
+    }
 }
 
 async function acknowledgeByTag(elderId, tag) {
@@ -2237,18 +2359,16 @@ async function acknowledgeSafetyEvent(elderId, index) {
         if (!res.ok) throw new Error(data.detail || '確認失敗');
         showToast('安全事件已標記為已確認。', 'success');
         await loadSafety(elderId);
-        await loadAdminDashboard();
     } catch (e) {
         showToast(e.message || '安全事件確認失敗。', 'error');
     }
 }
 async function setLanguage(language) {
-    const elderId = document.getElementById('elder-select').value;
     try {
         const res = await fetch(`${API_BASE}/api/stt/language`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: elderId, language: language })
+            body: JSON.stringify({ language: language })
         });
         const data = await res.json();
         if (data.success) {
@@ -2298,12 +2418,37 @@ function renderFamilyNotes(notes) {
         div.innerHTML = `
             <div style="flex:1;font-size:14px;color:var(--palette-3d3530);">${escapeHtml(note.note)}</div>
             <div style="font-size:12px;color:var(--palette-9b8e87);white-space:nowrap;">${note.date || ''}</div>
-            <button onclick="deleteFamilyNote(${idx})"
-                style="width:28px;height:28px;border-radius:50%;background:var(--palette-fdecea);
-                       border:none;color:var(--palette-922b21);font-size:14px;cursor:pointer;flex-shrink:0;">×</button>
+            <div class="family-note-actions" style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+                ${familyNoteDeleteButtonHtml(idx)}
+            </div>
         `;
         container.appendChild(div);
     });
+}
+
+function familyNoteDeleteButtonHtml(idx) {
+    return `
+        <button onclick="requestDeleteFamilyNote(this, ${idx})"
+            style="width:28px;height:28px;border-radius:50%;background:var(--palette-fdecea);
+                   border:none;color:var(--palette-922b21);font-size:14px;cursor:pointer;flex-shrink:0;">×</button>
+    `;
+}
+
+function requestDeleteFamilyNote(button, idx) {
+    const actions = button.closest('.family-note-actions');
+    if (!actions) return;
+    actions.innerHTML = `
+        <button onclick="deleteFamilyNote(${idx}, this.parentElement)"
+            style="padding:6px 10px;border-radius:7px;border:none;background:var(--palette-922b21);
+                   color:white;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;">確定刪除</button>
+        <button onclick="cancelDeleteFamilyNote(this.parentElement, ${idx})"
+            style="padding:6px 10px;border-radius:7px;border:1px solid var(--palette-d6cec7);
+                   background:white;color:var(--palette-3d3530);font-size:12px;cursor:pointer;font-family:inherit;">取消</button>
+    `;
+}
+
+function cancelDeleteFamilyNote(actions, idx) {
+    actions.innerHTML = familyNoteDeleteButtonHtml(idx);
 }
 
 async function addFamilyNote() {
@@ -2325,8 +2470,13 @@ async function addFamilyNote() {
     } catch (e) { showToast('家人資訊新增失敗。', 'error'); }
 }
 
-async function deleteFamilyNote(idx) {
+async function deleteFamilyNote(idx, actions = null) {
     const elderId = document.getElementById('elder-select').value;
+    if (actions) {
+        actions.querySelectorAll('button').forEach(button => {
+            button.disabled = true;
+        });
+    }
     try {
         const res = await fetch(`${API_BASE}/api/profile/family-note/delete`, {
             method: 'POST',
@@ -2334,14 +2484,19 @@ async function deleteFamilyNote(idx) {
             body: JSON.stringify({ elder_id: elderId, index: idx })
         });
         const data = await res.json();
-        if (data.success) renderFamilyNotes(data.family_notes);
-    } catch (e) { showToast('家人資訊刪除失敗。', 'error'); }
+        if (!res.ok || !data.success) throw new Error(data.detail || '刪除失敗');
+        renderFamilyNotes(data.family_notes);
+    } catch (e) {
+        if (actions) cancelDeleteFamilyNote(actions, idx);
+        showToast('家人資訊刪除失敗。', 'error');
+    }
 }
 
 // ===== 系統處理紀錄 =====
 async function loadAgentLogs() {
     try {
         const res = await fetch(`${API_BASE}/api/agent-logs`);
+        if (!res.ok) throw new Error(String(res.status));
         const data = await res.json();
         const selectedElderId = document.getElementById('agent-elder-select')?.value || '';
         const logs = (data.logs || []).filter(log => !selectedElderId || log.elder_id === selectedElderId);
@@ -2374,7 +2529,10 @@ async function loadAgentLogs() {
             `;
             container.appendChild(row);
         });
-    } catch (e) { console.error('系統處理紀錄載入失敗', e); }
+    } catch (e) {
+        showToast('系統處理紀錄載入失敗，請重試', 'error');
+        console.error('系統處理紀錄載入失敗', e);
+    }
 }
 
 async function loadPersonaNameMap(elderId) {
@@ -2469,7 +2627,7 @@ async function setSttVerifyLanguage(language) {
         const res = await fetch(`${API_BASE}/api/stt/language`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ elder_id: 'W001', language }),
+            body: JSON.stringify({ language }),
         });
         const data = await res.json();
         document.getElementById('btn-stt-verify-zh').style.background = language === 'zh' ? 'var(--care-soft)' : 'white';
@@ -2606,22 +2764,23 @@ function initTagLimits() {
 }
 
 window.addEventListener('load', async () => {
-    loadAdminIdentity();
-    const elders = await loadAllowedElders();
-    const firstElderId = elders[0]?.id || 'W001';
-    loadElderData(firstElderId);
-    loadDemoOverview();
-    initTagLimits();
-    // 緊急橫幅初始化 + 每60秒自動更新
-    updateEmergencyBanner();
-    setInterval(updateEmergencyBanner, 60000);
+    const stored = sessionStorage.getItem('care4u_admin_token');
+    const probe = await _checkAdminMe(stored);
+    if (!probe.ok) {
+        sessionStorage.removeItem('care4u_admin_token');
+        showLoginModal();
+        return;
+    }
+    await _initPageContent();
 });
 // ===== 人格設定 =====
 async function loadPersonas(elderId) {
     try {
         const res = await fetch(`${API_BASE}/api/profile/${elderId}/personas`);
+        if (!res.ok) throw new Error(String(res.status));
         const data = await res.json();
         const personas = data.personas || {};
+        const personaEntries = Object.entries(personas);
         const activeId = data.active_persona || 'ai';
 
         // 更新目前使用人格
@@ -2631,10 +2790,17 @@ async function loadPersonas(elderId) {
         // 顯示人格列表
         const container = document.getElementById('persona-list');
         container.innerHTML = '';
+        if (personaEntries.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--palette-9b8e87);padding:24px;font-size:15px;">尚未新增任何陪伴者</div>';
+            return;
+        }
 
-        Object.entries(personas).forEach(([id, persona]) => {
+        personaEntries.forEach(([id, persona]) => {
             const isActive = id === activeId;
-            const avatarSrc = safeAvatarSrc(persona.avatar_path);
+            const genderFallback = id === 'ai'
+                ? '/static/avatars/ai_assistant_nobg.png'
+                : persona.gender === 'male' ? '/static/avatars/son_bg.png' : '/static/avatars/granddaughter_bg.png';
+            const avatarSrc = safeAvatarSrc(persona.avatar_path, genderFallback);
             const div = document.createElement('div');
             div.style.cssText = `
                 background: ${isActive ? 'var(--palette-fef3e8)' : 'var(--palette-f7f3ee)'};
@@ -2697,6 +2863,7 @@ async function addPersona() {
     const name = document.getElementById('persona-name').value.trim();
     const relation = document.getElementById('persona-relation').value.trim();
     const honorific = document.getElementById('persona-honorific').value.trim();
+    const gender = document.getElementById('persona-gender').value;
     const language = document.getElementById('persona-language').value;
     const sharedMemories = document.getElementById('persona-shared-memories').value.trim();
     const currentStatus = document.getElementById('persona-current-status').value.trim();
@@ -2725,7 +2892,7 @@ async function addPersona() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 elder_id: elderId,
-                name, relation, honorific, language,
+                name, relation, honorific, gender, language,
                 personality, habits,
                 is_deceased: isDeceased,
                 shared_memories: sharedMemories,
@@ -2748,7 +2915,7 @@ async function addPersona() {
         if (data.success) {
         msgEl.style.background = 'var(--palette-e8f5ec)';
         msgEl.style.color = 'var(--palette-2d6a4f)';
-        msgEl.textContent = data.message + '（說話風格生成中...）';
+        msgEl.textContent = '新增成功！';
         showToast('陪伴者已新增。', 'success');
         loadPersonas(elderId);
         if (elderId === document.getElementById('elder-select')?.value) {
@@ -2759,6 +2926,7 @@ async function addPersona() {
             document.getElementById('persona-name').value = '';
             document.getElementById('persona-relation').value = '';
             document.getElementById('persona-honorific').value = '';
+            document.getElementById('persona-gender').value = 'female';
             document.getElementById('persona-language').value = 'mandarin';
             document.getElementById('persona-shared-memories').value = '';
             document.getElementById('persona-current-status').value = '';
@@ -3097,6 +3265,21 @@ async function submitNewElder() {
         確認建立
       </button>
     </div>
+  </div>
+</div>
+<!-- Admin login modal -->
+<div id="admin-login-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:99999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--surface); border-radius:16px; width:100%; max-width:360px; padding:28px; box-shadow:0 8px 40px rgba(0,0,0,.3);">
+    <div style="font-size:18px; font-weight:700; margin-bottom:6px; color:var(--ink);">照護後台登入</div>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:20px;">請輸入後台帳號與密碼</div>
+    <input id="login-username" placeholder="帳號" value="admin" style="margin-bottom:10px;">
+    <input id="login-password" type="password" placeholder="密碼" style="margin-bottom:16px;"
+      onkeydown="if(event.key==='Enter') doAdminLogin()">
+    <button onclick="doAdminLogin()"
+      style="width:100%; padding:12px; background:var(--care); color:#fff; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit;">
+      登入
+    </button>
+    <p id="login-error" style="color:var(--palette-e74c3c); font-size:13px; margin:10px 0 0; display:none;"></p>
   </div>
 </div>
 </body>

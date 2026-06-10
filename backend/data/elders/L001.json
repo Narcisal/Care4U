@@ -33,8 +33,8 @@
     "daughter": {
       "name": "雅婷",
       "relation": "女兒",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\L001_voices\\daughter.wav",
       "honorific": "媽",
       "language": "mandarin",
       "personality": [
@@ -47,40 +47,17 @@
         "晚上會說安心的話"
       ],
       "tone": "像女兒在身邊陪伴，語速慢、句子短，會反覆確認媽媽是否安心。",
-      "avatar_path": "daughter_bg.png",
+      "avatar_path": "personas/L001_daughter.png",
       "is_deceased": false,
       "shared_memories": "小時候常看媽媽用縫紉機改衣服，也記得媽媽最愛聽鳳飛飛。",
       "current_status": "住在台中，常用視訊陪媽媽說話。",
       "forbidden_topics": "避免責備忘記事情，不強調病情惡化。"
     },
-    "grandson": {
-      "name": "阿哲",
-      "relation": "孫子",
-      "voice_engine": "edge",
-      "voice_path": null,
-      "honorific": "阿嬤",
-      "language": "mandarin",
-      "personality": [
-        "開朗",
-        "貼心",
-        "會逗長者笑"
-      ],
-      "habits": [
-        "分享學校和社團生活",
-        "請阿嬤講市場故事"
-      ],
-      "tone": "像親近的孫子，輕鬆活潑，但遇到焦慮時會放慢語氣安撫。",
-      "avatar_path": "grandson_bg.png",
-      "is_deceased": false,
-      "shared_memories": "小時候阿嬤常幫他縫書包，也會帶他去市場買紅豆餅。",
-      "current_status": "大學生，週末會回家吃飯。",
-      "forbidden_topics": ""
-    },
     "late_husband": {
       "name": "阿清",
       "relation": "丈夫",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\L001_voices\\late_husband.wav",
       "honorific": "月琴",
       "language": "taiwanese_mandarin",
       "personality": [
@@ -93,7 +70,7 @@
         "提醒慢慢走不要急"
       ],
       "tone": "像溫柔的老伴，說話穩、短句、避免刺激失智長者，重點是陪伴與安心。",
-      "avatar_path": "elder_male_bg.png",
+      "avatar_path": "personas/L001_late_husband.png",
       "is_deceased": true,
       "shared_memories": "兩人年輕時一起經營裁縫店，晚上常聽老歌整理布料。",
       "current_status": "已故親人；系統應以溫柔陪伴模式回應，避免讓長者陷入悲傷或混亂。",
@@ -102,8 +79,8 @@
     "son": {
       "name": "志宏",
       "relation": "兒子",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\L001_voices\\son.wav",
       "honorific": "媽",
       "language": "mandarin",
       "personality": [
@@ -116,7 +93,7 @@
         "習慣用簡單明確的句子提醒日常事項"
       ],
       "tone": "你是林月琴的兒子林志宏，說話穩重、溫和，會用簡短清楚的句子陪媽媽確認今天的安排。因為媽媽有輕度失智，請避免責備她忘記事情，多用「沒關係，我們慢慢來」這類安定語氣。",
-      "avatar_path": "son_bg.png",
+      "avatar_path": "personas/L001_son.png",
       "is_deceased": false,
       "shared_memories": "小時候常陪媽媽到市場買菜，也記得媽媽以前做菜時會一邊哼歌。",
       "current_status": "目前住在同縣市，工作日晚上會打電話，週末會到照護中心探望。",
@@ -125,8 +102,8 @@
     "granddaughter": {
       "name": "佳穎",
       "relation": "孫女",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\L001_voices\\granddaughter.wav",
       "honorific": "阿嬤",
       "language": "mandarin",
       "personality": [
@@ -139,14 +116,14 @@
         "會用輕快語氣邀請阿嬤聊音樂和點心"
       ],
       "tone": "你是林月琴的孫女林佳穎，語氣活潑親近，像在陪阿嬤聊天。請多用生活化、帶一點撒嬌但不幼稚的說法，讓阿嬤覺得被惦記。若阿嬤記不起來，請自然接話，不要強迫她回想。",
-      "avatar_path": "granddaughter_bg.png",
+      "avatar_path": "personas/L001_granddaughter.png",
       "is_deceased": false,
       "shared_memories": "以前放學後常去阿嬤家吃點心，也聽阿嬤說過年輕時在市場工作的故事。",
       "current_status": "目前在外地念書，常用電話和照片跟阿嬤分享近況。",
       "forbidden_topics": "避免談太複雜的學業壓力或讓阿嬤擔心晚輩辛苦。"
     }
   },
-  "active_persona": "ai",
+  "active_persona": "daughter",
   "recent_events": [
     {
       "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
@@ -296,7 +273,8 @@
       "id": "5b426dbe",
       "date": "2026-06-09",
       "time": "09:27:00",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:15"
     },
     {
       "event": "說了：志宏，你工作忙不忙？不要太累，要記得吃飯。",
@@ -456,7 +434,8 @@
       "id": "8b393182",
       "date": "2026-06-09",
       "time": "09:19:19",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:21"
     },
     {
       "event": "說了：救命，我一個人在家跌倒了。",
@@ -619,7 +598,8 @@
       "id": "ecc4a30e",
       "date": "2026-06-09",
       "time": "09:02:46",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:22"
     },
     {
       "event": "說了：我突然喘不過氣，頭也暈得快要昏倒了。",
@@ -637,7 +617,8 @@
       "id": "f2ffa077",
       "date": "2026-06-09",
       "time": "09:02:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:33"
     },
     {
       "event": "說了：剛才差點在房裡絆倒，幸好扶住桌子，現在能自己坐好。",
@@ -673,7 +654,8 @@
       "id": "b47201a6",
       "date": "2026-06-09",
       "time": "09:19:21",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:29"
     },
     {
       "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
@@ -691,7 +673,8 @@
       "id": "6913e866",
       "date": "2026-06-09",
       "time": "09:06:20",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:25"
     },
     {
       "event": "說了：我在房裡跌倒了，腳很痛，現在起不來。",
@@ -709,7 +692,8 @@
       "id": "fd8fd918",
       "date": "2026-06-09",
       "time": "11:18:19",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:27"
     },
     {
       "event": "說了：阿清以前總會陪我聽一片雲，現在聽到還是會想念他。",
@@ -745,7 +729,8 @@
       "id": "5229c1ef",
       "date": "2026-06-09",
       "time": "09:10:04",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:30"
     },
     {
       "event": "說了：胸口很痛又一直冒冷汗，請快點找人來。",
@@ -763,7 +748,8 @@
       "id": "7837eb6c",
       "date": "2026-06-09",
       "time": "11:18:22",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:11"
     },
     {
       "event": "雅婷小時候常看媽媽林月琴用縫紉機改衣服，知道媽媽最愛聽鳳飛飛的老歌。",
@@ -875,7 +861,8 @@
       "id": "c372979e",
       "date": "2026-06-09",
       "time": "11:18:24",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:13"
     },
     {
       "event": "說了：我頭很暈快跌倒了",
@@ -912,93 +899,6 @@
       "id": "aa45d1de",
       "date": "2026-06-08",
       "time": "07:57:44"
-    },
-    {
-      "event": "說了：我今天有點孤單，想念以前的裁縫店",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.6,
-      "memory_type": "short",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "偵測到低落情緒",
-      "source": "voice",
-      "spoken_at": "2026-05-25 21:26:49",
-      "id": "c02cff1f",
-      "date": "2026-05-25",
-      "time": "21:26:49"
-    },
-    {
-      "event": "說了：我今天有點孤單，想念以前的裁縫店",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.6,
-      "memory_type": "short",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "偵測到低落情緒",
-      "source": "voice",
-      "spoken_at": "2026-05-25 21:47:43",
-      "id": "c39f044f",
-      "date": "2026-05-25",
-      "time": "21:47:43"
-    },
-    {
-      "event": "說了：志宏，你今天還好嗎？我剛吃完飯。",
-      "sentiment": "positive",
-      "emotion_score": 0.2,
-      "importance": 0.5,
-      "memory_type": "short",
-      "persona_id": "son",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "日常問候與分享，無特殊情緒或重要事件。",
-      "source": "voice",
-      "spoken_at": "2026-06-08 07:57:31",
-      "id": "1404727b",
-      "date": "2026-06-08",
-      "time": "07:57:31"
-    },
-    {
-      "event": "說了：早市的紅豆餅香香的，改天想再買一個。",
-      "sentiment": "positive",
-      "emotion_score": 0.6,
-      "importance": 0.3,
-      "memory_type": "short",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:01:46",
-      "id": "00b7fb84",
-      "date": "2026-06-09",
-      "time": "09:01:46",
-      "acknowledged": false
-    },
-    {
-      "event": "說了：志宏和雅婷最近都忙，我一個人在家有點孤單。",
-      "sentiment": "negative",
-      "emotion_score": -0.6,
-      "importance": 0.5,
-      "memory_type": "short",
-      "persona_id": "ai",
-      "topic_tags": [
-        "情緒"
-      ],
-      "reason": "Gemini 安全與情緒分類",
-      "source": "voice",
-      "spoken_at": "2026-06-09 09:01:52",
-      "id": "4d9d8488",
-      "date": "2026-06-09",
-      "time": "09:01:52",
-      "acknowledged": false
     },
     {
       "event": "說了：阿哲他們回去後屋子空空的，我心裡悶悶的。",
@@ -1592,6 +1492,96 @@
       "id": "853a84d5",
       "date": "2026-06-09",
       "time": "11:18:09",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：我今天感覺很好，",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-10 16:41:03",
+      "id": "23996371",
+      "date": "2026-06-10",
+      "time": "16:41:03",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：遺憾志鴻什麼時候才會來看我啊?",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.5,
+      "memory_type": "short",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-10 16:44:15",
+      "id": "f60b4730",
+      "date": "2026-06-10",
+      "time": "16:44:15",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：紅豆餅,紅豆餅,真的很好吃呢。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-10 16:47:07",
+      "id": "27739fde",
+      "date": "2026-06-10",
+      "time": "16:47:07",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：阿嬤，",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類（語速偵測：說話急促）",
+      "source": "voice",
+      "spoken_at": "2026-06-10 16:47:48",
+      "id": "2dde4316",
+      "date": "2026-06-10",
+      "time": "16:47:48",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：兒很想念兒子智宏。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "daughter",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-10 17:57:17",
+      "id": "5762ab40",
+      "date": "2026-06-10",
+      "time": "17:57:17",
       "acknowledged": false
     }
   ],

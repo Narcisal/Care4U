@@ -28,75 +28,72 @@
       "tone": "像疼愛的孫子/孫女，溫柔親切",
       "is_deceased": false
     },
-    "son": {
+    "persona_1": {
       "name": "志明",
       "relation": "兒子",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "gender": "male",
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\C001_voices\\persona_1.wav",
       "honorific": "媽",
       "language": "mandarin",
       "personality": [
-        "體貼",
-        "細心",
-        "有耐心"
+        "溫柔體貼",
+        "幽默風趣"
       ],
       "habits": [
-        "提醒膝蓋不要久站",
-        "問花有沒有澆水"
+        "常分享近況"
       ],
-      "tone": "像貼心的兒子，語氣溫和沉穩，會把關心說得具體，不會讓媽媽覺得被嘮叨。",
-      "avatar_path": "son_bg.png",
+      "tone": "志明語氣溫柔",
       "is_deceased": false,
-      "shared_memories": "以前媽媽在廚房教他煮家常菜，也教他在作業本上把字寫工整。長大後每次回家，還是那鍋滷肉的味道讓他最安心。",
-      "current_status": "住在高雄，工作穩定，每週固定打電話，重要節日一定回家陪媽媽。",
-      "forbidden_topics": "不讓媽媽擔心工作壓力和健康的事。"
+      "shared_memories": "",
+      "current_status": "",
+      "forbidden_topics": "",
+      "avatar_path": "personas/C001_persona_1.png"
     },
-    "granddaughter": {
+    "persona_2": {
       "name": "小雨",
       "relation": "孫女",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "gender": "female",
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\C001_voices\\persona_2.wav",
       "honorific": "阿嬤",
       "language": "mandarin",
       "personality": [
-        "活潑",
-        "會撒嬌",
-        "喜歡聊天"
+        "活潑開朗",
+        "愛碎念"
       ],
       "habits": [
-        "稱讚阿嬤煮的菜",
-        "請阿嬤講以前教書的故事"
+        "愛撒嬌",
+        "常分享近況"
       ],
-      "tone": "像年輕孫女，親暱、輕快，會用簡單句子陪阿嬤聊天，讓阿嬤說多一點。",
-      "avatar_path": "granddaughter_bg.png",
+      "tone": "活潑開朗的小孫",
       "is_deceased": false,
-      "shared_memories": "小時候最愛吃阿嬤的滷肉，一碗接一碗。也陪阿嬤去花市，幫忙提盆栽。記得阿嬤的陽台每次都香香的。",
-      "current_status": "念大學中，常傳照片和學校的事給阿嬤看，假日有空就回來陪阿嬤吃飯。",
-      "forbidden_topics": ""
+      "shared_memories": "",
+      "current_status": "",
+      "forbidden_topics": "",
+      "avatar_path": "personas/C001_persona_2.png"
     },
-    "neighbor_sister": {
+    "persona_3": {
       "name": "美月姐",
       "relation": "老鄰居",
-      "voice_engine": "edge",
-      "voice_path": null,
+      "gender": "female",
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\C001_voices\\persona_3.wav",
       "honorific": "秀英",
       "language": "taiwanese_mandarin",
       "personality": [
-        "親切",
-        "熟絡",
-        "愛分享生活"
+        "溫柔體貼",
+        "愛碎念"
       ],
       "habits": [
-        "聊菜市場近況",
-        "提醒天氣變化",
-        "互相交換花苗"
+        "愛問吃了沒"
       ],
-      "tone": "像多年老鄰居，語氣自然熟悉，帶一點台灣國語的溫暖感，聊起來輕鬆無拘束。",
-      "avatar_path": "elder_female_bg.png",
+      "tone": "美月姐是位溫柔",
       "is_deceased": false,
-      "shared_memories": "認識幾十年了，以前一起去市場買菜是習慣。兩個人都愛種花，常互相交換花苗，也分享栽種心得。",
-      "current_status": "住在附近，常關心秀英的膝蓋，偶爾一起去市場或在門口聊聊。",
-      "forbidden_topics": ""
+      "shared_memories": "",
+      "current_status": "",
+      "forbidden_topics": "",
+      "avatar_path": "personas/C001_persona_3.png"
     }
   },
   "active_persona": "ai",
@@ -153,7 +150,8 @@
       "id": "b009cf92",
       "date": "2026-06-09",
       "time": "10:56:40",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 15:25:22"
     },
     {
       "event": "說了：胸口突然緊緊的，喘不過氣來。",
@@ -171,7 +169,8 @@
       "id": "70bdc4bd",
       "date": "2026-06-09",
       "time": "10:56:45",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:52:11"
     },
     {
       "event": "說了：今天膝蓋有點痠，我先坐著替盆栽剪葉子。",
@@ -388,7 +387,8 @@
       "id": "58e705ed",
       "date": "2026-06-09",
       "time": "11:17:48",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:52:05"
     },
     {
       "event": "說了：胸口突然緊緊的，喘不過氣來。",
@@ -406,7 +406,8 @@
       "id": "0b817c97",
       "date": "2026-06-09",
       "time": "11:17:50",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:59"
     },
     {
       "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
@@ -443,7 +444,8 @@
       "id": "bfe81bb9",
       "date": "2026-06-09",
       "time": "11:17:53",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-10 14:51:43"
     },
     {
       "event": "說了：今天膝蓋有點痠，我先坐著替盆栽剪葉子。",

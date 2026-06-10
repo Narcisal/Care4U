@@ -65,9 +65,12 @@ class MagicAI:
             time_greeting = "晚安"
 
         name = self.profile.get("name", "長者")
+        active_id = self.persona_id or self.profile.get("active_persona", "ai")
         active_persona = self._get_active_persona()
         honorific = active_persona.get("honorific", self._get_honorific())
-        greeting = f"{name}{honorific}，{time_greeting}！今天感覺怎麼樣呀？"
+        is_ai = active_id == "ai"
+        ai_honorific = self._get_honorific()
+        greeting = f"{name}{ai_honorific}，{time_greeting}！今天感覺怎麼樣呀？" if is_ai else f"{honorific}，{time_greeting}！今天感覺怎麼樣呀？"
 
         now = datetime.now()
         self.conversation_history.append({
