@@ -217,7 +217,7 @@ CARE4U_DEMO_MODE=false   # set true to skip image generation (useful on low-spec
 DB_ENABLED=false
 ```
 
-For full RAG functionality, also enable PostgreSQL:
+For full RAG functionality, also enable PostgreSQL + pgvector:
 
 ```env
 DB_ENABLED=true
@@ -228,17 +228,41 @@ DB_USER=postgres
 DB_PASSWORD=your_password
 ```
 
-### 3. (Optional) Initialize PostgreSQL
+### 3. (Optional) PostgreSQL + pgvector 部署
+
+系統預設使用 JSON 檔案儲存（`backend/data/elders/`），無需資料庫即可運作。啟用 PostgreSQL 後可使用向量語意搜尋（RAG），提升對話記憶檢索品質。
+
+**安裝 pgvector 擴充套件：**
 
 ```bash
+# Ubuntu / Debian
+sudo apt install postgresql-16-pgvector
+
+# macOS (Homebrew)
+brew install pgvector
+
+# Windows — 使用預編譯版本或從 source 編譯
+# 詳見 https://github.com/pgvector/pgvector#windows
+```
+
+**建立資料庫與初始化 schema：**
+
+```bash
+createdb aicaeru
 psql -d aicaeru -f backend/data/schema.sql
 ```
 
-Then seed embeddings for existing elder profiles:
+`schema.sql` 會建立 `vector` 擴充套件和 `elder_memories` 資料表，包含 `embedding vector(768)` 欄位用於語意搜尋。
+
+**Embedding 模型：** `gemini-embedding-2`（Google），3072 維。向量透過 `EmbeddingService` 在事件寫入時自動生成，使用 cosine distance（`<=>`）進行相似度檢索。
+
+**Seed 既有長者資料的 embeddings：**
 
 ```bash
 python scripts/reembed_all.py
 ```
+
+**Fallback 機制：** 若 `DB_ENABLED=true` 但 PostgreSQL 無法連線，系統會自動退回 JSON 儲存，不會遺失資料。設定 `DB_ENABLED=false` 可完全停用資料庫。
 
 ### 4. Start the Server
 
@@ -373,6 +397,76 @@ Voice samples are uploaded through the caregiver admin dashboard as `.wav` files
 - On CUDA crash (device-side assert), the XTTS process calls `os._exit(1)` and the `run_loop.py` wrapper auto-restarts it
 - A background health probe detects when XTTS is back online and clears the cooldown immediately
 - Set `XTTS_RESTART_SCRIPT` in `.env` to enable the Care4U-side restart trigger
+
+**XTTS server 部署（獨立於本專案）：**
+
+XTTS v2 作為獨立的 FastAPI 服務運行，需要 GPU 和 CUDA 環境。以下是 `api.py` 的關鍵設計：
+
+```python
+# api.py — 最小 XTTS server
+import io, os, sys, threading, torch
+from fastapi import FastAPI
+from fastapi.responses import Response
+from pydantic import BaseModel
+from TTS.api import TTS
+
+app = FastAPI()
+device = "cuda" if torch.cuda.is_available() else "cpu"
+tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
+_infer_lock = threading.Lock()  # GPU 推理不支援並行，必須序列化
+
+class TTSRequest(BaseModel):
+    text: str
+    voice_path: str
+    language: str = "zh-cn"
+    speed: float = 1.0
+
+@app.post("/v1/audio/speech")
+def synthesize(req: TTSRequest):
+    try:
+        with _infer_lock:  # 同時只允許一個推理請求
+            buf = io.BytesIO()
+            tts.tts_to_file(text=req.text, speaker_wav=req.voice_path,
+                            language=req.language, file_path=buf, speed=req.speed)
+            buf.seek(0)
+            data = buf.read()
+        return Response(content=data, media_type="audio/wav")
+    except Exception as e:
+        err_str = str(e).lower()
+        if "cuda" in err_str or "assert" in err_str or "device-side" in err_str:
+            print("CUDA fatal -- exiting for auto-restart...")
+            sys.stdout.flush()
+            os._exit(1)  # CUDA context 損壞後無法恢復，必須重啟 process
+        return Response(status_code=500)
+```
+
+使用 `run_loop.py` 啟動（而非直接 `uvicorn`），確保 CUDA crash 後自動重啟：
+
+```python
+# run_loop.py — 自動重啟 wrapper
+import subprocess, sys, time, os
+python = os.path.join(os.path.dirname(__file__), "venv", "Scripts", "python.exe")
+cmd = [python, "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8082"]
+while True:
+    try:
+        result = subprocess.run(cmd, cwd=os.path.dirname(__file__))
+    except KeyboardInterrupt:
+        break
+    if result.returncode == 0:
+        break
+    print("Crash detected, restarting in 3s...")
+    time.sleep(3)
+```
+
+XTTS server 的 requirements（獨立 venv）：
+```
+TTS>=0.22.0
+torch>=2.0
+fastapi
+uvicorn
+```
+
+聲音樣本檔（`.wav`，16 kHz mono 推薦）透過照護者後台上傳，存放於 `backend/data/voices/`。
 
 **edge-tts emotion prosody mapping:**
 

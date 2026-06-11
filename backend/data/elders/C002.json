@@ -278,6 +278,42 @@
       "date": "2026-06-12",
       "time": "04:49:35",
       "acknowledged": false
+    },
+    {
+      "event": "說了：今天感覺不錯,早上的太陽很溫暖,終於不下雨了。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 05:06:30",
+      "id": "8cf30548",
+      "date": "2026-06-12",
+      "time": "05:06:30",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：剛才出門散步步曬的些太陽很舒服,台南終於不下雨了。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 05:10:21",
+      "id": "f52483d9",
+      "date": "2026-06-12",
+      "time": "05:10:21",
+      "acknowledged": false
     }
   ],
   "memory_summary": {
