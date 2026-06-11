@@ -370,6 +370,7 @@ class PersonaAddRequest(ValidatedRequest):
     language: str = "mandarin"
     personality: list = []
     habits: list = []
+    custom_description: str = ""
     voice_engine: str = "xtts"
     voice_path: str = None
     is_deceased: bool = False
@@ -670,6 +671,7 @@ async def _generate_persona_tone(elder_id: str, persona_id: str):
             language_text,
             persona.get("personality", []),
             persona.get("habits", []),
+            persona.get("custom_description", ""),
         )
 
         if not memory.set_persona_field(elder_id, persona_id, "tone", tone):
@@ -1621,6 +1623,7 @@ async def add_persona(req: PersonaAddRequest, _: dict = Depends(require_caregive
             "language": req.language,
             "personality": req.personality,
             "habits": req.habits,
+            "custom_description": req.custom_description,
             "tone": "",
             "is_deceased": req.is_deceased,
             "shared_memories": req.shared_memories,

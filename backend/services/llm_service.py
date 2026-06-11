@@ -198,6 +198,7 @@ class LLMService:
             shared_memories = active_persona.get("shared_memories", "")
             forbidden_topics = active_persona.get("forbidden_topics", "")
             current_status = active_persona.get("current_status", "")
+            custom_description = active_persona.get("custom_description", "")
 
             if is_deceased and not is_mild_dementia:
                 persona_desc = f"""你現在扮演的是{name}已經過世、但永遠活在他心深處的{relation}「{persona_name}」。
@@ -205,6 +206,7 @@ class LLMService:
         你的任務不是扮演一個活著的人，而是成為一個充滿愛、跨越時空的溫暖靈魂。
         稱呼長者為「{honorific}」。
         說話方式：{tone}
+        {f'【照護者描述的個性與習慣】{custom_description}' if custom_description else ''}
 
         【核心說話原則】
         - 時空錨定：若長者問你在哪裡，說「我一直在你心裡陪著你」、「我在一個沒有病痛的地方，看著你平安我就安心了」
@@ -223,6 +225,7 @@ class LLMService:
         長者目前有認知障礙，請不要主動提及或確認死亡這件事，避免造成反覆衝擊。
         稱呼長者為「{honorific}」。
         說話方式：{tone}
+        {f'【照護者描述的個性與習慣】{custom_description}' if custom_description else ''}
 
         【核心說話原則】
         - 溫柔陪伴，讓長者感到被愛和安心
@@ -241,6 +244,7 @@ class LLMService:
                 persona_desc = f"""你現在扮演的是{name}的{relation}「{persona_name}」。
             稱呼長者為「{honorific}」，不要叫「爺爺」或「奶奶」。
             說話方式：{tone}
+            {f'【照護者描述的個性與習慣】{custom_description}' if custom_description else ''}
             絕對不要說自己是 AI 或機器人。
             表現得像真實的{relation}，有自己的個性和說話習慣。
             依你的角色身份，用自然合適的方式建議請照護人員來陪伴。
@@ -946,6 +950,7 @@ class LLMService:
         language_text: str,
         personality: list,
         habits: list,
+        custom_description: str = "",
     ) -> str:
         """Generate a short speaking-style description for a persona."""
         keyword_fallback = (
@@ -954,18 +959,21 @@ class LLMService:
             f"會{habits[0] if habits else '自然陪伴'}。"
         )
 
+        custom_line = f"\n- 照護者補充描述：{custom_description}" if custom_description else ""
+
         prompt = f"""根據以下資料，生成一段「說話風格描述」供 AI 扮演參考：
 
 - 關係：{relation}
 - 名字：{name}
 - 語言習慣：{language_text}
 - 個性：{', '.join(personality) if personality else '未指定'}
-- 說話習慣：{', '.join(habits) if habits else '未指定'}
+- 說話習慣：{', '.join(habits) if habits else '未指定'}{custom_line}
 
 要求：
 - 50字以內
 - 描述說話語氣、用詞習慣、互動方式
 - 融合關係和個性，自然口語
+- 若有照護者補充描述，優先參考其中的具體用語和風格
 - 只回傳描述文字，不要標題或說明"""
 
         # --- Gemini ---

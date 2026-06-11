@@ -976,6 +976,13 @@
                 </div>
 
                 <div style="grid-column: 1 / -1;">
+                    <label>自訂人格描述 <span style="color:var(--palette-bdc3c7);">（選填，會與上方標籤合併使用）</span></label>
+                    <textarea id="persona-custom-description" rows="3"
+                        placeholder="例如：說話很慢很溫柔，喜歡用台語夾雜國語，常常說「乖孫啊」，會一直問有沒有吃飽穿暖"
+                        style="width:100%; resize:vertical;"></textarea>
+                </div>
+
+                <div style="grid-column: 1 / -1;">
                     <label>共同核心記憶 <span style="color:var(--palette-bdc3c7);">（選填）</span></label>
                     <input id="persona-shared-memories" type="text"
                         placeholder="例如：小玲大學放榜時阿公高興到放鞭炮">
@@ -2952,6 +2959,7 @@ async function addPersona() {
     // 收集標籤
     const personality = [...document.querySelectorAll('#personality-tags input:checked')].map(cb => cb.value);
     const habits = [...document.querySelectorAll('#habit-tags input:checked')].map(cb => cb.value);
+    const customDescription = document.getElementById('persona-custom-description').value.trim();
 
     if (!name || !honorific || !relation) {
         showToast('請填寫名字、關係和稱呼。', 'warn');
@@ -2971,6 +2979,7 @@ async function addPersona() {
                 elder_id: elderId,
                 name, relation, honorific, gender, language,
                 personality, habits,
+                custom_description: customDescription,
                 is_deceased: isDeceased,
                 shared_memories: sharedMemories,
                 current_status: currentStatus,
@@ -3008,6 +3017,7 @@ async function addPersona() {
             document.getElementById('persona-shared-memories').value = '';
             document.getElementById('persona-current-status').value = '';
             document.getElementById('persona-forbidden-topics').value = '';
+            document.getElementById('persona-custom-description').value = '';
             document.getElementById('persona-deceased').checked = false;
             document.getElementById('persona-voice').value = '';
             document.getElementById('persona-avatar').value = '';
