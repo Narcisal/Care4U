@@ -157,7 +157,7 @@ class STTService:
             beam_size=5,
             initial_prompt=_WHISPER_PROMPT,
         )
-        return result["text"].strip()
+        return result.get("text", "").strip()
 
     def _transcribe_whisper_with_timestamps(self, audio_bytes: bytes) -> dict:
         """Return full Whisper result dict (includes word_timestamps segments)."""

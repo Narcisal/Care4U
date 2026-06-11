@@ -8,13 +8,25 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
+try:
+    from openai import OpenAI as _OpenAIClient
+    _HAS_OPENAI = True
+except ImportError:
+    _HAS_OPENAI = False
+
 load_dotenv(override=True)
 
 _client = None
+_openai_client = None
 LLM_TIMEOUT_MS = int(os.getenv("LLM_TIMEOUT_MS", "15000"))
 LLM_MAX_CONCURRENT = int(os.getenv("LLM_MAX_CONCURRENT", "4"))
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 _llm_semaphore = threading.BoundedSemaphore(LLM_MAX_CONCURRENT)
 
+
+# ------------------------------------------------------------------
+# Provider clients
+# ------------------------------------------------------------------
 
 def _generate_content(client, **kwargs):
     with _llm_semaphore:
@@ -38,6 +50,92 @@ def _get_client():
         _client = genai.Client(api_key=api_key)
     return _client
 
+
+def _get_openai_client():
+    """Create OpenAI client only when an API key is available."""
+    global _openai_client
+    if not _HAS_OPENAI:
+        return None
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key or api_key == "your_api_key_here":
+        return None
+    if _openai_client is None:
+        _openai_client = _OpenAIClient(api_key=api_key)
+    return _openai_client
+
+
+# ------------------------------------------------------------------
+# OpenAI helpers
+# ------------------------------------------------------------------
+
+def _openai_generate(client, model, messages, temperature=0.7,
+                     max_tokens=2000, response_format=None):
+    with _llm_semaphore:
+        kwargs = dict(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        if response_format:
+            kwargs["response_format"] = response_format
+        return client.chat.completions.create(**kwargs)
+
+
+def _openai_generate_stream(client, model, messages, temperature=0.7,
+                            max_tokens=2000):
+    with _llm_semaphore:
+        stream = client.chat.completions.create(
+            model=model, messages=messages,
+            temperature=temperature, max_tokens=max_tokens, stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta and delta.content:
+                yield delta.content
+
+
+def _to_openai_messages(system_prompt, history_dicts, user_message=None):
+    """Convert conversation data to OpenAI messages format."""
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    for msg in (history_dicts or []):
+        role = msg.get("role", "user")
+        if role == "model":
+            role = "assistant"
+        messages.append({"role": role, "content": msg.get("content", "")})
+    if user_message:
+        messages.append({"role": "user", "content": user_message})
+    return messages
+
+
+def _is_retryable_gemini_error(exc: Exception) -> bool:
+    """Return True if the Gemini error suggests the service is down."""
+    s = str(exc).lower()
+    return any(signal in s for signal in [
+        "503", "overloaded", "unavailable", "timeout",
+        "rate limit", "429", "deadline", "connection",
+        "resource exhausted", "internal error", "500",
+    ])
+
+
+def _warn_fallback(method: str, reason: str, target: str = "OpenAI"):
+    """Print a prominent fallback warning to the server console."""
+    ts = datetime.now().strftime("%H:%M:%S")
+    print(
+        f"\n{'='*60}\n"
+        f"  [!] FALLBACK TRIGGERED  [{ts}]\n"
+        f"  Method : {method}\n"
+        f"  Reason : {reason}\n"
+        f"  Target : {target} ({OPENAI_MODEL})\n"
+        f"{'='*60}\n"
+    )
+
+
+# ------------------------------------------------------------------
+# Keyword fallback (last resort)
+# ------------------------------------------------------------------
 
 def _fallback_emotion(message: str) -> dict:
     urgent_terms = ["痛", "胸口", "喘", "跌倒", "頭暈", "暈", "救命", "不舒服", "腳軟"]
@@ -341,15 +439,49 @@ class LLMService:
     - 不要複述長者說的話再回應"""
 
     # ------------------------------------------------------------------
+    # Shared: emotion result parser
+    # ------------------------------------------------------------------
+
+    def _parse_emotion_result(self, raw_text: str) -> dict:
+        """Parse and normalize emotion analysis JSON from any provider."""
+        try:
+            result = json.loads(raw_text)
+        except json.JSONDecodeError:
+            m = re.search(r"\{[^{}]+\}", raw_text, re.DOTALL)
+            if m:
+                result = json.loads(m.group(0))
+            else:
+                raise ValueError(f"無法從回傳中取得 JSON：{raw_text[:80]}")
+
+        result.setdefault("emotion", "normal")
+        result.setdefault("sentiment", "neutral")
+        result.setdefault("is_urgent", result["emotion"] == "urgent")
+        result["escalation_level"] = min(
+            3, max(0, int(result.get("escalation_level", 0))),
+        )
+        result["importance"] = (
+            0.8 if result["escalation_level"] >= 2 else 0.5
+            if result["escalation_level"] == 1 else 0.3
+        )
+        result["emotion_score"] = (
+            0.6 if result["sentiment"] == "positive" else -0.6
+            if result["sentiment"] == "negative" else 0.0
+        )
+        result["memory_type"] = (
+            "long" if result["importance"] >= 0.7 else "short"
+        )
+        result["should_record"] = (
+            result["escalation_level"] >= 1
+            or result["emotion"] in ["comfort", "happy"]
+        )
+        return result
+
+    # ------------------------------------------------------------------
     # Public: emotion analysis
     # ------------------------------------------------------------------
 
-    def analyze_emotion(self, message: str) -> dict:
-        client = _get_client()
-        if client is None:
-            return _fallback_emotion(message)
-
-        prompt = f"""分析台灣長者訊息的安全等級與情緒。
+    def _build_emotion_prompt(self, message: str) -> str:
+        return f"""分析台灣長者訊息的安全等級與情緒。
 只輸出 JSON，不加 Markdown 或說明：
 {{
   "escalation_level": 0,
@@ -368,92 +500,117 @@ class LLMService:
 - sentiment 只能是 positive、negative、neutral。
 訊息：{message}"""
 
-        response = None
-        for attempt in range(3):
-            try:
-                response = _generate_content(
-                    client,
-                    model=self.model_name,
-                    contents=[types.Content(
-                        role="user",
-                        parts=[types.Part(text=prompt)]
-                    )],
-                    config=types.GenerateContentConfig(
-                        temperature=0.0,
-                        max_output_tokens=200,
-                        response_mime_type="application/json",
-                        thinking_config=types.ThinkingConfig(thinking_budget=0),
-                        http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
-                    ),
-                )
+    def _try_openai_emotion(self, prompt: str, reason: str = "Gemini 不可用") -> dict | None:
+        """Attempt emotion analysis via OpenAI. Returns None on failure."""
+        oc = _get_openai_client()
+        if oc is None:
+            return None
+        _warn_fallback("analyze_emotion", reason)
+        try:
+            resp = _openai_generate(
+                oc, OPENAI_MODEL,
+                [{"role": "user", "content": prompt}],
+                temperature=0.0, max_tokens=200,
+                response_format={"type": "json_object"},
+            )
+            raw = resp.choices[0].message.content.strip()
+            result = self._parse_emotion_result(raw)
+            result.setdefault("reason", "OpenAI fallback 安全與情緒分類")
+            print(f"[OpenAI fallback] 情緒分析：emotion={result['emotion']}, importance={result['importance']}")
+            return result
+        except Exception as e:
+            print(f"[OpenAI fallback] 情緒分析失敗：{e}")
+            return None
 
-                raw_text = response.text.strip()
+    def analyze_emotion(self, message: str) -> dict:
+        prompt = self._build_emotion_prompt(message)
 
-                # Primary parse
+        # --- Gemini path ---
+        client = _get_client()
+        if client is not None:
+            response = None
+            for attempt in range(3):
                 try:
-                    result = json.loads(raw_text)
-                except json.JSONDecodeError:
-                    # Regex fallback: extract first {...} block from response
-                    m = re.search(r"\{[^{}]+\}", raw_text, re.DOTALL)
-                    if m:
-                        result = json.loads(m.group(0))
-                    else:
-                        raise ValueError(f"無法從回傳中取得 JSON：{raw_text[:80]}")
+                    response = _generate_content(
+                        client,
+                        model=self.model_name,
+                        contents=[types.Content(
+                            role="user",
+                            parts=[types.Part(text=prompt)]
+                        )],
+                        config=types.GenerateContentConfig(
+                            temperature=0.0,
+                            max_output_tokens=200,
+                            response_mime_type="application/json",
+                            thinking_config=types.ThinkingConfig(thinking_budget=0),
+                            http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
+                        ),
+                    )
+                    result = self._parse_emotion_result(response.text.strip())
+                    result.setdefault("reason", "Gemini 安全與情緒分類")
+                    print(f"情緒分析結果：emotion={result['emotion']}, importance={result['importance']}")
+                    return result
 
-                result.setdefault("emotion", "normal")
-                result.setdefault("sentiment", "neutral")
-                result.setdefault("is_urgent", result["emotion"] == "urgent")
-                result["escalation_level"] = min(
-                    3,
-                    max(0, int(result.get("escalation_level", 0))),
-                )
-                result["importance"] = (
-                    0.8 if result["escalation_level"] >= 2 else 0.5
-                    if result["escalation_level"] == 1 else 0.3
-                )
-                result["emotion_score"] = (
-                    0.6 if result["sentiment"] == "positive" else -0.6
-                    if result["sentiment"] == "negative" else 0.0
-                )
-                result["memory_type"] = (
-                    "long" if result["importance"] >= 0.7 else "short"
-                )
-                result["should_record"] = (
-                    result["escalation_level"] >= 1
-                    or result["emotion"] in ["comfort", "happy"]
-                )
-                result.setdefault("reason", "Gemini 安全與情緒分類")
+                except Exception as e:
+                    should_retry = (
+                        "503" in str(e)
+                        or "overloaded" in str(e).lower()
+                        or isinstance(e, (json.JSONDecodeError, ValueError))
+                    )
+                    if should_retry and attempt < 2:
+                        wait = 2 * (attempt + 1)
+                        print(f"情緒分析重試（第 {attempt + 1} 次，等 {wait}s）：{str(e)[:60]}")
+                        time.sleep(wait)
+                        response = None
+                        continue
 
-                print(f"情緒分析結果：emotion={result['emotion']}, importance={result['importance']}")
-                return result
+                    raw = response.text if response is not None else "無回應"
+                    print(f"Gemini 情緒分析失敗，原始回傳：{raw[:80]}\n錯誤：{e}")
 
-            except Exception as e:
-                should_retry = (
-                    "503" in str(e)
-                    or "overloaded" in str(e).lower()
-                    or isinstance(e, (json.JSONDecodeError, ValueError))
-                )
-                if should_retry and attempt < 2:
-                    wait = 2 * (attempt + 1)
-                    print(f"情緒分析重試（第 {attempt + 1} 次，等 {wait}s）：{str(e)[:60]}")
-                    time.sleep(wait)
-                    response = None
-                    continue
-                raw = response.text if response is not None else "無回應"
-                print(f"情緒分析失敗，原始回傳：{raw[:80]}\n錯誤：{e}")
-                return {
-                    "emotion": "normal",
-                    "sentiment": "neutral",
-                    "is_urgent": False,
-                    "should_record": False,
-                    "reason": "分析失敗，使用預設值",
-                    "importance": 0.3,
-                    "memory_type": "short",
-                }
+                    if _is_retryable_gemini_error(e):
+                        oai_result = self._try_openai_emotion(prompt, reason=str(e)[:80])
+                        if oai_result is not None:
+                            return oai_result
+                    break
+
+        else:
+            # Gemini client unavailable — try OpenAI before keyword fallback
+            oai_result = self._try_openai_emotion(prompt, reason="Gemini client 未設定")
+            if oai_result is not None:
+                return oai_result
+
+        return _fallback_emotion(message)
 
     # ------------------------------------------------------------------
     # Public: multi-turn chat
     # ------------------------------------------------------------------
+
+    def _keyword_chat_fallback(self, profile, user_message, active_persona) -> str:
+        name = profile.get("name", "您")
+        active_name = (active_persona or {}).get("name", "AI 助理")
+        honorific = (active_persona or {}).get("honorific") or name
+        if any(term in user_message for term in ["痛", "胸口", "喘", "跌倒", "頭暈", "暈", "救命"]):
+            return f"{honorific}，我聽到你身體不舒服。請先坐好或躺好，不要自己走動，我會提醒照護人員來看你。"
+        if any(term in user_message for term in ["孤單", "難過", "想念", "不開心", "心慌", "焦慮"]):
+            return f"{honorific}，我在這裡陪你。你可以慢慢說，不用急，我們一起把心裡的事講出來。"
+        return f"{honorific}，我是{active_name}。我有聽到你說「{user_message}」，我們可以慢慢聊。"
+
+    def _try_openai_chat(self, system_prompt, history_source, user_message,
+                         reason: str = "Gemini 不可用") -> str | None:
+        oc = _get_openai_client()
+        if oc is None:
+            return None
+        _warn_fallback("chat", reason)
+        try:
+            messages = _to_openai_messages(system_prompt, history_source, user_message)
+            resp = _openai_generate(oc, OPENAI_MODEL, messages,
+                                    temperature=0.9, max_tokens=2000)
+            text = resp.choices[0].message.content
+            print("[OpenAI fallback] chat 成功")
+            return text
+        except Exception as e:
+            print(f"[OpenAI fallback] chat 失敗：{e}")
+            return None
 
     def chat(
         self,
@@ -465,58 +622,59 @@ class LLMService:
         similar_memories: list = None,
         active_persona: dict = None,
     ) -> str:
-        try:
-            client = _get_client()
-            if client is None:
-                name = profile.get("name", "您")
-                active_name = (active_persona or {}).get("name", "AI 助理")
-                honorific = (active_persona or {}).get("honorific") or name
-                if any(term in user_message for term in ["痛", "胸口", "喘", "跌倒", "頭暈", "暈", "救命"]):
-                    return f"{honorific}，我聽到你身體不舒服。請先坐好或躺好，不要自己走動，我會提醒照護人員來看你。"
-                if any(term in user_message for term in ["孤單", "難過", "想念", "不開心", "心慌", "焦慮"]):
-                    return f"{honorific}，我在這裡陪你。你可以慢慢說，不用急，我們一起把心裡的事講出來。"
-                return f"{honorific}，我是{active_name}。我有聽到你說「{user_message}」，我們可以慢慢聊。"
+        system_prompt = self.build_system_prompt(
+            profile,
+            recent_messages=recent_messages,
+            important_memories=important_memories,
+            similar_memories=similar_memories,
+            active_persona=active_persona,
+        )
+        history_source = (
+            recent_messages if recent_messages is not None else conversation_history
+        )
 
-            system_prompt = self.build_system_prompt(
-                profile,
-                recent_messages=recent_messages,
-                important_memories=important_memories,
-                similar_memories=similar_memories,
-                active_persona=active_persona,
-            )
-
-            history_source = (
-                recent_messages
-                if recent_messages is not None
-                else conversation_history
-            )
-            history = [
-                types.Content(
-                    role="user" if msg["role"] == "user" else "model",
-                    parts=[types.Part(text=msg["content"])],
+        # --- Gemini path ---
+        client = _get_client()
+        if client is not None:
+            try:
+                history = [
+                    types.Content(
+                        role="user" if msg["role"] == "user" else "model",
+                        parts=[types.Part(text=msg["content"])],
+                    )
+                    for msg in history_source
+                ]
+                history.append(
+                    types.Content(role="user", parts=[types.Part(text=user_message)])
                 )
-                for msg in history_source
-            ]
-            history.append(
-                types.Content(role="user", parts=[types.Part(text=user_message)])
-            )
+                response = _generate_content(
+                    client,
+                    model=self.model_name,
+                    contents=history,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=0.9,
+                        max_output_tokens=2000,
+                        http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
+                    ),
+                )
+                return response.text
+            except Exception as e:
+                print(f"Gemini chat 錯誤：{e}")
+                if _is_retryable_gemini_error(e):
+                    oai = self._try_openai_chat(system_prompt, history_source, user_message,
+                                                reason=str(e)[:80])
+                    if oai is not None:
+                        return oai
+                return self._keyword_chat_fallback(profile, user_message, active_persona)
 
-            response = _generate_content(
-                client,
-                model=self.model_name,
-                contents=history,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    temperature=0.9,
-                    max_output_tokens=2000,
-                    http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
-                ),
-            )
-            return response.text
+        # --- OpenAI fallback ---
+        oai = self._try_openai_chat(system_prompt, history_source, user_message,
+                                    reason="Gemini client 未設定")
+        if oai is not None:
+            return oai
 
-        except Exception as e:
-            print(f"LLM 錯誤：{e}")
-            return "抱歉，我剛剛沒聽清楚，可以再說一次嗎？"
+        return self._keyword_chat_fallback(profile, user_message, active_persona)
 
     def stream_chat(
         self,
@@ -528,19 +686,6 @@ class LLMService:
         similar_memories: list = None,
         active_persona: dict = None,
     ):
-        client = _get_client()
-        if client is None:
-            yield self.chat(
-                profile=profile,
-                conversation_history=conversation_history,
-                user_message=user_message,
-                recent_messages=recent_messages,
-                important_memories=important_memories,
-                similar_memories=similar_memories,
-                active_persona=active_persona,
-            )
-            return
-
         system_prompt = self.build_system_prompt(
             profile,
             recent_messages=recent_messages,
@@ -549,64 +694,122 @@ class LLMService:
             active_persona=active_persona,
         )
         history_source = (
-            recent_messages
-            if recent_messages is not None
-            else conversation_history
-        )
-        history = [
-            types.Content(
-                role="user" if msg["role"] == "user" else "model",
-                parts=[types.Part(text=msg["content"])],
-            )
-            for msg in history_source
-        ]
-        history.append(
-            types.Content(role="user", parts=[types.Part(text=user_message)])
+            recent_messages if recent_messages is not None else conversation_history
         )
 
-        yielded = False
-        try:
-            for response in _generate_content_stream(
-                client,
-                model=self.model_name,
-                contents=history,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    temperature=0.9,
-                    max_output_tokens=2000,
-                    thinking_config=types.ThinkingConfig(thinking_budget=512),
-                    http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
-                ),
-            ):
-                text = response.text or ""
-                if text:
-                    yielded = True
-                    yield text
-        except Exception as e:
-            print(f"LLM 串流錯誤：{e}")
-            fallback = self.chat(
-                profile=profile,
-                conversation_history=conversation_history,
-                user_message=user_message,
-                recent_messages=recent_messages,
-                important_memories=important_memories,
-                similar_memories=similar_memories,
-                active_persona=active_persona,
+        # --- Gemini streaming path ---
+        client = _get_client()
+        if client is not None:
+            history = [
+                types.Content(
+                    role="user" if msg["role"] == "user" else "model",
+                    parts=[types.Part(text=msg["content"])],
+                )
+                for msg in history_source
+            ]
+            history.append(
+                types.Content(role="user", parts=[types.Part(text=user_message)])
             )
-            yield fallback if not yielded else f"\n\n{fallback}"
+
+            yielded = False
+            try:
+                for response in _generate_content_stream(
+                    client,
+                    model=self.model_name,
+                    contents=history,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=0.9,
+                        max_output_tokens=2000,
+                        thinking_config=types.ThinkingConfig(thinking_budget=512),
+                        http_options=types.HttpOptions(timeout=LLM_TIMEOUT_MS),
+                    ),
+                ):
+                    text = response.text or ""
+                    if text:
+                        yielded = True
+                        yield text
+                return
+            except Exception as e:
+                print(f"Gemini stream 錯誤：{e}")
+                if _is_retryable_gemini_error(e) and not yielded:
+                    oc = _get_openai_client()
+                    if oc is not None:
+                        _warn_fallback("stream_chat", str(e)[:80])
+                        try:
+                            messages = _to_openai_messages(
+                                system_prompt, history_source, user_message
+                            )
+                            for text in _openai_generate_stream(
+                                oc, OPENAI_MODEL, messages,
+                                temperature=0.9, max_tokens=2000,
+                            ):
+                                yield text
+                            return
+                        except Exception as oe:
+                            print(f"[OpenAI fallback] stream 失敗：{oe}")
+
+                fallback = self._keyword_chat_fallback(
+                    profile, user_message, active_persona
+                )
+                yield fallback if not yielded else f"\n\n{fallback}"
+                return
+
+        # --- OpenAI streaming fallback (Gemini client is None) ---
+        oc = _get_openai_client()
+        if oc is not None:
+            _warn_fallback("stream_chat", "Gemini client 未設定")
+            try:
+                messages = _to_openai_messages(
+                    system_prompt, history_source, user_message
+                )
+                for text in _openai_generate_stream(
+                    oc, OPENAI_MODEL, messages,
+                    temperature=0.9, max_tokens=2000,
+                ):
+                    yield text
+                return
+            except Exception as e:
+                print(f"[OpenAI fallback] stream 失敗：{e}")
+
+        yield self._keyword_chat_fallback(profile, user_message, active_persona)
 
     # ------------------------------------------------------------------
     # Public: background generation helpers
     # ------------------------------------------------------------------
 
+    def _try_openai_simple(self, prompt: str, temperature=0.3,
+                           max_tokens=500, method: str = "unknown",
+                           reason: str = "Gemini 不可用") -> str | None:
+        """Generic OpenAI fallback for simple prompt→text methods."""
+        oc = _get_openai_client()
+        if oc is None:
+            return None
+        _warn_fallback(method, reason)
+        try:
+            resp = _openai_generate(
+                oc, OPENAI_MODEL,
+                [{"role": "user", "content": prompt}],
+                temperature=temperature, max_tokens=max_tokens,
+            )
+            text = resp.choices[0].message.content.strip()
+            print(f"[OpenAI fallback] 生成成功，長度：{len(text)}")
+            return text
+        except Exception as e:
+            print(f"[OpenAI fallback] 生成失敗：{e}")
+            return None
+
     def generate_memory_summary(self, events: list, name: str) -> str:
         """Summarise recent events into a caregiver-readable paragraph."""
-        client = _get_client()
-        if client is None:
-            if not events:
-                return f"{name} 近期沒有可彙整的對話事件。"
+        fallback_text = None
+        if not events:
+            fallback_text = f"{name} 近期沒有可彙整的對話事件。"
+        else:
             latest = events[-1]
-            return f"{name} 近期主要提到「{latest.get('event', '')}」，情緒狀態為 {latest.get('sentiment', 'neutral')}，建議照護者持續觀察。"
+            fallback_text = (
+                f"{name} 近期主要提到「{latest.get('event', '')}」，"
+                f"情緒狀態為 {latest.get('sentiment', 'neutral')}，建議照護者持續觀察。"
+            )
 
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         events_text = "\n".join(
@@ -631,13 +834,34 @@ class LLMService:
     - 第三人稱，自然口語，不列點
     - 只回傳摘要文字，不要標題或其他說明"""
 
-        response = _generate_content(
-            client,
-            model=self.model_name,
-            contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=500),
-        )
-        return response.text.strip()
+        # --- Gemini ---
+        client = _get_client()
+        if client is not None:
+            try:
+                response = _generate_content(
+                    client,
+                    model=self.model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.3, max_output_tokens=500,
+                    ),
+                )
+                return response.text.strip()
+            except Exception as e:
+                print(f"Gemini memory summary 錯誤：{e}")
+                if _is_retryable_gemini_error(e):
+                    oai = self._try_openai_simple(prompt, temperature=0.3, max_tokens=500,
+                                                  method="generate_memory_summary", reason=str(e)[:80])
+                    if oai is not None:
+                        return oai
+                return fallback_text
+
+        # --- OpenAI fallback ---
+        oai = self._try_openai_simple(prompt, temperature=0.3, max_tokens=500,
+                                      method="generate_memory_summary", reason="Gemini client 未設定")
+        if oai is not None:
+            return oai
+        return fallback_text
 
     def update_biography(
         self,
@@ -647,16 +871,11 @@ class LLMService:
         family_notes: list,
     ) -> str:
         """Merge new evidence into an existing elder biography."""
-        client = _get_client()
-        if client is None:
-            return existing_bio
-
         events_text = "\n".join(
             f"- {e.get('event', '')}（依據：{e.get('reason', '')}）"
             for e in important_events
         ) if important_events else "無"
 
-        # Coarse dedup: skip notes already verbatim in the bio
         filtered_notes = [
             n for n in family_notes
             if not (existing_bio and n.get("note", "") in existing_bio)
@@ -688,13 +907,34 @@ class LLMService:
     6. 繁體中文、第三人稱，維持像老朋友介紹般自然溫暖的台灣口吻。
     7. 只回傳更新後的文章本體，不要任何標題、前言或說明。"""
 
-        response = _generate_content(
-            client,
-            model=self.model_name,
-            contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.2, max_output_tokens=1000),
-        )
-        return response.text.strip()
+        # --- Gemini ---
+        client = _get_client()
+        if client is not None:
+            try:
+                response = _generate_content(
+                    client,
+                    model=self.model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.2, max_output_tokens=1000,
+                    ),
+                )
+                return response.text.strip()
+            except Exception as e:
+                print(f"Gemini biography update 錯誤：{e}")
+                if _is_retryable_gemini_error(e):
+                    oai = self._try_openai_simple(prompt, temperature=0.2, max_tokens=1000,
+                                                  method="update_biography", reason=str(e)[:80])
+                    if oai is not None:
+                        return oai
+                return existing_bio
+
+        # --- OpenAI fallback ---
+        oai = self._try_openai_simple(prompt, temperature=0.2, max_tokens=1000,
+                                      method="update_biography", reason="Gemini client 未設定")
+        if oai is not None:
+            return oai
+        return existing_bio
 
     def generate_persona_tone(
         self,
@@ -705,11 +945,11 @@ class LLMService:
         habits: list,
     ) -> str:
         """Generate a short speaking-style description for a persona."""
-        client = _get_client()
-        if client is None:
-            traits = "、".join(personality[:2]) if personality else "溫和"
-            habit = habits[0] if habits else "自然陪伴"
-            return f"像{name}這位{relation}，語氣{traits}，會{habit}。"
+        keyword_fallback = (
+            f"像{name}這位{relation}，語氣"
+            f"{'、'.join(personality[:2]) if personality else '溫和'}，"
+            f"會{habits[0] if habits else '自然陪伴'}。"
+        )
 
         prompt = f"""根據以下資料，生成一段「說話風格描述」供 AI 扮演參考：
 
@@ -725,10 +965,31 @@ class LLMService:
 - 融合關係和個性，自然口語
 - 只回傳描述文字，不要標題或說明"""
 
-        response = _generate_content(
-            client,
-            model=self.model_name,
-            contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.3, max_output_tokens=200),
-        )
-        return response.text.strip()
+        # --- Gemini ---
+        client = _get_client()
+        if client is not None:
+            try:
+                response = _generate_content(
+                    client,
+                    model=self.model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.3, max_output_tokens=200,
+                    ),
+                )
+                return response.text.strip()
+            except Exception as e:
+                print(f"Gemini persona tone 錯誤：{e}")
+                if _is_retryable_gemini_error(e):
+                    oai = self._try_openai_simple(prompt, temperature=0.3, max_tokens=200,
+                                                  method="generate_persona_tone", reason=str(e)[:80])
+                    if oai is not None:
+                        return oai
+                return keyword_fallback
+
+        # --- OpenAI fallback ---
+        oai = self._try_openai_simple(prompt, temperature=0.3, max_tokens=200,
+                                      method="generate_persona_tone", reason="Gemini client 未設定")
+        if oai is not None:
+            return oai
+        return keyword_fallback

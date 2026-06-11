@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -73,7 +74,7 @@ class HealthSearchService:
                 "title": best.get("title", "健康衛教資訊"),
                 "summary": summary[:300],
                 "url": best.get("url", ""),
-                "source": best.get("url", "").split("/")[2] if best.get("url") else ""
+                "source": urlparse(best.get("url", "")).netloc if best.get("url") else ""
             }
 
         except Exception as e:

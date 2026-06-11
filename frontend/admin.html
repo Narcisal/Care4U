@@ -393,7 +393,26 @@
             </div>
             <div class="profile-tab-panel" data-profile-panel="basic">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div><label>姓名</label><input id="field-name" type="text" placeholder="王大明"></div>
+                <!-- Row 1: 相片 | 姓名 | 年齡 -->
+                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr 1fr; gap: 20px; align-items: end;">
+                    <label style="cursor:pointer;display:block;text-align:center;margin-bottom:0;" title="點擊更換相片">
+                        <img id="elder-photo-preview" src="/static/avatars/elder_male_bg.png" alt="長者相片"
+                             style="width:72px;height:72px;border-radius:50%;object-fit:cover;
+                                    border:2px solid var(--palette-d6cec7);display:block;">
+                        <input id="elder-photo-input" type="file" accept=".png,.jpg,.jpeg,.webp"
+                               style="display:none;" onchange="uploadElderPhoto(this)">
+                    </label>
+                    <div><label>姓名</label><input id="field-name" type="text" placeholder="王大明"></div>
+                    <div>
+                        <label>出生年（西元）</label>
+                        <input id="field-birth-year" type="number" min="1900" max="2010" placeholder="例：1945">
+                    </div>
+                </div>
+                <!-- 隱藏的 status span（JS 用） -->
+                <span id="elder-photo-status" style="display:none;"></span>
+                <span id="quick-cognitive-status" style="display:none;"></span>
+                <span id="quick-active-persona" style="display:none;"></span>
+                <!-- Row 2: 性別 | 認知狀態 -->
                 <div><label>性別</label><select id="field-gender"><option value="male">男</option><option value="female">女</option></select></div>
                 <div>
                     <label>認知狀態</label>
@@ -403,6 +422,7 @@
                         <option value="moderate_dementia">中度認知障礙</option>
                     </select>
                 </div>
+                <!-- Row 3: 曾任職業 | 說話偏好 -->
                 <div><label>曾任職業</label><input id="field-job" type="text" placeholder="國中數學老師"></div>
                 <div><label>說話偏好</label><input id="field-tone" type="text" placeholder="尊敬且親切"></div>
                 <div style="grid-column: 1 / -1;">
@@ -1010,7 +1030,7 @@
 
 </div>
 <script>
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = window.location.origin;
 
 // ── Admin Basic-Auth interceptor ───────────────────────────────────────────────
 // All fetch() calls to API_BASE automatically include the stored Basic token.
@@ -1252,11 +1272,24 @@ async function loadDemoOverview() {
                 background:var(--palette-ffffff); border:1px solid var(--line); border-radius:8px;
                 padding:16px; min-height:180px; display:flex; flex-direction:column; gap:10px;
             `;
+            const elderPhotoFallback = (profile.gender === 'female')
+                ? '/static/avatars/elder_female_bg.png'
+                : '/static/avatars/elder_male_bg.png';
+            const elderPhotoSrc = profile.photo_path
+                ? `/static/avatars/${profile.photo_path}`
+                : elderPhotoFallback;
             card.innerHTML = `
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-                    <div>
-                        <div style="font-size:18px;font-weight:700;color:var(--ink);">${escapeHtml(profile.name || elder.name)}</div>
-                        <div style="font-size:13px;color:var(--muted);margin-top:2px;">${escapeHtml(profile.persona?.former_job || '')}</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <img src="${escapeHtml(elderPhotoSrc)}"
+                             alt="${escapeHtml(profile.name || elder.name)}"
+                             onerror="this.src='${elderPhotoFallback}'"
+                             style="width:44px;height:44px;border-radius:50%;object-fit:cover;
+                                    border:2px solid var(--palette-d6cec7);flex-shrink:0;">
+                        <div>
+                            <div style="font-size:18px;font-weight:700;color:var(--ink);">${escapeHtml(profile.name || elder.name)}</div>
+                            <div style="font-size:13px;color:var(--muted);margin-top:2px;">${escapeHtml(profile.persona?.former_job || '')}</div>
+                        </div>
                     </div>
                     <span class="badge ${hazardLevel === 'high' ? 'badge-high' : hazardLevel === 'medium' ? 'badge-warn' : 'badge-low'}">${hazardLevel === 'high' ? '高風險' : hazardLevel === 'medium' ? '須注意' : '正常'}</span>
                 </div>
@@ -1539,6 +1572,37 @@ async function loadElderData(elderId) {
         const profile = await res.json();
         if (requestSeq !== _loadElderSeq) return;
         document.getElementById('field-name').value = profile.name || '';
+        // 出生年
+        const birthYearInput = document.getElementById('field-birth-year');
+        if (birthYearInput) birthYearInput.value = profile.birth_year ?? '';
+        // 認知狀態 badge
+        const cogEl = document.getElementById('quick-cognitive-status');
+        if (cogEl) {
+            const cogMap = { normal: '正常', mild_dementia: '輕度認知障礙', moderate_dementia: '中度認知障礙' };
+            const cogColor = { normal: ['var(--palette-e8f5ec)', 'var(--palette-2d6a4f)'],
+                               mild_dementia: ['#fff3e0', '#b45309'],
+                               moderate_dementia: ['#fdecea', 'var(--palette-922b21)'] };
+            const status = profile.cognitive_status || 'normal';
+            cogEl.textContent = cogMap[status] || status;
+            const [bg, fg] = cogColor[status] || cogColor.normal;
+            cogEl.style.background = bg; cogEl.style.color = fg;
+        }
+        // 長者相片預覽
+        const photoPreview = document.getElementById('elder-photo-preview');
+        const photoStatus = document.getElementById('elder-photo-status');
+        if (photoPreview && photoStatus) {
+            const fallback = (profile.gender === 'female')
+                ? '/static/avatars/elder_female_bg.png'
+                : '/static/avatars/elder_male_bg.png';
+            if (profile.photo_path) {
+                photoPreview.src = `/static/avatars/${profile.photo_path}`;
+                photoStatus.textContent = profile.photo_path.split('/').pop();
+            } else {
+                photoPreview.src = fallback;
+                photoStatus.textContent = '尚未上傳';
+            }
+            photoPreview.onerror = () => { photoPreview.src = fallback; };
+        }
         document.getElementById('field-gender').value = profile.gender || 'male';
         document.getElementById('field-cognitive-status').value = profile.cognitive_status || 'normal';
         document.getElementById('field-job').value = profile.persona?.former_job || '';
@@ -1552,7 +1616,12 @@ async function loadElderData(elderId) {
             () => requestSeq === _loadElderSeq
         );
         if (requestSeq !== _loadElderSeq) return;
-
+        // 目前陪伴者（persona select 已填好後才讀）
+        const personaSel = document.getElementById('field-active-persona');
+        const personaEl = document.getElementById('quick-active-persona');
+        if (personaSel && personaEl) {
+            personaEl.textContent = personaSel.options[personaSel.selectedIndex]?.text || '—';
+        }
 
         // 顯示生平資料
         const bioSection = document.getElementById('biography-section');
@@ -1656,6 +1725,7 @@ async function saveElderProfile() {
                 sensitivity: document.getElementById('field-sensitivity').value,
                 diet: document.getElementById('field-diet').value,
                 active_persona: document.getElementById('field-active-persona').value,
+                birth_year: document.getElementById('field-birth-year').value ? parseInt(document.getElementById('field-birth-year').value) : null,
             })
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -3006,6 +3076,35 @@ async function uploadPersonaAvatar(elderId, personaId, file) {
         msgEl.textContent = '照片上傳失敗';
         showToast('照片上傳失敗，請確認檔案格式。', 'error');
         console.error('照片上傳失敗', e);
+    }
+}
+
+async function uploadElderPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const elderId = document.getElementById('elder-select').value;
+    const statusEl = document.getElementById('elder-photo-status');
+    const previewEl = document.getElementById('elder-photo-preview');
+    statusEl.textContent = '上傳中...';
+    try {
+        const formData = new FormData();
+        formData.append('elder_id', elderId);
+        formData.append('photo', file);
+        const res = await fetch(`${API_BASE}/api/profile/upload-elder-photo`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        previewEl.src = `/static/avatars/${data.photo_path}?t=${Date.now()}`;
+        statusEl.textContent = data.photo_path.split('/').pop();
+        showToast('長者相片已上傳', 'success');
+    } catch (e) {
+        statusEl.textContent = '上傳失敗';
+        showToast('相片上傳失敗，請確認檔案格式。', 'error');
+        console.error('長者相片上傳失敗', e);
+    } finally {
+        input.value = '';
     }
 }
 

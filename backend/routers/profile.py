@@ -35,6 +35,7 @@ def build_router(handlers: Mapping[str, Callable]) -> APIRouter:
             "/api/profile/family-note/delete",
             "delete_family_note",
         ),
+        ("POST", "/api/profile/upload-elder-photo", "upload_elder_photo"),
     ]
     for method, path, name in routes:
         router.add_api_route(path, handlers[name], methods=[method])

@@ -272,7 +272,7 @@ class VectorMemoryStore(MemoryManager):
     ) -> list:
         with self._get_conn() as conn:
             if conn is None:
-                return self._json.get_important_memories(elder_id, importance_threshold, limit)
+                return self._json.get_important_memories(elder_id, importance_threshold, limit, persona_id)
             try:
                 params: list = [elder_id, importance_threshold]
                 persona_clause = ""

@@ -255,6 +255,7 @@ class JsonMemoryStore(MemoryManager):
             "cognitive_status",
             "persona",
             "health_notes",
+            "birth_year",
         }
         if not set(fields_dict).issubset(allowed_fields):
             return False
@@ -467,11 +468,17 @@ class JsonMemoryStore(MemoryManager):
         elder_id: str,
         importance_threshold: float = 0.7,
         limit: int = 10,
+        persona_id: str = None,
     ) -> list:
         profile = self.get_profile(elder_id)
         important = [
             e for e in profile.get("recent_events", [])
             if e.get("importance", 0) >= importance_threshold
+            and (
+                not persona_id
+                or persona_id == "ai"
+                or e.get("persona_id") in (None, "ai", persona_id)
+            )
         ]
         important.sort(key=lambda x: x.get("importance", 0), reverse=True)
         return important[:limit]

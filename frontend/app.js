@@ -19,6 +19,7 @@ let isRecording = false;
 let currentPersonaAvatar = "/static/avatars/ai_assistant_nobg.png";
 let currentElderAvatar = "/static/avatars/elder_male_nobg.png";
 let isBusy = false;
+let isSpeaking = false;  // true only while TTS audio is actually playing
 let isLoadingSwitcher = false;
 let isEnteringChat = false;
 let backgroundPollSeq = 0;
@@ -258,13 +259,17 @@ class StreamingTTSQueue {
         const lbl      = document.getElementById("status-label");
         const pname    = document.getElementById("persona-portrait-name");
         // 開始說話動畫
+        isSpeaking = true;
         if (portrait) portrait.classList.add("speaking");
         if (ring1) ring1.classList.add("active");
         if (ring2) ring2.classList.add("active");
         if (lbl && pname) { lbl.textContent = `${pname.textContent} 正在回你`; lbl.className = "status-label speaking"; }
         // 依序播放每一句（fetch 已提前並行執行）
-        for (const p of this._pending) await playAudioBlob(await p);
+        for (const p of this._pending) {
+            try { await playAudioBlob(await p); } catch (e) { console.warn("TTS play failed:", e); }
+        }
         // 結束動畫
+        isSpeaking = false;
         if (portrait) portrait.classList.remove("speaking");
         if (ring1) ring1.classList.remove("active");
         if (ring2) ring2.classList.remove("active");
@@ -558,6 +563,7 @@ async function sendAudioToSTT(audioBlob) {
             method: "POST",
             body: formData
         });
+        if (!res.ok) throw new Error(`STT HTTP ${res.status}`);
         const data = await res.json();
         document.getElementById("recording-indicator").classList.remove("active");
         if (data.stt_error === true) {
@@ -961,6 +967,7 @@ async function speakText(text, emotion = "normal") {
         const ring1 = document.getElementById("speaking-ring-1");
         const ring2 = document.getElementById("speaking-ring-2");
         const resetSpeaking = () => {
+            isSpeaking = false;
             if (portrait) portrait.classList.remove("speaking");
             if (ring1) ring1.classList.remove("active");
             if (ring2) ring2.classList.remove("active");
@@ -968,6 +975,7 @@ async function speakText(text, emotion = "normal") {
         };
         try {
             // 開始說話：加光暈
+            isSpeaking = true;
             if (portrait) portrait.classList.add("speaking");
             if (ring1) ring1.classList.add("active");
             if (ring2) ring2.classList.add("active");
@@ -1268,7 +1276,7 @@ async function startVAD() {
             const volume = data.reduce((a, b) => a + b) / data.length;
 
             if (volume > 15 && !vadRecording) {
-                if (isBusy) {
+                if (isSpeaking) {
                     const lbl = document.getElementById('status-label');
                     if (lbl && lbl.textContent !== '等我說完再說吧') {
                         lbl.textContent = '等我說完再說吧';

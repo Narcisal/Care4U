@@ -140,7 +140,7 @@ Caregiver Admin UI
 | `W001` | 王大明 Wang Daming | Retired engineer, Teresa Teng fan, chess; safety-alert demo |
 | `C001` | 陳秀英 Chen Xiuying | Retired teacher, gardening, cooking, family warmth |
 | `L001` | 林月琴 Lin Yueqin | Former tailor, mild dementia care scenario |
-| `Z001` | (Extended demo) | Rich biographical events; multi-persona RAG benchmark |
+| `Z001` | (Extended demo) | Rich biographical events; multi-persona RAG benchmark. Add to `ALLOWED_ELDER_IDS` to enable. |
 
 ---
 
@@ -166,7 +166,7 @@ Care4U_codex/
 │   │   ├── llm_service.py       Gemini 2.5 Flash integration; chat, streaming, embedding
 │   │   ├── stt_service.py       Whisper + BreezeVoice ASR; pooled workers
 │   │   ├── tts_service.py       XTTS → LuxTTS → edge-tts → Windows SAPI fallback chain
-│   │   └── embedding_service.py Gemini text-embedding-004 (3072-dim)
+│   │   └── embedding_service.py Gemini gemini-embedding-2 (3072-dim)
 │   ├── memory/
 │   │   ├── json_store.py        JSON-based profile, event, and conversation storage
 │   │   └── vector_store.py      PostgreSQL + pgvector with DISTINCT ON deduplication
@@ -222,7 +222,7 @@ For full RAG functionality, also enable PostgreSQL:
 ```env
 DB_ENABLED=true
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=5433
 DB_NAME=aicaeru
 DB_USER=postgres
 DB_PASSWORD=your_password
@@ -578,7 +578,7 @@ LIMIT 5;
 
 High-importance events (importance ≥ 0.7) are injected separately, ensuring significant life events are always present in the prompt regardless of query relevance.
 
-**Embedding model:** `text-embedding-004` (Google), 3072 dimensions
+**Embedding model:** `gemini-embedding-2` (Google), 3072 dimensions
 
 ---
 

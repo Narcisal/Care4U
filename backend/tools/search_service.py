@@ -262,7 +262,10 @@ class SearchService:
             from google import genai
             from google.genai import types
 
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            api_key = os.getenv("GEMINI_API_KEY")
+            if not api_key:
+                return ""
+            client = genai.Client(api_key=api_key)
 
             gender_text = "男性長者" if gender == "male" else "女性長者"
             hobbies_str = "、".join(hobbies) if hobbies else "（未填寫）"

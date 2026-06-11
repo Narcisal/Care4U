@@ -315,6 +315,7 @@ class ElderProfileUpdate(ValidatedRequest):
     diet: str
     cognitive_status: str = "normal"
     active_persona: Optional[str] = None
+    birth_year: Optional[int] = None
 
     @field_validator("active_persona")
     @classmethod
@@ -1522,7 +1523,7 @@ def get_agent_logs(_: dict = Depends(require_caregiver)):
 async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregiver)):
     try:
         memory = VectorMemoryStore()
-        updated = memory.update_basic_fields(req.elder_id, {
+        fields: dict = {
             "name": req.name,
             "gender": req.gender,
             "cognitive_status": req.cognitive_status,
@@ -1535,7 +1536,10 @@ async def save_profile(req: ElderProfileUpdate, _: dict = Depends(require_caregi
                 "sensitivity": [s.strip() for s in req.sensitivity.split("、") if s.strip()],
                 "diet": req.diet,
             },
-        })
+        }
+        if req.birth_year is not None:
+            fields["birth_year"] = req.birth_year
+        updated = memory.update_basic_fields(req.elder_id, fields)
         if not updated:
             raise RuntimeError("長者資料儲存失敗")
         if req.active_persona:
@@ -1840,7 +1844,7 @@ async def upload_avatar(
         if persona is None:
             raise HTTPException(status_code=404, detail="找不到此人格")
 
-        avatars_dir = Path("frontend/avatars/personas")
+        avatars_dir = Path(__file__).parent.parent / "frontend" / "avatars" / "personas"
         avatars_dir.mkdir(parents=True, exist_ok=True)
         avatar_filename = f"{elder_id}_{persona_id}{suffix}"
         avatar_path = avatars_dir / avatar_filename
@@ -1881,6 +1885,60 @@ async def upload_avatar(
             "avatar_path": f"personas/{avatar_filename}",
         }
 
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def upload_elder_photo(
+    elder_id: str = Form(...),
+    photo: UploadFile = File(...),
+    _: dict = Depends(require_caregiver),
+):
+    try:
+        elder_id = validate_elder_id(elder_id)
+        suffix = Path(photo.filename or "").suffix.lower()
+        if suffix not in {".png", ".jpg", ".jpeg", ".webp"}:
+            raise HTTPException(status_code=400, detail="只支援 png、jpg、jpeg、webp")
+
+        photos_dir = Path(__file__).parent.parent / "frontend" / "avatars" / "elders"
+        photos_dir.mkdir(parents=True, exist_ok=True)
+        photo_filename = f"{elder_id}{suffix}"
+        photo_path_full = photos_dir / photo_filename
+        temp_path = photo_path_full.with_name(
+            f".{photo_path_full.name}.{secrets.token_hex(8)}.tmp"
+        )
+        memory = VectorMemoryStore()
+        profile = dict(memory.get_profile(elder_id) or {})
+        if not profile.get("name"):
+            raise HTTPException(status_code=404, detail="找不到此長者")
+        old_photo_path = profile.get("photo_path")
+        metadata_changed = False
+        try:
+            with open(temp_path, "wb") as f:
+                shutil.copyfileobj(photo.file, f)
+            profile["photo_path"] = f"elders/{photo_filename}"
+            metadata_changed = memory.save_profile(elder_id, profile)
+            if not metadata_changed:
+                raise RuntimeError("長者照片資料儲存失敗")
+            os.replace(temp_path, photo_path_full)
+        except Exception:
+            if metadata_changed:
+                profile["photo_path"] = old_photo_path
+                memory.save_profile(elder_id, profile)
+            raise
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+        _reset_elder_state(elder_id)
+        return {
+            "success": True,
+            "message": "長者照片已上傳",
+            "photo_path": f"elders/{photo_filename}",
+        }
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except HTTPException:
@@ -1997,6 +2055,7 @@ app.include_router(
             "biography_preview_new": biography_preview_new,
             "add_family_note": add_family_note,
             "delete_family_note": delete_family_note,
+            "upload_elder_photo": upload_elder_photo,
         }
     )
 )
