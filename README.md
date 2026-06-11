@@ -10,7 +10,7 @@
 
 Care4U is an AI companion system built for Taiwanese long-term care scenarios. It enables older adults to have warm, personalized conversations with AI companions modeled after their family members, while giving caregivers a professional dashboard for safety monitoring and profile management.
 
-The system is designed to run entirely on a single local machine — no cloud infrastructure required beyond the Gemini API key.
+The system is designed to run entirely on a single local machine — no cloud infrastructure required beyond the Gemini API key (optional OpenAI key enables automatic fallback).
 
 **Key achievements:**
 - RAG memory recall rate: **97.1%**
@@ -113,7 +113,7 @@ Elder Voice / Text Input
         │         └── Health Search Tool     ──→ health-topic background info (background async)
         │
         ├─── TTS Service
-        │         └── XTTS → LuxTTS → edge-tts → Windows SAPI (priority fallback chain)
+        │         └── XTTS (circuit breaker + auto-restart) → LuxTTS → edge-tts → Windows SAPI
         │
         └─── STT Service
                   └── Whisper / BreezeVoice ASR
@@ -125,7 +125,7 @@ Caregiver Admin UI
 
 ### Agent Components
 
-**MagicAI** — The conversation agent. Builds responses using the elder profile, active companion persona, family notes, biography, recent memories, and RAG-retrieved similar memories. Streams output token-by-token. Keeps up to **50 conversation turns** in memory per session (older turns are trimmed automatically).
+**MagicAI** — The conversation agent. Builds responses using the elder profile, active companion persona, family notes, biography, recent memories, and RAG-retrieved similar memories. Streams output token-by-token. Keeps up to **50 conversation turns** in memory per session (older turns are trimmed automatically). LLM fallback chain: **Gemini → OpenAI GPT-4o-mini → keyword hardcoded responses**. Fallback triggers only on retryable errors (503, rate limit, timeout); prompt-level errors do not trigger fallback.
 
 **iSafe** — The safety classifier. Runs in a parallel thread; uses a fast keyword check for Level 3 emergencies and an LLM classification for Levels 0–2. Produces `escalation_level`, `emotion`, `sentiment`, and optional `trend_alert`. Trend alerts have a **2-hour cooldown** to prevent duplicate notifications.
 
@@ -163,9 +163,9 @@ Care4U_codex/
 │   │   ├── profile.py           Profile CRUD, biography draft, safety event, family notes
 │   │   └── speech.py            STT and TTS endpoints
 │   ├── services/
-│   │   ├── llm_service.py       Gemini 2.5 Flash integration; chat, streaming, embedding
+│   │   ├── llm_service.py       Gemini → OpenAI fallback; chat, streaming, emotion analysis
 │   │   ├── stt_service.py       Whisper + BreezeVoice ASR; pooled workers
-│   │   ├── tts_service.py       XTTS → LuxTTS → edge-tts → Windows SAPI fallback chain
+│   │   ├── tts_service.py       XTTS (circuit breaker) → edge-tts → SAPI; emoji stripping
 │   │   └── embedding_service.py Gemini gemini-embedding-2 (3072-dim)
 │   ├── memory/
 │   │   ├── json_store.py        JSON-based profile, event, and conversation storage
@@ -261,37 +261,28 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 |---|---|---|
 | `GEMINI_API_KEY` | — | Required for chat, embeddings, image generation |
 | `TAVILY_API_KEY` | — | Optional; enables biography web research |
-| `CARE4U_DEMO_MODE` | `true` | `true` disables AI image generation and relaxes auth; set `false` for full demo |
-| `MAGIC_MODEL` | `gemini-2.5-pro` | Model for MagicAI conversation |
-| `ISAFE_MODEL` | `gemini-2.0-flash` | Lightweight model for iSafe classification |
+| `OPENAI_API_KEY` | — | Optional; enables OpenAI GPT fallback when Gemini is unavailable |
+| `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model used for fallback |
+| `CARE4U_DEMO_MODE` | `false` | `true` disables AI image generation; set `false` for full demo |
+| `MAGIC_MODEL` | `gemini-2.5-flash` | Model for MagicAI conversation |
+| `ISAFE_MODEL` | `gemini-2.5-flash` | Lightweight model for iSafe classification |
 | `LLM_TIMEOUT_MS` | `15000` | Timeout (ms) for a single Gemini API call |
-| `LLM_MAX_CONCURRENT` | `4` | Max simultaneous Gemini requests |
-| `ALLOWED_ELDER_IDS` | `W001,C001,L001` | Comma-separated list of elder IDs allowed to log in |
-| `ALLOWED_ORIGINS` | `*` (in demo mode) | CORS allowed origins |
-| `CARE4U_DEMO_AUTH_ROLE` | `admin` | Role granted automatically to localhost in demo mode |
+| `LLM_MAX_CONCURRENT` | `4` | Max simultaneous LLM requests (shared by Gemini + OpenAI) |
+| `ALLOWED_ELDER_IDS` | `W001,C001,L001,Z001` | Comma-separated list of elder IDs allowed to log in |
 | `DB_ENABLED` | `false` | Enable PostgreSQL + pgvector |
 | `DB_HOST` | `localhost` | PostgreSQL host |
 | `DB_PORT` | `5433` | PostgreSQL port |
 | `DB_NAME` | `aicaeru` | Database name |
 | `DB_USER` | `postgres` | Database user |
 | `DB_PASSWORD` | — | Database password |
-| `DB_POOL_MAX` | `5` | Max PostgreSQL connections in the shared pool |
 | `XTTS_URL` | `http://localhost:8082` | XTTS v2 voice cloning API endpoint |
-| `LUXTTS_URL` | `http://localhost:8081` | LuxTTS local neural TTS endpoint |
+| `XTTS_RESTART_SCRIPT` | — | Absolute path to `restart_xtts.ps1`; enables auto-restart on CUDA crash |
 | `BREEZYVOICE_URL` | `http://localhost:8080` | BreezeVoice ASR endpoint |
 | `STT_POOL_SIZE` | `1` | Number of concurrent STT workers |
-| `STT_MODEL_SIZE` | `medium` | Whisper model size |
-| `STT_DEVICE` | `cuda` | `cuda` or `cpu` |
-| `AGENT_EXECUTOR_WORKERS` | `4` | Thread pool workers for parallel agent execution |
+| `STT_MODEL_SIZE` | `small` | Whisper model size |
+| `STT_DEVICE` | `cpu` | `cuda` or `cpu` |
 | `MAX_SESSIONS` | `100` | Max concurrent elder sessions; oldest session evicted when exceeded (LRU) |
-| `ADMIN_USERNAME` | `admin` | Admin dashboard username |
-| `ADMIN_PASSWORD` | — | Enables Basic Auth when set |
-| `ADMIN_USERS` | — | JSON map for multiple admin users and roles |
-
-**Admin roles:**
-- `viewer` — read-only access to profiles and personas
-- `caregiver` — read + update care data
-- `admin` — full access including session management
+| `ADMIN_PASSWORD` | — | Enables admin auth when set |
 
 ---
 
@@ -368,13 +359,20 @@ For each AI response, TTS is attempted in this order:
 | Priority | Engine | Port | Notes |
 |---|---|---|---|
 | 1 | **XTTS v2** | 8082 | Voice cloning using the uploaded `.wav` sample; most natural |
-| 2 | **LuxTTS** | 8081 | Local neural TTS; no voice sample required |
-| 3 | **edge-tts** | — | Microsoft cloud TTS; emotion-aware prosody (rate/pitch/volume adjusted per detected emotion) |
-| 4 | **Windows SAPI** | — | Offline fallback; always available on Windows |
+| 2 | **edge-tts** | — | Microsoft cloud TTS; emotion-aware prosody (rate/pitch/volume adjusted per detected emotion) |
+| 3 | **Windows SAPI** | — | Offline fallback; always available on Windows |
 
 The system tries each engine in sequence and moves to the next if the current one is unreachable or returns an error. This ensures TTS never fails silently during a demo.
 
 Voice samples are uploaded through the caregiver admin dashboard as `.wav` files (16 kHz, mono recommended). XTTS requires a voice sample; the other engines work without one.
+
+**XTTS circuit breaker and auto-restart:**
+- Text is split into chunks of max **40 characters** before sending to XTTS (Chinese tokenizer limitation)
+- Emoji and special characters are stripped at three layers: LLM prompt prohibition → backend `_strip_emoji()` → frontend `stripEmoji()`
+- After **2 consecutive failures**, XTTS is bypassed for a cooldown period and edge-tts handles all requests
+- On CUDA crash (device-side assert), the XTTS process calls `os._exit(1)` and the `run_loop.py` wrapper auto-restarts it
+- A background health probe detects when XTTS is back online and clears the cooldown immediately
+- Set `XTTS_RESTART_SCRIPT` in `.env` to enable the Care4U-side restart trigger
 
 **edge-tts emotion prosody mapping:**
 

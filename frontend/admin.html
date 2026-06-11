@@ -1042,7 +1042,14 @@ window.fetch = function (url, opts = {}) {
         h.set('Authorization', `Basic ${token}`);
         opts = { ...opts, headers: h };
     }
-    return _rawFetch(url, opts);
+    return _rawFetch(url, opts).then(res => {
+        if (res.status === 401 && String(url).startsWith(API_BASE)) {
+            sessionStorage.removeItem('care4u_admin_token');
+            if (_emergencyInterval) { clearInterval(_emergencyInterval); _emergencyInterval = null; }
+            showLoginModal();
+        }
+        return res;
+    });
 };
 
 function _checkAdminMe(token) {
@@ -3136,8 +3143,8 @@ function openAddElderModal() {
     // 重置表單
     document.getElementById('aem-name').value = '';
     document.getElementById('aem-birth-year').value = '';
-    document.getElementById('aem-hometown').value = '';
     document.getElementById('aem-job').value = '';
+    document.getElementById('aem-tone').value = '';
     document.getElementById('aem-hobbies').value = '';
     document.getElementById('aem-hints').value = '';
     document.getElementById('aem-family').value = '';
@@ -3195,8 +3202,8 @@ async function generateAemBiography() {
             name,
             gender:         document.getElementById('aem-gender').value,
             birth_year:     parseInt(document.getElementById('aem-birth-year').value) || null,
-            hometown:       document.getElementById('aem-hometown').value.trim(),
             job:            document.getElementById('aem-job').value.trim(),
+            tone_preference: document.getElementById('aem-tone').value.trim(),
             hobbies:        document.getElementById('aem-hobbies').value.split(/[,，、]/).map(s => s.trim()).filter(Boolean),
             family_members: parseAemFamily(document.getElementById('aem-family').value),
             hints:          document.getElementById('aem-hints').value.trim(),
@@ -3233,9 +3240,9 @@ async function submitNewElder() {
             name,
             gender:         document.getElementById('aem-gender').value,
             birth_year:     parseInt(document.getElementById('aem-birth-year').value) || null,
-            hometown:       document.getElementById('aem-hometown').value.trim(),
             cognitive_status: document.getElementById('aem-cognitive-status').value,
             job:            document.getElementById('aem-job').value.trim(),
+            tone_preference: document.getElementById('aem-tone').value.trim(),
             hobbies:        document.getElementById('aem-hobbies').value.split(/[,，、]/).map(s => s.trim()).filter(Boolean),
             family_members: parseAemFamily(document.getElementById('aem-family').value),
             hints:          document.getElementById('aem-hints').value.trim(),
@@ -3305,14 +3312,14 @@ async function submitNewElder() {
       </div>
 
       <div>
-        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">家鄉</label>
-        <input id="aem-hometown" type="text" placeholder="例：台南市"
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">曾任職業</label>
+        <input id="aem-job" type="text" placeholder="例：臺鐵火車司機"
           style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
       </div>
 
-      <div style="grid-column:1/3;">
-        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">曾任職業</label>
-        <input id="aem-job" type="text" placeholder="例：臺鐵火車司機"
+      <div>
+        <label style="font-size:13px; color:var(--muted); display:block; margin-bottom:4px;">說話偏好</label>
+        <input id="aem-tone" type="text" placeholder="例：尊敬且親切"
           style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:var(--surface-soft); box-sizing:border-box;">
       </div>
 

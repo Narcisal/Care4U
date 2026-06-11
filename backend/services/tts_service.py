@@ -4,11 +4,15 @@ import edge_tts
 import io
 import json
 import os
+import re
 import requests
+import struct
 import subprocess
 import tempfile
 import threading
 import time
+
+XTTS_MAX_CHARS = 40  # XTTS 單次最大輸入字元數（中文需要更短避免 tokenizer OOB）
 
 BREEZYVOICE_URL = os.getenv("BREEZYVOICE_URL", "http://localhost:8080")
 LUXTTS_URL = os.getenv("LUXTTS_URL", "http://localhost:8081")
@@ -18,8 +22,9 @@ XTTS_URL = os.getenv("XTTS_URL", "http://localhost:8082")
 _xtts_lock = threading.Lock()
 _xtts_fail_count: int = 0
 _xtts_broken_until: float = 0.0
+_xtts_restarting: bool = False   # debounce: only one restart at a time
 XTTS_FAIL_THRESHOLD = 2   # trip after this many consecutive failures
-XTTS_COOLDOWN_SEC = 90    # seconds to skip XTTS after tripping
+XTTS_COOLDOWN_SEC = 120   # seconds to skip XTTS after tripping (restart+reload ~60s)
 
 
 def _record_xtts_failure() -> bytes:
@@ -38,20 +43,59 @@ def _record_xtts_failure() -> bytes:
 
 
 def _trigger_xtts_restart():
+    global _xtts_restarting
     script = os.getenv("XTTS_RESTART_SCRIPT", "")
     if not script:
+        print("XTTS_RESTART_SCRIPT 未設定，無法自動重啟")
         return
+    with _xtts_lock:
+        if _xtts_restarting:
+            print("XTTS 重啟已在進行中，跳過重複觸發")
+            return
+        _xtts_restarting = True
 
     def _run():
+        global _xtts_restarting, _xtts_broken_until
         try:
-            subprocess.run(
+            print(f"正在執行 XTTS 重啟腳本：{script}")
+            completed = subprocess.run(
                 ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script],
-                timeout=15,
+                timeout=30,
                 capture_output=True,
             )
-            print(f"XTTS 重啟腳本執行完畢：{script}")
+            stdout = completed.stdout.decode(errors="ignore").strip()
+            stderr = completed.stderr.decode(errors="ignore").strip()
+            if stdout:
+                print(f"XTTS restart stdout: {stdout}")
+            if stderr:
+                print(f"XTTS restart stderr: {stderr}")
+
+            print("等待 XTTS 重新載入模型...")
+            for attempt in range(20):
+                time.sleep(5)
+                try:
+                    probe = requests.get(
+                        XTTS_URL,
+                        timeout=5,
+                    )
+                    if probe.status_code < 500:
+                        print(f"XTTS 重啟成功（第 {attempt+1} 次探測，status={probe.status_code}）")
+                        with _xtts_lock:
+                            _xtts_broken_until = 0.0
+                        return
+                except requests.ConnectionError:
+                    pass
+                except Exception:
+                    pass
+                print(f"XTTS 尚未就緒（探測 {attempt+1}/20）")
+            print("XTTS 重啟後仍未就緒，保持冷卻狀態")
+        except subprocess.TimeoutExpired:
+            print("XTTS 重啟腳本執行超時（30s）")
         except Exception as e:
             print(f"XTTS 重啟腳本失敗：{e}")
+        finally:
+            with _xtts_lock:
+                _xtts_restarting = False
 
     threading.Thread(target=_run, daemon=True).start()
 
@@ -144,18 +188,57 @@ class TTSService:
             print(f"LuxTTS 錯誤：{e}")
             return b""
 
-    def _xtts_synthesize(self, text: str) -> bytes:
-        """Generate speech via XTTS v2 voice-cloning server."""
-        global _xtts_fail_count, _xtts_broken_until
-        with _xtts_lock:
-            remaining = _xtts_broken_until - time.time()
-            if remaining > 0:
-                print(f"XTTS 冷卻中，跳過（剩 {int(remaining)}s）")
-                return b""
+    @staticmethod
+    def _split_text_for_xtts(text: str, max_chars: int = XTTS_MAX_CHARS) -> list[str]:
+        """按標點切句，確保每塊不超過 max_chars 字元。"""
+        parts = re.split(r'(?<=[。！？；，、])', text)
+        chunks, current = [], ""
+        for part in parts:
+            if not part:
+                continue
+            if len(current) + len(part) <= max_chars:
+                current += part
+            else:
+                if current:
+                    chunks.append(current)
+                # 單段超長時硬切
+                while len(part) > max_chars:
+                    chunks.append(part[:max_chars])
+                    part = part[max_chars:]
+                current = part
+        if current:
+            chunks.append(current)
+        return chunks
 
-        if not self.voice_path:
-            print("XTTS 未設定聲音樣本，降級到 edge-tts")
+    @staticmethod
+    def _concat_wav(wav_parts: list[bytes]) -> bytes:
+        """拼接多段 WAV bytes（假設格式相同，僅更新大小欄位）。"""
+        if not wav_parts:
             return b""
+        if len(wav_parts) == 1:
+            return wav_parts[0]
+        header = wav_parts[0][:44]
+        pcm = b"".join(p[44:] for p in wav_parts)
+        header = (
+            header[:4]
+            + struct.pack("<I", 36 + len(pcm))
+            + header[8:40]
+            + struct.pack("<I", len(pcm))
+        )
+        return header + pcm
+
+    @staticmethod
+    def _is_valid_wav(data: bytes) -> bool:
+        """Check if data looks like a valid WAV with real audio content."""
+        if len(data) < 100:
+            return False
+        if data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+            return False
+        return True
+
+    def _xtts_synthesize_single(self, text: str) -> bytes:
+        """送單段文字到 XTTS，回傳 bytes；失敗回傳 b''。"""
+        global _xtts_fail_count
         try:
             payload = {
                 "text": text,
@@ -169,15 +252,70 @@ class TTSService:
                 timeout=30,
             )
             if res.status_code == 200:
-                print(f"XTTS 生成成功，長度：{len(res.content)} bytes")
+                if self._is_valid_wav(res.content):
+                    with _xtts_lock:
+                        _xtts_fail_count = 0
+                    return res.content
+                print(f"XTTS 返回 200 但音訊無效（{len(res.content)} bytes），視為 CUDA 損壞")
+                _trigger_xtts_restart()
                 with _xtts_lock:
+                    _xtts_broken_until = time.time() + XTTS_COOLDOWN_SEC
                     _xtts_fail_count = 0
-                return res.content
-            print(f"XTTS 失敗：{res.status_code}")
+                return b""
+            error_body = res.text or ""
+            print(f"XTTS 失敗：{res.status_code} {error_body[:200]}")
+            if res.status_code == 500:
+                print("XTTS 500 錯誤（可能 CUDA 損壞），立即觸發重啟")
+                _trigger_xtts_restart()
+                with _xtts_lock:
+                    _xtts_broken_until = time.time() + XTTS_COOLDOWN_SEC
+                    _xtts_fail_count = 0
+                return b""
             return _record_xtts_failure()
         except Exception as e:
+            err_str = str(e).lower()
             print(f"XTTS 錯誤：{e}")
+            if "cuda" in err_str or "assert" in err_str:
+                print("XTTS CUDA 例外，立即觸發重啟")
+                _trigger_xtts_restart()
+                with _xtts_lock:
+                    _xtts_broken_until = time.time() + XTTS_COOLDOWN_SEC
+                    _xtts_fail_count = 0
+                return b""
             return _record_xtts_failure()
+
+    def _xtts_synthesize(self, text: str) -> bytes:
+        """Generate speech via XTTS v2 voice-cloning server（自動切塊）。"""
+        with _xtts_lock:
+            if _xtts_restarting:
+                print("XTTS 重啟中，跳過")
+                return b""
+            remaining = _xtts_broken_until - time.time()
+            if remaining > 0:
+                print(f"XTTS 冷卻中，跳過（剩 {int(remaining)}s）")
+                return b""
+
+        if not self.voice_path:
+            print("XTTS 未設定聲音樣本，降級到 edge-tts")
+            return b""
+
+        chunks = self._split_text_for_xtts(text)
+        if len(chunks) == 1:
+            audio = self._xtts_synthesize_single(chunks[0])
+            if audio:
+                print(f"XTTS 生成成功，長度：{len(audio)} bytes")
+            return audio
+
+        print(f"XTTS 長句切塊：{len(chunks)} 段")
+        parts = []
+        for chunk in chunks:
+            audio = self._xtts_synthesize_single(chunk)
+            if not audio:
+                return b""  # 任何一塊失敗，整體降級
+            parts.append(audio)
+        combined = self._concat_wav(parts)
+        print(f"XTTS 拼接完成，總長度：{len(combined)} bytes")
+        return combined
 
     # ------------------------------------------------------------------
     # Edge-TTS (emotion-aware fallback)
@@ -256,7 +394,18 @@ $speaker.Dispose()
     # Public API
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _strip_emoji(text: str) -> str:
+        return re.sub(
+            r"[\U0001F300-\U0001FAFF\U00002702-\U000027B0\U0000FE00-\U0000FE0F"
+            r"\U0000200D\U00002600-\U000026FF\U0000231A-\U0000231B]+",
+            "", text,
+        ).strip()
+
     def synthesize(self, text: str, emotion: str = "normal") -> bytes:
+        text = self._strip_emoji(text)
+        if not text:
+            return b""
         try:
             if self.engine == "breezyvoice":
                 result = self._breezyvoice_synthesize(text)

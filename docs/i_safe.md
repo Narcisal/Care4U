@@ -55,7 +55,7 @@ Level 0 的三重條件（短句 + 安全詞 + 無 blocker）是為了防止 "�
 |------|------|
 | `emotion_history` | `list[str]`，最近 5 次情緒，用於趨勢分析 |
 | `active_persona_id` | 當前 persona，每次 `analyze()` 會重新讀取 |
-| `llm` | `LLMService`，使用 `ISAFE_MODEL`（預設 `gemini-2.0-flash`） |
+| `llm` | `LLMService`，使用 `ISAFE_MODEL`（預設 `gemini-2.5-flash`） |
 
 ---
 

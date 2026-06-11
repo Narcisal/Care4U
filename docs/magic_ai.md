@@ -24,7 +24,7 @@
 | `elder_id` | `str` | 永久 | 長者 ID |
 | `persona_id` | `str \| None` | 永久 | 建構時傳入 |
 | `_persona_key` | `str` | 永久 | `persona_id or "ai"`，用於對話歷史的檔案名 |
-| `llm` | `LLMService` | 永久 | 使用 `MAGIC_MODEL` 環境變數（預設 `gemini-2.5-pro`） |
+| `llm` | `LLMService` | 永久 | 使用 `MAGIC_MODEL` 環境變數（預設 `gemini-2.5-flash`） |
 | `memory` | `VectorMemoryStore` | 永久 | |
 | `embedding` | `EmbeddingService` | 永久 | |
 | `profile` | `dict` | 永久 | **初始化時讀取一次，之後不更新**（注意：不反映運行中的 profile 變更） |

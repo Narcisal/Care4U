@@ -175,8 +175,7 @@ class Decision:
                 self._log("Decision", "事件儲存失敗", str(e))
             return {
                 "message": (
-                    "這可能是緊急狀況。請先不要移動，立即呼叫附近照護人員"
-                    "或撥打 119。"
+                    "這可能是緊急狀況。請先不要移動，立即呼叫附近照護人員。"
                 ),
                 "emotion": "urgent",
                 "is_urgent": True,
@@ -215,7 +214,7 @@ class Decision:
         if escalation_level >= 2:
             response = (
                 f"{response}\n\n"
-                "請立即通知附近照護人員確認狀況；若有生命危險，請撥打 119。"
+                "請立即通知附近照護人員確認狀況。"
             )
 
         if escalation_level >= 2:
@@ -261,8 +260,7 @@ class Decision:
             except Exception as e:
                 self._log("Decision", "事件儲存失敗", str(e))
             message = (
-                "這可能是緊急狀況，請先保持安全並立即通知照護人員，"
-                "必要時撥打 119。"
+                "這可能是緊急狀況，請先保持安全並立即通知照護人員。"
             )
             yield {"type": "chunk", "chunk": message}
             yield {
@@ -329,10 +327,7 @@ class Decision:
         response = "".join(chunks)
 
         if escalation_level >= 2:
-            warning = (
-                "\n\n請立即通知照護人員；若症狀持續或情況危急，"
-                "請撥打 119。"
-            )
+            warning = "\n\n請立即通知照護人員確認狀況。"
             response += warning
             yield {"type": "chunk", "chunk": warning}
 

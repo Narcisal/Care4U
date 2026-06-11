@@ -18,6 +18,22 @@ _WHISPER_PROMPT = (
     "以及台灣常用詞彙如豆漿、象棋、鄧麗君。"
 )
 
+# Whisper 在靜音/環境音時常見幻覺句，命中即丟棄
+_HALLUCINATION_FRAGMENTS = [
+    "請不吝點贊", "訂閱", "打賞支持", "開啟小鈴鐺",
+    "明鏡", "謝謝收看", "感謝收看", "感謝觀看",
+    "字幕由", "翻譯：", "Thank you for watching",
+]
+# 送 Whisper 前的 RMS 能量門檻（低於此視為靜音）
+_MIN_RMS = 0.008
+
+
+def _is_hallucination(text: str) -> bool:
+    for frag in _HALLUCINATION_FRAGMENTS:
+        if frag in text:
+            return True
+    return False
+
 
 def get_stt_environment_status() -> dict:
     """Return dependency/cache readiness without loading heavy STT models."""
@@ -151,13 +167,21 @@ class STTService:
             print(f"Whisper 尚未可用：{self.whisper_error or '未載入'}")
             return ""
         audio_np = self._convert_to_numpy(audio_bytes)
+        rms = float(np.sqrt(np.mean(audio_np ** 2)))
+        if rms < _MIN_RMS:
+            print(f"音量過低（RMS={rms:.4f}），跳過 Whisper")
+            return ""
         result = self.model.transcribe(
             audio_np,
             language="zh",
             beam_size=5,
             initial_prompt=_WHISPER_PROMPT,
         )
-        return result.get("text", "").strip()
+        text = result.get("text", "").strip()
+        if _is_hallucination(text):
+            print(f"Whisper 幻覺過濾：{text!r}")
+            return ""
+        return text
 
     def _transcribe_whisper_with_timestamps(self, audio_bytes: bytes) -> dict:
         """Return full Whisper result dict (includes word_timestamps segments)."""
@@ -270,8 +294,22 @@ class STTService:
                     "error": self.whisper_error or "Whisper model 未載入",
                 }
 
-            result = self._transcribe_whisper_with_timestamps(audio_bytes)
+            audio_np = self._convert_to_numpy(audio_bytes)
+            rms = float(np.sqrt(np.mean(audio_np ** 2)))
+            if rms < _MIN_RMS:
+                print(f"音量過低（RMS={rms:.4f}），跳過 Whisper")
+                return {"text": "", "speech_rate": 0.0, "speed_emotion": "normal", "duration": 0.0}
+            result = self.model.transcribe(
+                audio_np,
+                language="zh",
+                beam_size=5,
+                initial_prompt=_WHISPER_PROMPT,
+                word_timestamps=True,
+            )
             text = result["text"].strip()
+            if _is_hallucination(text):
+                print(f"Whisper 幻覺過濾：{text!r}")
+                return {"text": "", "speech_rate": 0.0, "speed_emotion": "normal", "duration": 0.0}
             total_duration = result["segments"][-1]["end"] if result["segments"] else 0.0
             speech_rate = len(text) / total_duration if total_duration > 0 else 0.0
 

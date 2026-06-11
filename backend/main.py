@@ -344,6 +344,7 @@ class CreateElderRequest(BaseModel):
     cognitive_status: str = "normal"
     job: str = ""
     hobbies: list = []
+    tone_preference: str = ""
     family_members: list = []   # [{"relation": "兒子", "name": "志明"}, ...]
     hints: str = ""             # admin 手填的關鍵人生事件
     biography: str = ""         # 最終確認的傳記（可空，之後再填）
@@ -519,7 +520,7 @@ def require_admin_role(*allowed_roles: str):
             raise HTTPException(
                 status_code=401,
                 detail="Admin login required",
-                headers={"WWW-Authenticate": "Basic"},
+                headers={"X-Auth-Required": "Basic"},
             )
         with admin_auth_fail_lock:
             admin_auth_fail_counts.pop(client_key, None)
@@ -687,7 +688,7 @@ def read_root():
     return FileResponse("frontend/index.html")
 
 
-def admin_page(_: dict = Depends(require_admin)):
+def admin_page():
     return FileResponse("frontend/admin.html")
 
 
@@ -800,7 +801,7 @@ def create_elder(req: CreateElderRequest, _: dict = Depends(require_caregiver)):
         "cognitive_status": req.cognitive_status,
         "persona": {
             "former_job": req.job or "",
-            "tone_preference": "",
+            "tone_preference": req.tone_preference or "",
             "hobbies": req.hobbies or [],
         },
         "health_notes": {

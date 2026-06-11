@@ -1,0 +1,299 @@
+{
+  "elder_id": "C002",
+  "name": "陳教授 (demo)",
+  "gender": "male",
+  "cognitive_status": "normal",
+  "persona": {
+    "former_job": "成功大學資訊工程學系教授",
+    "tone_preference": "知性嚴謹，偶爾幽默",
+    "hobbies": [
+      "閱讀技術論文",
+      "養孔雀魚",
+      "散步"
+    ]
+  },
+  "health_notes": {
+    "sensitivity": [],
+    "diet": ""
+  },
+  "personas": {
+    "ai": {
+      "name": "AI 助理",
+      "voice_engine": "edge",
+      "voice_path": null,
+      "honorific": "爺爺",
+      "tone": "像耐心的照護助理，親切溫和地陪伴陳教授 (demo)爺爺。",
+      "avatar_path": "ai_assistant_nobg.png",
+      "is_deceased": false
+    },
+    "persona_1": {
+      "name": "孜芸 (demo)",
+      "relation": "學生",
+      "gender": "female",
+      "voice_engine": "xtts",
+      "voice_path": "C:\\Users\\user\\often_use\\NCKU\\grade3-2\\專題\\Care4U_codex\\backend\\data\\elders\\C002_voices\\persona_1.wav",
+      "honorific": "教授",
+      "language": "mandarin",
+      "personality": [
+        "活潑開朗",
+        "幽默風趣"
+      ],
+      "habits": [
+        "常分享近況",
+        "喜歡叫暱稱"
+      ],
+      "tone": "語氣活潑開朗，常用",
+      "is_deceased": false,
+      "shared_memories": "曾在教授的課上學到很多，對資工充滿熱情",
+      "current_status": "目前在成大資工系就讀三年級，正在做 AI 長照專題",
+      "forbidden_topics": "",
+      "avatar_path": "personas/C002_persona_1.jpg"
+    }
+  },
+  "active_persona": "ai",
+  "recent_events": [
+    {
+      "event": "說了：我的孔雀魚最近生了很多小魚，",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 02:36:52",
+      "id": "a4d28dde",
+      "date": "2026-06-12",
+      "time": "02:36:52",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：對進寫計畫常常改到凌晨三點,頭很痛,眼睛很痠,背也有些痛痛的。",
+      "sentiment": "negative",
+      "emotion_score": -0.6,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:06:16",
+      "id": "bf618edb",
+      "date": "2026-06-12",
+      "time": "03:06:16",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：阿公還好,但我想去看我的空雀魚。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:11:54",
+      "id": "f6e8b6b9",
+      "date": "2026-06-12",
+      "time": "03:11:54",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：阿嬤已經沒事了，",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類（語速偵測：說話急促）",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:12:40",
+      "id": "429af5d1",
+      "date": "2026-06-12",
+      "time": "03:12:40",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：今天心情很不錯,計畫寫好了,背也不疼的。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:25:33",
+      "id": "8bed8515",
+      "date": "2026-06-12",
+      "time": "03:25:33",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：今天感覺很不錯。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:35:00",
+      "id": "60f2d512",
+      "date": "2026-06-12",
+      "time": "03:35:00",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：今天放假心情不錯，",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:57:21",
+      "id": "597392c4",
+      "date": "2026-06-12",
+      "time": "03:57:21",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：是啊,我很喜歡和別人喝茶聊天。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.7,
+      "memory_type": "long",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 03:58:10",
+      "id": "50235e75",
+      "date": "2026-06-12",
+      "time": "03:58:10",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "說了：這麼一說,我就想起了某個學生,他總是要待在實驗室很久,常常弄得我頭很痛了。",
+      "sentiment": "neutral",
+      "emotion_score": 0.0,
+      "importance": 0.8,
+      "memory_type": "long",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 04:37:58",
+      "id": "1b0d8f3f",
+      "date": "2026-06-12",
+      "time": "04:37:58",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:46"
+    },
+    {
+      "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "sentiment": "negative",
+      "emotion_score": -1.0,
+      "importance": 1.0,
+      "memory_type": "long",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "趨勢警報",
+        "需要關注"
+      ],
+      "reason": "連續三次偵測到緊急狀況，請立即確認長者狀態！",
+      "source": "trend_analysis",
+      "spoken_at": "2026-06-12 04:44:37",
+      "id": "5cc65eeb",
+      "date": "2026-06-12",
+      "time": "04:44:37",
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 04:45:51"
+    },
+    {
+      "event": "說了：今天感覺不錯,我在專題展著學生很有信心。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 04:48:48",
+      "id": "96577f99",
+      "date": "2026-06-12",
+      "time": "04:48:48",
+      "acknowledged": false
+    },
+    {
+      "event": "說了：有一位學生做的手勢辨識,那看起來真的很有趣。",
+      "sentiment": "positive",
+      "emotion_score": 0.6,
+      "importance": 0.3,
+      "memory_type": "short",
+      "persona_id": "persona_1",
+      "topic_tags": [
+        "情緒"
+      ],
+      "reason": "Gemini 安全與情緒分類",
+      "source": "voice",
+      "spoken_at": "2026-06-12 04:49:35",
+      "id": "6b89934a",
+      "date": "2026-06-12",
+      "time": "04:49:35",
+      "acknowledged": false
+    }
+  ],
+  "memory_summary": {
+    "content": "",
+    "updated_at": "",
+    "based_on_events": 0
+  },
+  "elder_biography": {
+    "content": "陳教授 (demo)是一位重視生活情感與家庭連結的長者，過去曾在成功大學資訊工程學系教授累積人生經驗。這位長者平時熟悉並喜歡閱讀技術論文、養孔雀魚、散步。這些背景可作為陪伴對話時的自然話題，讓回應更貼近長者的生命經驗與日常習慣。",
+    "updated_at": "2026-06-12 02:22:54",
+    "sources": [
+      "admin_created"
+    ],
+    "manually_edited": true
+  },
+  "biography_usage_count": 0,
+  "family_notes": [],
+  "birth_year": 1985
+}

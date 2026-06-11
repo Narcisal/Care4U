@@ -42,13 +42,13 @@ Care4U 是一套面向台灣高齡長者的 AI 陪伴系統，提供：
 | 層級 | 技術 |
 |------|------|
 | 後端框架 | FastAPI + Uvicorn |
-| 主要 LLM | Google Gemini 2.5-pro（對話）、2.0-flash（安全分類） |
+| 主要 LLM | Google Gemini 2.5-flash（對話 + 安全分類） |
 | 備援 LLM | OpenAI GPT-4o-mini（Gemini 不可用時自動切換） |
 | 向量嵌入 | gemini-embedding-2（3072 維） |
 | 向量資料庫 | PostgreSQL + pgvector |
 | JSON 儲存 | 本地檔案系統（`backend/data/elders/`） |
 | 語音辨識 | OpenAI Whisper / MediaTek Breeze ASR 26（台語） |
-| 語音合成 | XTTS v2 → LuxTTS → edge-tts（fallback chain） |
+| 語音合成 | XTTS v2（circuit breaker + auto-restart）→ edge-tts → Windows SAPI |
 | 圖片生成 | Gemini Imagen 3 |
 | 健康搜尋 | Tavily Search API |
 | 前端 | 原生 HTML/JS + SSE 串流 |
@@ -383,17 +383,16 @@ VectorMemoryStore
 #### Fallback Chain
 
 ```
-XTTS v2 ──[失敗]──▶ LuxTTS ──[失敗]──▶ edge-tts ──[失敗]──▶ Windows SAPI
+XTTS v2 ──[失敗/冷卻中]──▶ edge-tts ──[失敗]──▶ Windows SAPI
 ```
 
 每個引擎的特性：
 
 | 引擎 | 類型 | 聲音 | 延遲 | 備註 |
 |------|------|------|------|------|
-| XTTS v2 | 本地 HTTP | 客製化聲音克隆 | 中 | 需 GPU |
-| LuxTTS | 本地 HTTP | 客製化 | 中 | 替代 XTTS |
+| XTTS v2 | 本地 HTTP | 客製化聲音克隆 | 中 | 需 GPU；circuit breaker + auto-restart |
 | edge-tts | 雲端 | Microsoft HsiaoChen | 低 | 免費、無需 GPU |
-| Windows SAPI | 本地 OS | 系統預設 | 極低 | 最終降級方案 |
+| Windows SAPI | 本地 OS | 系統預設 | 極低 | 離線最終降級方案 |
 
 #### XTTS Circuit Breaker
 
@@ -401,10 +400,17 @@ XTTS v2 ──[失敗]──▶ LuxTTS ──[失敗]──▶ edge-tts ──[�
 
 ```python
 XTTS_FAIL_THRESHOLD = 2    # 連續失敗 2 次後觸發
-XTTS_COOLDOWN_SEC = 90     # 冷卻 90 秒不嘗試 XTTS
+XTTS_COOLDOWN_SEC = 120    # 冷卻 120 秒不嘗試 XTTS
+XTTS_MAX_CHARS = 40        # 中文切塊上限（避免 tokenizer OOB）
 ```
 
 觸發後自動呼叫 `XTTS_RESTART_SCRIPT`（PowerShell 腳本）嘗試重啟 XTTS 服務。
+
+**三層 Emoji 防護**：LLM prompt 禁止 emoji → 後端 `_strip_emoji()` → 前端 `stripEmoji()`。防止 emoji 字元導致 XTTS tokenizer crash。
+
+**CUDA 自動復原**：XTTS `api.py` 偵測到 CUDA 致命錯誤時呼叫 `os._exit(1)`，外層 `run_loop.py` wrapper 自動重啟進程。重啟期間所有 TTS 請求由 edge-tts 處理。背景 health probe 偵測 XTTS 恢復後立即清除 cooldown。
+
+**GPU 序列化**：XTTS `api.py` 使用 `threading.Lock` 序列化所有推論請求，避免併發 CUDA 推論導致 tensor 維度不匹配。
 
 #### 情緒語調對映
 
@@ -670,8 +676,7 @@ CREATE TABLE elder_memories (
 
 ### 管理端
 
-- **HTTP Basic Auth**：`ADMIN_USERNAME` / `ADMIN_PASSWORD`
-- **多使用者**：`ADMIN_USERS` 可設定多組帳號
+- **Admin Auth**：`ADMIN_PASSWORD` 設定後啟用登入驗證
 - **Demo Mode**：`CARE4U_DEMO_MODE=true` 時允許 localhost 免密碼存取
 - **暴力破解防護**：`ADMIN_AUTH_MAX_FAILURES = 5` 次失敗後鎖定 `ADMIN_AUTH_LOCK_SECONDS = 60` 秒
 
@@ -696,7 +701,7 @@ CREATE TABLE elder_memories (
 
 ### 為何 iSafe 和 MagicAI 平行執行？
 
-iSafe 使用輕量模型（gemini-2.0-flash），延遲約 200-500ms。若串行，會增加每次對話的感知延遲。平行執行時，iSafe 通常在 MagicAI 串流結束前就完成，不影響 TTFB。
+iSafe 使用輕量模型（gemini-2.5-flash），延遲約 200-500ms。若串行，會增加每次對話的感知延遲。平行執行時，iSafe 通常在 MagicAI 串流結束前就完成，不影響 TTFB。
 
 ### 為何不做 Provider 抽象層？
 
@@ -726,8 +731,8 @@ XTTS v2 提供最佳的聲音克隆品質，但需要 GPU 且偶爾不穩定。L
 | 變數 | 用途 | 範例 |
 |------|------|------|
 | `GEMINI_API_KEY` | Gemini API 金鑰 | `AIzaSy...` |
-| `MAGIC_MODEL` | MagicAI 使用的模型 | `gemini-2.5-pro` |
-| `ISAFE_MODEL` | iSafe 使用的模型 | `gemini-2.0-flash` |
+| `MAGIC_MODEL` | MagicAI 使用的模型 | `gemini-2.5-flash` |
+| `ISAFE_MODEL` | iSafe 使用的模型 | `gemini-2.5-flash` |
 
 ### 選用變數
 
@@ -735,25 +740,21 @@ XTTS v2 提供最佳的聲音克隆品質，但需要 GPU 且偶爾不穩定。L
 |------|--------|------|
 | `OPENAI_API_KEY` | （空） | OpenAI fallback 金鑰 |
 | `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI fallback 模型 |
-| `CARE4U_DEMO_MODE` | `true` | Demo 模式（免密碼 admin） |
+| `CARE4U_DEMO_MODE` | `false` | Demo 模式（免密碼 admin） |
 | `DB_ENABLED` | `false` | 啟用 PostgreSQL |
 | `DB_HOST` | `localhost` | PostgreSQL 主機 |
 | `DB_PORT` | `5433` | PostgreSQL 埠號 |
 | `DB_NAME` | `aicaeru` | 資料庫名稱 |
-| `DB_POOL_MAX` | `5` | 連線池上限 |
 | `STT_POOL_SIZE` | `1` | STT worker 數量 |
-| `STT_MODEL_SIZE` | `medium` | Whisper 模型大小 |
-| `STT_DEVICE` | `cuda` | STT 計算裝置 |
+| `STT_MODEL_SIZE` | `small` | Whisper 模型大小 |
+| `STT_DEVICE` | `cpu` | STT 計算裝置 |
 | `LLM_MAX_CONCURRENT` | `4` | LLM 最大並行數 |
 | `LLM_TIMEOUT_MS` | `15000` | LLM 請求逾時（ms） |
 | `XTTS_URL` | `http://localhost:8082` | XTTS 服務位址 |
-| `LUXTTS_URL` | `http://localhost:8081` | LuxTTS 服務位址 |
 | `XTTS_RESTART_SCRIPT` | （空） | XTTS 自動重啟腳本路徑 |
-| `AGENT_EXECUTOR_WORKERS` | `4` | Agent 平行 worker 數 |
 | `TAVILY_API_KEY` | （空） | Tavily 搜尋 API 金鑰 |
-| `ALLOWED_ORIGINS` | （空） | CORS 白名單 |
-| `ADMIN_USERNAME` | `admin` | 管理員帳號 |
 | `ADMIN_PASSWORD` | （空） | 管理員密碼 |
+| `ALLOWED_ELDER_IDS` | `W001,C001,L001,Z001` | 允許登入的長者 ID |
 
 ### 啟動
 

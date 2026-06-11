@@ -183,7 +183,12 @@ async function sendMessage() {
 // ── 逐句串流 TTS ─────────────────────────────────────────────────────────────
 
 /** 立刻發 TTS 請求，回傳 Promise<Blob>（不阻塞，後台並行下載） */
+const _emojiRe = /[\u{1F300}-\u{1FAFF}\u{2702}-\u{27B0}\u{FE00}-\u{FE0F}\u{200D}\u{2600}-\u{26FF}\u{231A}-\u{231B}]+/gu;
+function stripEmoji(t) { return t.replace(_emojiRe, "").trim(); }
+
 function fetchTTSBlob(text) {
+    text = stripEmoji(text);
+    if (!text) return Promise.resolve(null);
     return elderFetch("/api/elder/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1275,7 +1280,7 @@ async function startVAD() {
             vadAnalyser.getByteFrequencyData(data);
             const volume = data.reduce((a, b) => a + b) / data.length;
 
-            if (volume > 15 && !vadRecording) {
+            if (volume > 30 && !vadRecording) {
                 if (isSpeaking) {
                     const lbl = document.getElementById('status-label');
                     if (lbl && lbl.textContent !== '等我說完再說吧') {
@@ -1289,7 +1294,9 @@ async function startVAD() {
                 vadChunks = [];
                 vadRecorder = new MediaRecorder(vadStream);
                 vadRecorder.ondataavailable = e => vadChunks.push(e.data);
+                const vadStartTime = Date.now();
                 vadRecorder.onstop = async () => {
+                    if (Date.now() - vadStartTime < 800) return; // 太短跳過，防環境雜音
                     const blob = new Blob(vadChunks, { type: 'audio/webm' });
                     await sendAudioToSTT(blob);
                 };
@@ -1304,7 +1311,7 @@ async function startVAD() {
                 }
                 document.getElementById('recording-indicator')?.classList.add('active');
 
-            } else if (volume <= 15 && vadRecording) {
+            } else if (volume <= 25 && vadRecording) {
                 // 音量下降，開始計時靜音
                 if (!silenceTimer) {
                     silenceTimer = setTimeout(() => {
@@ -1312,9 +1319,9 @@ async function startVAD() {
                         vadRecording = false;
                         silenceTimer = null;
                         document.getElementById('recording-indicator')?.classList.remove('active');
-                    }, 1500); // 靜音 1.5 秒後送出
+                    }, 2000); // 靜音 2 秒後送出
                 }
-            } else if (volume > 25 && vadRecording && silenceTimer) {
+            } else if (volume > 40 && vadRecording && silenceTimer) {
                 // 靜音中又有聲音，取消靜音計時
                 clearTimeout(silenceTimer);
                 silenceTimer = null;

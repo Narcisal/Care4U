@@ -29,8 +29,10 @@
 | `_xtts_lock` | `threading.Lock` |
 | `_xtts_fail_count` | 連續失敗次數 |
 | `_xtts_broken_until` | `time.time()` 基準的冷卻結束時間 |
+| `_xtts_restarting` | `bool`，重啟過程中為 True，跳過 XTTS 請求 |
 | `XTTS_FAIL_THRESHOLD` | 2（連續失敗 2 次觸發） |
-| `XTTS_COOLDOWN_SEC` | 90 秒 |
+| `XTTS_COOLDOWN_SEC` | 120 秒 |
+| `XTTS_MAX_CHARS` | 40（超過此長度的文字會被截斷，避免 XTTS tokenizer OOB crash） |
 
 **觸發流程**：
 
@@ -39,15 +41,15 @@ XTTS 請求失敗
 └─ _record_xtts_failure()
    ├─ _xtts_fail_count += 1
    └─ count ≥ THRESHOLD?
-      ├─ YES → _xtts_broken_until = now + 90s
+      ├─ YES → _xtts_broken_until = now + 120s
       │        _xtts_fail_count = 0（重設）
       │        _trigger_xtts_restart()
       └─ NO → return b""
 ```
 
-**自動重啟**：若 `XTTS_RESTART_SCRIPT` 環境變數有值，在 daemon thread 中執行 PowerShell 腳本。
+**自動重啟**：若 `XTTS_RESTART_SCRIPT` 環境變數有值，在 daemon thread 中執行 PowerShell 腳本。重啟流程包含 health probe（GET 請求，最多 20 次 × 5 秒間隔），確認 XTTS 重新上線後才清除冷卻狀態。
 
-**冷卻檢查**：`_xtts_synthesize()` 開頭檢查 `_xtts_broken_until`，冷卻中直接 return `b""`。
+**冷卻檢查**：`_xtts_synthesize()` 開頭檢查 `_xtts_broken_until` 和 `_xtts_restarting`，任一為 True 直接 return `b""`。
 
 ### 情緒語調
 
@@ -111,8 +113,10 @@ _windows_sapi_synthesize(text) → return（最終保底）
 - URL：`XTTS_URL/v1/audio/speech`（預設 `http://localhost:8082`）
 - Payload：`{text, voice_path, language: "zh-cn", speed: 1.0}`
 - Timeout：30 秒
+- 文字前處理：`_strip_emoji()` 移除 emoji，截斷超過 `XTTS_MAX_CHARS`（40）的文字
+- WAV 驗證：`_is_valid_wav()` 檢查回應是否為有效 WAV（RIFF header），無效視為失敗
 - 成功：重設 `_xtts_fail_count = 0`
-- 失敗：呼叫 `_record_xtts_failure()`
+- 失敗（含 500 狀態碼）：直接觸發 `_record_xtts_failure()` + 重啟
 - 無 voice_path → 直接 return `b""`（不嘗試，因為 XTTS 需要聲音樣本）
 
 ### LuxTTS（`_luxtts_synthesize`）
@@ -151,3 +155,6 @@ _windows_sapi_synthesize(text) → return（最終保底）
 3. **BreezyVoice 的 voice 參數是硬編碼的 `"shimmer"`**：不使用 `self.voice_path`。這可能不是預期行為。
 4. **Windows SAPI 的 text 直接嵌入 PowerShell 腳本**：透過 JSON serialize + `ConvertFrom-Json` 處理，但極端情況下（含特殊字元）可能有 injection 風險。目前用 `json.dumps` + base64 encoded command 緩解。
 5. **`synthesize()` 的 emotion 參數只對 edge-tts 有效**：其他引擎忽略 emotion。
+6. **XTTS tokenizer OOB crash**：某些中文字元會導致 XTTS 的 tokenizer 產生超出範圍的 token ID，觸發 CUDA `srcIndex < srcSelectDimSize` assertion failure。`XTTS_MAX_CHARS=40` 是緩解措施，非根本修復。
+7. **三層 emoji 防禦**：LLM prompt 指示不使用 emoji → `_strip_emoji()` 在 TTS 前移除 → 前端 `stripEmoji()` 最終清理。XTTS tokenizer 無法處理 emoji 字元。
+8. **XTTS GPU 請求序列化**：`api.py` 中使用 `threading.Lock()` 確保同時只有一個推理請求，避免 tensor dimension mismatch。
