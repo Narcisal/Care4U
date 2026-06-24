@@ -115,7 +115,8 @@
       "id": "56697e17",
       "date": "2026-06-09",
       "time": "09:08:59",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
@@ -133,7 +134,8 @@
       "id": "df507849",
       "date": "2026-06-09",
       "time": "11:16:54",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
@@ -151,7 +153,8 @@
       "id": "c21bd0c9",
       "date": "2026-06-09",
       "time": "10:56:03",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -169,7 +172,8 @@
       "id": "cb9d1b02",
       "date": "2026-06-09",
       "time": "12:06:06",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
@@ -187,7 +191,8 @@
       "id": "ff54a85b",
       "date": "2026-06-09",
       "time": "09:18:01",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -205,7 +210,8 @@
       "id": "ee9e4296",
       "date": "2026-06-09",
       "time": "16:49:28",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
@@ -223,7 +229,8 @@
       "id": "8f15ed6b",
       "date": "2026-06-09",
       "time": "09:18:06",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
@@ -241,7 +248,8 @@
       "id": "1d9a0fa9",
       "date": "2026-06-09",
       "time": "09:18:08",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -259,7 +267,8 @@
       "id": "ccc0b919",
       "date": "2026-06-09",
       "time": "12:03:59",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：胸口突然很痛，呼吸也很困難。",
@@ -296,7 +305,8 @@
       "id": "3f06c96c",
       "date": "2026-06-09",
       "time": "12:14:13",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
@@ -314,7 +324,8 @@
       "id": "e7853af4",
       "date": "2026-06-09",
       "time": "11:07:26",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
@@ -332,7 +343,8 @@
       "id": "c4759a0a",
       "date": "2026-06-09",
       "time": "09:20:38",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：胸口突然很痛，呼吸也很困難。",
@@ -369,7 +381,8 @@
       "id": "ec8a455c",
       "date": "2026-06-09",
       "time": "11:06:40",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：兒子最近都在忙電腦的工作，不知道哪天有空回來吃飯。",
@@ -387,7 +400,8 @@
       "id": "997d9f69",
       "date": "2026-06-09",
       "time": "12:09:21",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
@@ -405,7 +419,8 @@
       "id": "366bbba5",
       "date": "2026-06-09",
       "time": "09:26:14",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -423,7 +438,8 @@
       "id": "21c33c3a",
       "date": "2026-06-09",
       "time": "11:02:44",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
@@ -441,7 +457,8 @@
       "id": "7d01b462",
       "date": "2026-06-09",
       "time": "11:16:56",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "哼著《月亮代表我的心》，說這首歌聽了幾十年還是最喜歡，比現在那些新歌好聽多了",
@@ -479,7 +496,8 @@
       "id": "c858bdac",
       "date": "2026-06-09",
       "time": "12:06:24",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
@@ -516,7 +534,8 @@
       "id": "6bea7573",
       "date": "2026-06-09",
       "time": "16:49:44",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：建宏最近工作忙，屋裡安靜得讓我有點悶。",
@@ -534,7 +553,8 @@
       "id": "69b40999",
       "date": "2026-06-09",
       "time": "11:16:49",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我懷念和我老婆憶起唱歌跳舞",
@@ -570,7 +590,8 @@
       "id": "801904e7",
       "date": "2026-06-09",
       "time": "12:04:05",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -588,7 +609,8 @@
       "id": "1c51f9a8",
       "date": "2026-06-09",
       "time": "11:14:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
@@ -606,7 +628,8 @@
       "id": "86f58a90",
       "date": "2026-06-09",
       "time": "12:14:26",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說最近睡眠不太好，躺下去就想事情，有時候想妻子，有時候想以前在工廠的往事，睡睡醒醒",
@@ -644,7 +667,8 @@
       "id": "ab2d33bb",
       "date": "2026-06-09",
       "time": "11:12:46",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
@@ -681,7 +705,8 @@
       "id": "38a751e9",
       "date": "2026-06-09",
       "time": "05:36:20",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
@@ -699,7 +724,8 @@
       "id": "7fc48f90",
       "date": "2026-06-09",
       "time": "12:09:26",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
@@ -717,7 +743,8 @@
       "id": "500e9ade",
       "date": "2026-06-09",
       "time": "05:37:31",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：胸口突然很痛，呼吸也很困難。",
@@ -735,7 +762,8 @@
       "id": "7af649e4",
       "date": "2026-06-09",
       "time": "05:37:42",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：剛剛起身時腰突然使不上力，扶住桌子才站穩。",
@@ -753,7 +781,8 @@
       "id": "5ff49dc2",
       "date": "2026-06-09",
       "time": "11:16:59",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：今天忽然很想念以前和太太騎車去海邊的日子。",
@@ -771,7 +800,8 @@
       "id": "31733a36",
       "date": "2026-06-09",
       "time": "08:44:00",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
@@ -789,7 +819,8 @@
       "id": "2642d7dd",
       "date": "2026-06-09",
       "time": "12:06:31",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "趨勢警報：連續三次偵測到緊急狀況，請立即確認長者狀態！",
@@ -826,7 +857,8 @@
       "id": "8e976f56",
       "date": "2026-06-09",
       "time": "16:55:21",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
@@ -844,7 +876,8 @@
       "id": "e8c0e91a",
       "date": "2026-06-09",
       "time": "10:56:02",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨晚幾乎沒睡，今天整個人昏沉沉的。",
@@ -862,7 +895,8 @@
       "id": "789bdfdc",
       "date": "2026-06-09",
       "time": "08:59:52",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天又痠起來了，坐一下就好多了。",
@@ -880,7 +914,8 @@
       "id": "2a40de3b",
       "date": "2026-06-09",
       "time": "12:04:17",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：兒子最近都在忙電腦的工作，我想問問他哪天有空回來吃飯。",
@@ -898,7 +933,8 @@
       "id": "7dc8cda1",
       "date": "2026-06-09",
       "time": "11:14:56",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前老家門口有一棵大榕樹，夏天坐在樹下乘涼，風吹過來很舒服。",
@@ -916,7 +952,8 @@
       "id": "276aad22",
       "date": "2026-06-09",
       "time": "16:20:21",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
@@ -953,7 +990,8 @@
       "id": "95ed4be4",
       "date": "2026-06-09",
       "time": "11:12:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我頭暈得站不住，旁邊現在沒有人。",
@@ -990,7 +1028,8 @@
       "id": "db60a5dc",
       "date": "2026-06-09",
       "time": "09:04:53",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -1008,7 +1047,8 @@
       "id": "1ccf4dc3",
       "date": "2026-06-09",
       "time": "12:13:49",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我剛剛跌倒了，腰很痛，現在爬不起來。",
@@ -1026,7 +1066,8 @@
       "id": "053819f6",
       "date": "2026-06-09",
       "time": "09:04:58",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：胸口突然很痛，呼吸也很困難。",
@@ -1082,7 +1123,8 @@
       "id": "d5b3da8b",
       "date": "2026-06-09",
       "time": "09:08:44",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：以前和太太騎重型機車去海邊，風吹過來真的很舒服。",
@@ -1100,7 +1142,8 @@
       "id": "6fa54478",
       "date": "2026-06-09",
       "time": "12:09:12",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我剛才站起來時腰有點痠，坐一下就好多了。",
@@ -1118,7 +1161,8 @@
       "id": "57cc52f1",
       "date": "2026-06-09",
       "time": "11:02:42",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "下午去附近公園和老鄰居老張下象棋，贏了兩局，說好久沒贏得這麼開心了",
@@ -1259,7 +1303,8 @@
       "id": "8b7b2ee1",
       "date": "2026-06-09",
       "time": "08:59:48",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
@@ -1277,7 +1322,8 @@
       "id": "67c01a7c",
       "date": "2026-06-09",
       "time": "08:59:50",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
@@ -1295,7 +1341,8 @@
       "id": "d3e348d6",
       "date": "2026-06-09",
       "time": "09:04:29",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -1313,7 +1360,8 @@
       "id": "cf754652",
       "date": "2026-06-09",
       "time": "09:04:49",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
@@ -1331,7 +1379,8 @@
       "id": "f8600767",
       "date": "2026-06-09",
       "time": "09:04:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
@@ -1349,7 +1398,8 @@
       "id": "b9cb83fb",
       "date": "2026-06-09",
       "time": "09:08:42",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -1367,7 +1417,8 @@
       "id": "1b326537",
       "date": "2026-06-09",
       "time": "09:08:53",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
@@ -1385,7 +1436,8 @@
       "id": "7217bf12",
       "date": "2026-06-09",
       "time": "09:08:55",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -1403,7 +1455,8 @@
       "id": "adf450ab",
       "date": "2026-06-09",
       "time": "09:18:03",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
@@ -1421,7 +1474,8 @@
       "id": "6a599296",
       "date": "2026-06-09",
       "time": "09:18:04",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨天去公園找老友下棋，我們下到忘了時間。",
@@ -1439,7 +1493,8 @@
       "id": "a9a22c44",
       "date": "2026-06-09",
       "time": "09:20:10",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：我剛才站起來時腰有點痠，坐一下就好多了。",
@@ -1457,7 +1512,8 @@
       "id": "f4dafc66",
       "date": "2026-06-09",
       "time": "09:20:22",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -1475,7 +1531,8 @@
       "id": "da21fda9",
       "date": "2026-06-09",
       "time": "09:26:10",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：腰的舊傷今天一直痠，站久就不太舒服。",
@@ -1493,7 +1550,8 @@
       "id": "44733f95",
       "date": "2026-06-09",
       "time": "09:26:11",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
@@ -1511,7 +1569,8 @@
       "id": "d1ebdf3f",
       "date": "2026-06-09",
       "time": "10:52:22",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -1529,7 +1588,8 @@
       "id": "01abd9be",
       "date": "2026-06-09",
       "time": "10:55:59",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：昨天下午去公園和老友下棋，最後下成和棋。",
@@ -1547,7 +1607,8 @@
       "id": "ef658ebe",
       "date": "2026-06-09",
       "time": "10:58:40",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     },
     {
       "event": "說了：想到自己現在很多事做不動，心裡有些失落。",
@@ -1565,7 +1626,8 @@
       "id": "84acedde",
       "date": "2026-06-09",
       "time": "11:16:51",
-      "acknowledged": false
+      "acknowledged": true,
+      "acknowledged_at": "2026-06-12 17:25:36"
     }
   ],
   "memory_summary": {

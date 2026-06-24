@@ -2,7 +2,7 @@
 
 > **NCKU Computer Science Capstone Project**
 > Developing a Personality-Driven AI Companion System for Older Adults Using RAG
-> *顏孜芸 F74124040 · Advisor: Prof. 陳鸞亮*
+> *顏孜芸 F74124040 · Advisor: Prof. 陳響亮*
 
 ---
 

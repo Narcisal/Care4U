@@ -48,6 +48,9 @@ backend/services/tmp_*.mp3
 # Uploaded personal / biometric data
 # ------------------------------------------------------------------
 
+# Elder profiles that contain real personal data.
+backend/data/elders/C002.json
+
 # Voice samples uploaded from the admin panel.
 backend/data/elders/*_voices/
 backend/data/voices/
@@ -108,6 +111,7 @@ generated/
 # Local task tracking (agent working notes, not for version control)
 # ------------------------------------------------------------------
 
+TASK.md
 TASKS.md
 BUGS.md
 GUI_REDESIGN.md
@@ -119,9 +123,14 @@ GUI_REDESIGN.md
 
 commit_notes.md
 delivery_status.md
+demo_script.md
+evaluation_plan.md
+future_plan.md
 poster_content_draft.md
 poster_screenshot_plan.md
+rag_demo_run.py
 stt_verification.md
+xtts_wav_guide.md
 
 # ------------------------------------------------------------------
 # Runtime conversation session files (generated at runtime, per-elder)
@@ -134,8 +143,9 @@ backend/data/elders/*_conv.json
 # ------------------------------------------------------------------
 
 backend/tools/phase10_*.py
-backend/tools/phase7_live_collect.py
+backend/tools/phase7_*.py
 backend/tools/seed_*.py
+backend/tools/stt_corpus_eval.py
 
 # ------------------------------------------------------------------
 # Generated reports and benchmark outputs
